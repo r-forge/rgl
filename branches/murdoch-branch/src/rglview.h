@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.5 2004/06/29 12:54:59 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.6 2004/07/16 18:27:58 murdoch Exp $
 
 
 #include "gui.h"
@@ -66,6 +66,8 @@ private:
   void adjustDirectionEnd();
 
   PolarCoord camBase, dragBase, dragCurrent;
+  Vertex rotBase, rotCurrent;
+
 
 // o DRAG FEATURE: adjustZoom
 

@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.2.4 2004/06/23 22:05:10 murdoch Exp $
+// $Id: scene.h,v 1.3.2.5 2004/07/16 18:27:58 murdoch Exp $
 
 
 #include "types.h"
@@ -164,8 +164,8 @@ public:
 
   Viewpoint(PolarCoord position=PolarCoord(0.0f,15.0f), float fov=90.0f, float zoom=0.0f, bool interactive=true);
 
-  PolarCoord& getPosition();
   void        setPosition(const PolarCoord& position);
+  void	      clearMouseMatrix();
   float       getZoom(void) const;
   void        setZoom(const float zoom);
   float       getFOV(void) const;
@@ -174,15 +174,15 @@ public:
   void        setupTransformation(RenderContext* rctx, const Sphere& viewvolumeSphere);
   void        setupOrientation(RenderContext* rctx) const;
   bool        isInteractive() const;
-  //Add by Ming Chen
-  void		  setInteractive(bool in_interactive);
+  void        updateMouseMatrix(Vertex dragStart,Vertex dragCurrent);
+  void 	      mergeMouseMatrix();
   Frustum     frustum;
 
 private:
-  PolarCoord  position;
   float       fov;
   float       zoom;
   bool        interactive;
+  GLdouble    rotationMatrix[16], mouseMatrix[16];
 
 };
 

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.5 2004/06/29 12:54:59 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.6 2004/07/16 18:27:58 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -29,7 +29,7 @@
 
 
 RGLView::RGLView(Scene* in_scene)
- : View(0,0,256,256,0), camBase(0.0f,0.0f), dragBase(0.0f,0.0f),dragCurrent(0.0f,0.0f), autoUpdate(false)
+ : View(0,0,256,256,0), dragBase(0.0f,0.0f),dragCurrent(0.0f,0.0f), autoUpdate(false)
 {
   scene = in_scene;
   drag  = 0;
@@ -84,9 +84,9 @@ void RGLView::paint(void) {
   windowImpl->beginGL();
   scene->render(&renderContext);
 
-    glGetDoublev(GL_MODELVIEW_MATRIX,modelMatrix);
-    glGetDoublev(GL_PROJECTION_MATRIX,projMatrix);
-    glGetIntegerv(GL_VIEWPORT,viewport);
+  glGetDoublev(GL_MODELVIEW_MATRIX,modelMatrix);
+  glGetDoublev(GL_PROJECTION_MATRIX,projMatrix);
+  glGetIntegerv(GL_VIEWPORT,viewport);
 
   if (selectState == msCHANGING)
     select.render(mousePosition);
@@ -286,14 +286,43 @@ static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
 
 }
 
+static Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
+
+    float radius = (float) getMax(width, height) * 0.5f;
+
+    float cx = ((float)width) * 0.5f;
+    float cy = ((float)height) * 0.5f;
+    float x  = (((float)mouseX) - cx)/radius;
+    float y  = (((float)mouseY) - cy)/radius;
+
+    // Make unit vector
+
+    float len = sqrt(x*x + y*y);
+    if (len > 1.0e-6) {
+        x = x/len;
+        y = y/len;
+    }
+    // Find length to first edge
+
+    float maxlen = sqrt(2.0f);
+
+    // zero length is vertical, max length is horizontal
+    float angle = (maxlen - len)/maxlen*PI/2.0f;
+
+    float z = sin(angle);
+
+    // renorm to unit length
+
+    len = sqrt(1.0f - z*z);
+    x = x*len;
+    y = y*len;
+
+    return Vertex(x, y, z);
+}
 
 void RGLView::adjustDirectionBegin(int mouseX, int mouseY)
 {
-  Viewpoint* viewpoint = scene->getViewpoint();
-
-  camBase = viewpoint->getPosition();
-
-  dragBase = screenToPolar(width,height,mouseX,height-mouseY);
+  rotBase = screenToVector(width,height,mouseX,height-mouseY);
 }
 
 
@@ -301,21 +330,20 @@ void RGLView::adjustDirectionUpdate(int mouseX, int mouseY)
 {
   Viewpoint* viewpoint = scene->getViewpoint();
 
-  // float phiDragNow, thetaDragNow;
+  rotCurrent = screenToVector(width,height,mouseX,height-mouseY);
 
-  dragCurrent = screenToPolar(width,height,mouseX,height-mouseY);
+	windowImpl->beginGL();
+	viewpoint->updateMouseMatrix(rotBase,rotCurrent);
+	windowImpl->endGL();
 
-  PolarCoord newpos = camBase - ( dragCurrent - dragBase );
-
-  newpos.phi = clamp( newpos.phi, -90.0f, 90.0f );
-
-  viewpoint->setPosition( newpos );
-  View::update();
+	View::update();
 }
 
 
 void RGLView::adjustDirectionEnd()
 {
+    Viewpoint* viewpoint = scene->getViewpoint();
+    viewpoint->mergeMouseMatrix();
 }
 
 //////////////////////////////////////////////////////////////////////////////

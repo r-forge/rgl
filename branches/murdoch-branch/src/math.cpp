@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: math.cpp,v 1.1.1.1.2.1 2004/06/22 13:22:07 murdoch Exp $
+// $Id: math.cpp,v 1.1.1.1.2.2 2004/07/16 18:27:57 murdoch Exp $
 
 #include "math.h"
 
@@ -43,6 +43,15 @@ Vertex Vertex::cross(Vertex op2) const
   return v;
 }
 
+float Vertex::angle(Vertex op2) const
+{
+
+  float dot;
+  dot = x*op2.x + y*op2.y + z*op2.z;
+  return rad2degf(acosf( dot/(this->getLength() * op2.getLength())));
+
+}
+
 Vertex Vertex::operator * (float s)
 {
   Vertex v;
@@ -59,7 +68,7 @@ float Vertex::operator * (Vertex v)
   return (x*v.x + y*v.y + z*v.z);
 }
 
-Vertex Vertex::operator - (Vertex op2) const 
+Vertex Vertex::operator - (Vertex op2) const
 {
   Vertex v;
 
@@ -70,7 +79,7 @@ Vertex Vertex::operator - (Vertex op2) const
   return v;
 }
 
-void Vertex::operator += (Vertex op2) 
+void Vertex::operator += (Vertex op2)
 {
   x += op2.x;
   y += op2.y;
@@ -245,6 +254,12 @@ void Matrix4x4::setRotate(const int axis, const float degree) {
   }
 }
 
+void Matrix4x4::getData(double* dest)
+{
+	for(int i=0;i<16;i++)
+    	dest[i] = data[i];
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
@@ -326,12 +341,12 @@ Sphere::Sphere(const Vertex& in_center, const float in_radius)
 //
 
 //
-// setup frustum to enclose the space given by a bounding sphere, 
+// setup frustum to enclose the space given by a bounding sphere,
 // field-of-view angle and window size.
 //
 // window size is used to provide aspect ratio.
 //
-// 
+//
 
 void Frustum::enclose(float sphere_radius, float fovangle, RectSize& winsize)
 {
@@ -376,7 +391,7 @@ void Frustum::enclose(float sphere_radius, float fovangle, RectSize& winsize)
       hheight = hlen * ( (float)winsize.height ) / ( (float)winsize.width );
     }
 
-  } 
+  }
 
   left   = -hwidth;
   right  =  hwidth;
