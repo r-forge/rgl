@@ -5,3 +5,6 @@ cd src
 make -f build/vc/Makefile clean
 make -f build/mingw/Makefile clean
 exit 0
+#if test -d $(ZLIBDIR) ; then make -C $(ZLIBDIR) clean ; fi
+#if test -d $(LIBPNGDIR) ; then make -C $(LIBPNGDIR) -f scripts/makefile.gcc clean ; fi
+
