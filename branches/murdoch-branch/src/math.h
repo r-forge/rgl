@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: math.h,v 1.4 2003/11/21 21:56:03 dadler Exp $
+// $Id: math.h,v 1.4.2.1 2004/07/16 18:27:57 murdoch Exp $
 
 #include <math.h>
 #include <float.h>
@@ -57,6 +57,7 @@ struct Vertex
   float getLength() const;
   void normalize();
   Vertex cross(Vertex op2) const;
+  float angle(Vertex op2) const;
   float operator * (Vertex op2);
   Vertex operator * (float value);
   Vertex operator+(Vertex op2) const;
@@ -93,6 +94,7 @@ public:
   Matrix4x4 operator*(const Matrix4x4& op2) const;
   void setIdentity(void);
   void setRotate(int axis, float degree);
+  void getData(double* dest);
 private:
   inline float  val(int row, int column) const { return data[4*column+row]; }
   inline float& ref(int row, int column) { return data[4*column+row]; }

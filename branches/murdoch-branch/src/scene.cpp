@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.4 2004/06/23 22:05:10 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.5 2004/07/16 18:27:58 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -871,22 +871,29 @@ void Scene::calcDataBBox()
 
 Viewpoint::Viewpoint(PolarCoord in_position, float in_fov, float in_zoom, bool in_interactive) :
     SceneNode(VIEWPOINT),
-    position( in_position ),
+    // position( in_position ),
     fov(in_fov),
     zoom(in_zoom),
     interactive(in_interactive)
 {
-}
-
-
-PolarCoord& Viewpoint::getPosition()
-{
-  return position;
+    setPosition(in_position);
+    clearMouseMatrix();
 }
 
 void Viewpoint::setPosition(const PolarCoord& in_position)
 {
-  position = in_position;
+    Matrix4x4 M,N;
+    M.setRotate(0, in_position.phi);
+    N.setRotate(1, -in_position.theta);
+    M = M * N;
+    M.getData((double*)rotationMatrix);
+}
+
+void Viewpoint::clearMouseMatrix()
+{
+    Matrix4x4 M;
+    M.setIdentity();
+    M.getData((double*)mouseMatrix);
 }
 
 float Viewpoint::getZoom() const
@@ -930,8 +937,9 @@ void Viewpoint::setupFrustum(RenderContext* rctx, const Sphere& viewSphere)
 
 void Viewpoint::setupOrientation(RenderContext* rctx) const
 {
-  glRotatef( position.phi,   1.0f, 0.0f, 0.0f);
-  glRotatef(-position.theta, 0.0f, 1.0f, 0.0f);
+  glMultMatrixd(mouseMatrix);
+  glMultMatrixd(rotationMatrix);
+
 }
 
 void Viewpoint::setupTransformation(RenderContext* rctx, const Sphere& viewSphere)
@@ -954,10 +962,27 @@ void Viewpoint::setupTransformation(RenderContext* rctx, const Sphere& viewSpher
   glTranslatef( -viewSphere.center.x, -viewSphere.center.y, -viewSphere.center.z );
 }
 
-//Add by Ming Chen
-void Viewpoint::setInteractive(bool in_interactive)
+void Viewpoint::updateMouseMatrix(Vertex dragStart, Vertex dragCurrent)
 {
-	interactive = in_interactive;
+	Vertex axis = dragStart.cross(dragCurrent);
+
+	float angle = dragStart.angle(dragCurrent);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glRotatef((GLfloat)angle, (GLfloat)axis.x, (GLfloat)axis.y, (GLfloat)axis.z);
+	glGetDoublev(GL_MODELVIEW_MATRIX,mouseMatrix);
+	glPopMatrix();
+}
+
+void Viewpoint::mergeMouseMatrix()
+{
+    Matrix4x4 M((double *)rotationMatrix), N((double *)mouseMatrix);
+    M = N * M;
+    M.getData((double *)rotationMatrix);
+    N.setIdentity();
+    N.getData((double *)mouseMatrix);
 }
 
 //////////////////////////////////////////////////////////////////////////////
