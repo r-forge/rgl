@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.2.1 2004/06/22 12:40:15 murdoch Exp $
+// $Id: scene.h,v 1.3.2.2 2004/06/22 13:22:08 murdoch Exp $
 
 
 #include "types.h"
@@ -81,7 +81,7 @@ protected:
   float* arrayptr;
 };
 
-class NormalArray : public VertexArray
+class NormalArray : public VertexArray 
 {
 public:
   void beginUse();
@@ -93,7 +93,7 @@ struct TexCoord
   float s,t;
 };
 
-class TexCoordArray
+class TexCoordArray 
 {
 public:
   TexCoordArray();
@@ -163,10 +163,10 @@ class Viewpoint : public SceneNode
 public:
 
   Viewpoint(PolarCoord position=PolarCoord(0.0f,15.0f), float fov=90.0f, float zoom=0.0f, bool interactive=true);
-
+  
   PolarCoord& getPosition();
   void        setPosition(const PolarCoord& position);
-  float       getZoom(void) const;
+  float       getZoom(void) const; 
   void        setZoom(const float zoom);
   float       getFOV(void) const;
   void        setFOV(const float in_fov);
@@ -174,8 +174,6 @@ public:
   void        setupTransformation(RenderContext* rctx, const Sphere& viewvolumeSphere);
   void        setupOrientation(RenderContext* rctx) const;
   bool        isInteractive() const;
-  //Add by Ming Chen
-  void		  setInteractive(bool in_interactive);
   Frustum     frustum;
 
 private:
@@ -285,14 +283,14 @@ public:
   void draw(RenderContext* renderContext);
 
 private:
-
+  
   Vertex center;
   float  radius;
   float  philow;
   float  phihigh;
   float  thetalow;
   float  thetahigh;
-
+  
   VertexArray   vertexArray;
   NormalArray   normalArray;
   TexCoordArray texCoordArray;
@@ -315,7 +313,7 @@ private:
 class Texture : public AutoDestroy
 {
 public:
-
+ 
   enum Type { ALPHA = 1 , LUMINANCE, LUMINANCE_ALPHA, RGB, RGBA };
 
   Texture(const char* filename, Type type, bool mipmap, unsigned int minfilter, unsigned int magfilter);
@@ -340,11 +338,11 @@ private:
 class Material {
 public:
 
-  enum PolygonMode {
-    FILL_FACE=1,
-    LINE_FACE,
-    POINT_FACE,
-    CULL_FACE
+  enum PolygonMode { 
+    FILL_FACE=1, 
+    LINE_FACE, 
+    POINT_FACE, 
+    CULL_FACE 
   };
 
   Material( Color bg, Color fg );
@@ -430,23 +428,17 @@ private:
   GLenum type;
 };
 
-class PointSet : public PrimitiveSet
-{
+class PointSet : public PrimitiveSet 
+{ 
 public:
   PointSet(Material& material, int in_nelements, double* in_vertex);
 
 };
 
-class LineSet : public PrimitiveSet
-{
+class LineSet : public PrimitiveSet 
+{ 
 public:
   LineSet(Material& material, int in_nelements, double* in_vertex);
-};
-
-class LineStripSet : public PrimitiveSet
-{
-public:
-  LineStripSet(Material& material, int in_nelements, double* in_vertex);
 };
 
 //
@@ -464,13 +456,13 @@ protected:
 };
 
 class TriangleSet : public FaceSet
-{
+{ 
 public:
   TriangleSet(Material& material, int in_nelements, double* in_vertex);
 };
 
-class QuadSet : public FaceSet
-{
+class QuadSet : public FaceSet 
+{ 
 public:
   QuadSet(Material& material, int in_nelements, double* in_vertex);
 };
@@ -604,7 +596,7 @@ struct AxisInfo {
 };
 
 
-class BBoxDeco : public SceneNode
+class BBoxDeco : public SceneNode 
 {
 public:
   BBoxDeco(Material& in_material=defaultMaterial, AxisInfo& xaxis=defaultAxis, AxisInfo& yaxis=defaultAxis, AxisInfo& zaxis=defaultAxis, float marklen=15.0, bool marklen_fract=true);

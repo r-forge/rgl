@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: win32gui.cpp,v 1.3.2.2 2004/05/14 16:02:51 murdoch Exp $
+// $Id: win32gui.cpp,v 1.3.2.3 2004/06/22 13:22:08 murdoch Exp $
 
 #include "win32gui.h"
 
@@ -508,4 +508,5 @@ namespace gui {
     return impl;
   }
 
-};
+} // namespace gui
+

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: gui.cpp,v 1.4.2.2 2004/05/14 16:02:51 murdoch Exp $
+// $Id: gui.cpp,v 1.4.2.3 2004/06/22 13:22:06 murdoch Exp $
 
 #include "gui.h"
 #include "lib.h"
@@ -266,3 +266,4 @@ void Window::wheelRotate(int dir)
 }
 
 }
+
