@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.4 2004/06/22 15:53:45 murdoch Exp $
+## $Id: scene.R,v 1.5.2.5 2004/06/23 22:05:09 murdoch Exp $
 ##
 
 ##
@@ -323,7 +323,7 @@ rgl.spheres <- function( x, y, z,radius=1.0,...)
 ## add texts
 ##
 
-rgl.texts <- function(x, y, z, text, justify="center", ... )
+rgl.texts <- function(x, y, z, text, adj = 0.5, ... )
 {
   rgl.material( ... )
 
@@ -331,13 +331,12 @@ rgl.texts <- function(x, y, z, text, justify="center", ... )
   nvertex <- rgl.nvertex(vertex)
   text    <- rep(text, length.out=nvertex)
 
-  justify <- rgl.enum.halign( justify );
-
-  idata <- as.integer( c(nvertex, justify) )
+  idata <- as.integer(nvertex)
 
   ret <- .C( symbol.C("rgl_texts"),
     success=FALSE,
     idata,
+    as.double(adj),
     as.character(text),
     as.numeric(vertex),
     PACKAGE="rgl"
@@ -578,7 +577,7 @@ quads3d <- function ( x, y, z, ... )
   rgl.primitive( "quadrangles", x, y, z, ... )
 }
 
-text3d <- function(x, y, z, text, justify="center", ... )
+text3d <- function(x, y, z, text, adj = 0.5, ... )
 {
-	rgl.texts(x, y, z, text, justify="center", ... )
+	rgl.texts(x, y, z, text, adj = adj, ... )
 }

@@ -35,13 +35,40 @@ of the triangles, and quadruplets for the quadrilaterals.  Colours are applied v
 if different at each end of a line segment, or each vertex of a polygon, the colours
 are blended over the extent of the object.  Quadrilaterals must be entirely 
 in one plane, or the results are undefined.
+
+These functions call the lower level functions \code{\link{rgl.points}}, \code{\link{rgl.linestrip}},
+and so on, and are provided for convenience.
+
 }
 \author{
   Duncan Murdoch
 }
 
 \examples{
-rgl.clear()
-points3d(rnorm(1000), rnorm(1000), rnorm(1000), color=heat.colors(1000), size=2)
+# Show 12 random vertices in various ways. Force 4-tuples into 
+# planes so that quads3d works.
+x <- rnorm(12)
+y <- rnorm(12)
+z <- rnorm(12)
+for (i in c(4,8,12)) 
+  z[i] <- predict(lm(z ~ x+y, 
+            data=data.frame(x=x[(i-3):i], y=y[(i-3):i], z=z[(i-3):i])))[4]
+
+rgl.open()
+
+points3d(x,y,z)
+lines3d(x-3,y+3,z)
+segments3d(x-6,y+6,z)
+triangles3d(x-9,y+9,z,col='red')
+quads3d(x-12,y+12,z,col='green')  
+text3d(x-15,y+15,z,1:12)
+
+# Add labels
+
+text3d(-3*(0:5)+3, 3*(0:5), 0, 
+       c('points3d','lines3d','segments3d',
+         'triangles3d', 'quads3d','text3d'),
+       adj = 0)
+rgl.bringtotop()
 }
 \keyword{dynamic}

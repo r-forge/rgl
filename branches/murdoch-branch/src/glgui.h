@@ -4,7 +4,7 @@
 // C++ header
 // This file is part of rgl
 //
-// $Id: glgui.h,v 1.1 2003/03/25 00:13:21 dadler Exp $
+// $Id: glgui.h,v 1.1.1.1.2.1 2004/06/23 22:05:10 murdoch Exp $
 
 #include "opengl.h"
 
@@ -22,7 +22,7 @@ public:
     glListBase(listBase);
   };
 
-  void draw(char* text, int length, int justify);
+  void draw(char* text, int length, double adj);
 
   GLuint listBase;
   GLuint firstGlyph;
