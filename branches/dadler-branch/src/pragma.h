@@ -20,6 +20,8 @@
 //
 #ifdef _MSC_VER 
 
+
+#pragma warning(disable:4530)
 /**
  * remove warnings on truncated 'debug information' to 255 characters
  **/

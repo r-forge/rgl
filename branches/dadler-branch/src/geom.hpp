@@ -13,11 +13,15 @@ class Sphere;
 class AABox {
 public:
   AABox();
+  AABox(const AABox& that)
+   : vmin(that.vmin), vmax(that.vmax)
+  { }
   void invalidate(void);
   bool isValid(void) const;
   void operator += (const AABox& aabox);
   void operator += (const Sphere& sphere);
   void operator += (const Vertex& vertex);
+  bool operator < (const AABox& aabox) const;
   Vertex getCenter(void) const;
   Vertex vmin, vmax;
 };

@@ -26,6 +26,7 @@ public:
   void        setupOrientation(RenderContext* rctx) const;
   bool        isInteractive() const;
   Frustum     frustum;
+  Vertex      getCOP(const Sphere& viewvolumeSphere) const;
 
 private:
   PolarCoord  position;

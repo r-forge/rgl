@@ -22,6 +22,7 @@ public:
   virtual void draw(RenderContext* renderContext) = 0;
   const AABox& getBoundingBox() const { return boundingBox; }
   const Material& getMaterial() const { return material; }
+
 protected:
   AABox    boundingBox;
   Material material;

@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: math.h,v 1.4.4.1 2004/05/29 10:43:33 dadler Exp $
+// $Id: math.h,v 1.4.4.2 2004/05/29 13:16:57 dadler Exp $
 
 #include <math.h>
 #include <float.h>
@@ -34,6 +34,7 @@ struct Vertex
 {
   Vertex() {};
   Vertex(float x,float y, float z);
+  Vertex(const Vertex& that) : x(that.x), y(that.y), z(that.z) { }
   float getLength() const;
   void normalize();
   Vertex cross(Vertex op2) const;
@@ -111,6 +112,16 @@ struct PolarCoord
   PolarCoord(const PolarCoord& src) : theta(src.theta), phi(src.phi) {};
   PolarCoord operator + (const PolarCoord& op2) const { return PolarCoord(theta+op2.theta, phi+op2.phi); }
   PolarCoord operator - (const PolarCoord& op2) const { return PolarCoord(theta-op2.theta, phi-op2.phi); }
+  inline Vertex vector() const { 
+    float t = deg2radf(theta);
+    float p = deg2radf(phi);
+    return Vertex (
+      cosf(p) * sinf(t),
+      sinf(p),
+      cosf(p) * cosf(t)
+    );
+  }
+
   float theta;
   float phi;
 };
