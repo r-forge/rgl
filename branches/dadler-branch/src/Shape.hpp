@@ -18,6 +18,7 @@ class Shape : public SceneNode
 public:
   Shape(Material& in_material,TypeID in_typeID=SHAPE);
   virtual void render(RenderContext* renderContext);
+  virtual void renderZSort(RenderContext* renderContext);
   virtual void update(RenderContext* renderContext);
   virtual void draw(RenderContext* renderContext) = 0;
   const AABox& getBoundingBox() const { return boundingBox; }

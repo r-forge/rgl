@@ -17,6 +17,7 @@ public:
   double time;
   double lastTime;
   double deltaTime;
+  Vertex cop;
 };
 
 #endif // RENDERCONTEXT_HPP
