@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.1.1.1.2.2 2004/05/14 16:02:51 murdoch Exp $
+// $Id: device.cpp,v 1.1.1.1.2.3 2004/06/22 12:40:14 murdoch Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -106,4 +106,10 @@ bool Device::pop(TypeID stackTypeID)
 bool Device::snapshot(int format, const char* filename)
 {
   return rglview->snapshot( (PixmapFileFormatID) format, filename);
+}
+
+
+RGLView* Device::getRGLView(void)
+{
+	return rglview;
 }
