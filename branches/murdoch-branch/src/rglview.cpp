@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.10 2004/08/18 16:13:49 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.11 2004/08/19 14:08:00 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -198,7 +198,7 @@ void RGLView::wheelRotate(int dir)
   float zoom = viewpoint->getZoom();
 
 #define ZOOM_STEP   ((ZOOM_MAX - ZOOM_MIN) / 10)
-  
+
   switch(dir)
   {
     case GUI_WheelForward:
@@ -537,6 +537,11 @@ void RGLView::setMouseMode(MouseModeID mode)
 	    viewpoint->setPosition( viewpoint->getPosition() );
 	    View::update();
 	}
+}
+
+MouseModeID RGLView::getMouseMode()
+{
+    return mouseMode;
 }
 
 MouseSelectionID RGLView::getSelectState()
