@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.7.2.3 2004/05/29 14:30:05 dadler Exp $
+// $Id: scene.cpp,v 1.7.2.4 2004/05/30 08:35:04 dadler Exp $
 
 
 #include "scene.h"
@@ -100,6 +100,8 @@ bool Scene::clear(TypeID typeID)
 void Scene::addShape(Shape* shape) {
   const AABox& bbox = shape->getBoundingBox();
   data_bbox += bbox;
+
+  shapes.addTail(shape);
 
   if ( shape->getMaterial().isBlended() ) {
     zsortShapes.push_back(shape);
@@ -270,7 +272,9 @@ void Scene::render(RenderContext* renderContext)
 
 
   //
+  // SETUP BACKGROUND VIEWPOINT PROJECTION
   //
+  // FIXME: move to background
   //
 
   viewpoint->setupFrustum( renderContext, total_bsphere );
@@ -289,7 +293,7 @@ void Scene::render(RenderContext* renderContext)
   if (data_bbox.isValid() ) {
 
     //
-    // SETUP CAMERA
+    // SETUP VIEWPOINT TRANSFORMATION
     //
 
     viewpoint->setupTransformation( renderContext, total_bsphere);
@@ -316,15 +320,22 @@ void Scene::render(RenderContext* renderContext)
       }
     }
 
+// #define NO_BLEND
+
+#ifndef NO_BLEND
+    //
+    // RENDER BLENDED SHAPES
+    //
+    // render shapes in bounding-box sorted order according to cop-distance
+    // FIXME: must be (cop+znear)-distance
+    //
+
     //
     // CALCULATE CENTER OF PROJECTION
     //
 
     renderContext->cop = viewpoint->getCOP(total_bsphere);
 
-    //
-    // RENDER ALPHA SHADED
-    //
     {
       std::vector<Shape*>::iterator iter;
       std::multimap<float, int> distanceMap;
@@ -355,6 +366,7 @@ void Scene::render(RenderContext* renderContext)
         }
       }
     }
+#endif
   }
 }
 

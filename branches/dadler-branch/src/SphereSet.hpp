@@ -9,19 +9,13 @@ private:
   ARRAY<Vertex> center;
   ARRAY<float>  radius;
   SphereMesh    sphereMesh;
-/*
-  int nsphere;
-  VertexArray center;
-
-  int nradius;
-  union radiusInfo {
-    float* arrayptr;
-    float  value;
-  } radius;
-*/
 public:
   SphereSet(Material& in_material, int nsphere, double* center, int nradius, double* radius);
   ~SphereSet();
+
+  /**
+   * overload
+   **/
   void draw(RenderContext* renderContext);
 };
 

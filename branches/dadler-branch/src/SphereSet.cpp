@@ -47,5 +47,3 @@ void SphereSet::draw(RenderContext* renderContext)
   material.endUse(renderContext);
 }
 
-
-
