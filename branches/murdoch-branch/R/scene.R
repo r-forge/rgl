@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.14 2004/08/19 16:44:25 murdoch Exp $
+## $Id: scene.R,v 1.5.2.15 2004/09/03 17:46:26 murdoch Exp $
 ##
 
 ##
@@ -476,21 +476,28 @@ rgl.window2user <- function( x, y, z = 0, projection = rgl.projection())
   return(matrix(ret$point, ncol(window), 3, byrow = TRUE))
 }
 
-rgl.mouseHandlers <- function(type = c('trackball','polar','selection'))
+rgl.mouseMode <- function(button = c("left", "middle", "right"),
+                          handler = c("trackball", "polar", "selection", "zoom", "fov"))
 {
-	mode <- match.arg(type)
-	mode <- rgl.enum(mode, trackball = 1, polar = 2, selection = 3)
+	mode <- match.arg(handler)
+	mode <- rgl.enum(mode, trackball = 1, polar = 2, selection = 3, zoom = 4, fov = 5)
 	idata <- as.integer(mode)
 	
-	ret <- .C( symbol.C("rgl_mousemode"), 
+	button <- match.arg(button)
+	button <- rgl.enum(button, left = 1, middle = 2, right = 3);
+	
+	ddata <- as.integer(button)
+	
+	ret <- .C( symbol.C("rgl_mouseMode"), 
 		    success=FALSE,
-		    mode=idata,
+		    mode = idata,
+		    ddata,
 		    PACKAGE="rgl"
 		)
 		
 		if (! ret$success)
 		    stop("rgl_mouseHandlers")
-	c('trackball', 'polar', 'selection')[ret$mode]
+	c("trackball", "polar", "selection", "zoom", "fov")[ret$mode]
 }
 
 
@@ -509,11 +516,11 @@ rgl.selectstate <- function()
 }
 
 
-rgl.select <- function()
+rgl.select <- function(button = c("left", "middle", "right"))
 {
+	button <- match.arg(button)
 	
-	oldhandlers <- rgl.mouseHandlers("selection")
-	
+	oldhandler <- rgl.mouseMode(button, "selection")
 	
 	# number 3 means the mouse selection is done. ?? how to change 3 to done
 	while ((result <- rgl.selectstate())$state != 3)
@@ -521,7 +528,7 @@ rgl.select <- function()
 	
 	rgl.setselectstate("none")
 	
-	rgl.mouseHandlers(oldhandlers)
+	rgl.mouseMode(button, oldhandler)
 
 	return(result$mouseposition)
 }

@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.9 2004/08/18 16:13:49 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.10 2004/09/03 17:46:27 murdoch Exp $
 
 
 #include "gui.h"
@@ -14,7 +14,7 @@
 
 using namespace gui;
 
-enum MouseModeID {mmNAVIGATING = 1, mmPOLAR, mmSELECTING};
+enum MouseModeID {mmTRACKBALL = 1, mmPOLAR, mmSELECTING, mmZOOM, mmFOV};
 enum MouseSelectionID {msNONE = 1, msCHANGING, msDONE};
 
 class RGLView : public View
@@ -36,8 +36,8 @@ public:
   void keyPress(int code);
   Scene* getScene();
 
-  MouseModeID getMouseMode();
-  void        setMouseMode(MouseModeID mode);
+  MouseModeID getMouseMode(int button);
+  void        setMouseMode(int button, MouseModeID mode);
   MouseSelectionID getSelectState();
   void        setSelectState(MouseSelectionID state);
   double*     getMousePosition();
@@ -53,8 +53,14 @@ protected:
 
 
 private:
+	typedef void (RGLView::*viewControlPtr)(int mouseX,int mouseY);
+	typedef void (RGLView::*viewControlEndPtr)();
 
-  
+	viewControlPtr	ButtonBeginFunc[3], ButtonUpdateFunc[3];
+	viewControlEndPtr ButtonEndFunc[3];
+
+	void setDefaultMouseFunc();
+
 //
 // DRAG USER-INPUT
 //
@@ -62,10 +68,6 @@ private:
   int drag;
 
 // o DRAG FEATURE: adjustDirection
-
-  void adjustDirectionBegin(int mouseX, int mouseY);
-  void adjustDirectionUpdate(int mouseX, int mouseY);
-  void adjustDirectionEnd();
 
   void polarBegin(int mouseX, int mouseY);
   void polarUpdate(int mouseX, int mouseY);
@@ -98,8 +100,8 @@ private:
 
 // o DRAG FEATURE: mouseSelection
   void mouseSelectionBegin(int mouseX,int mouseY);
-  void mouseSelectionContinue(int mouseX,int mouseY);
-  void mouseSelectionEnd(int mouseX,int mouseY);
+  void mouseSelectionUpdate(int mouseX,int mouseY);
+  void mouseSelectionEnd();
 
 //
 // RENDER SYSTEM
@@ -124,7 +126,7 @@ private:
 
   int  flags;
 
-  MouseModeID mouseMode;
+  MouseModeID mouseMode[3];
   MouseSelectionID selectState;
   double  mousePosition[4];
 
