@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.2.2.3 2004/06/11 13:31:15 dadler Exp $
+// $Id: device.cpp,v 1.2.2.4 2004/06/12 16:11:32 dadler Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -94,11 +94,14 @@ void Device::close()
 
 void Device::run()
 {
+  try {
   scene   = new Scene();
   rglview = new RGLView(scene);
   window  = new Window( rglview, getGUIFactory() );
   window->setDestroyHandler(this, window);
-  Task::run();
+
+  Player::run();
+
 }
 
 void Device::shutdown()
