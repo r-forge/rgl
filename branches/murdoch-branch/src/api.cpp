@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.6 2004/06/22 15:53:45 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.7 2004/06/23 22:05:10 murdoch Exp $
 
 #include "lib.h"
 
@@ -63,7 +63,7 @@ EXPORT_SYMBOL void rgl_bg       (int* successptr, int* idata);
 EXPORT_SYMBOL void rgl_bbox     (int* successptr, int* idata, double* ddata, double* xat, char** xtext, double* yat, char** ytext, double* zat, char** ztext);
 
 EXPORT_SYMBOL void rgl_primitive(int* successptr, int* idata, double* vertex);
-EXPORT_SYMBOL void rgl_texts    (int* successptr, int* idata, char** text, double* vertex);
+EXPORT_SYMBOL void rgl_texts    (int* successptr, int* idata, double* adj, char** text, double* vertex);
 EXPORT_SYMBOL void rgl_spheres  (int* successptr, int* idata, double* vertex, double* radius);
 EXPORT_SYMBOL void rgl_surface  (int* successptr, int* idata, double* x, double* z, double* y);
 EXPORT_SYMBOL void rgl_sprites  (int* successptr, int* idata, double* vertex, double* radius);
@@ -503,7 +503,7 @@ void rgl_material(int *successptr, int* idata, char** cdata, double* ddata)
   *successptr = success;
 }
 
-void rgl_texts(int* successptr, int* idata, char** text, double* vertex)
+void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* vertex)
 {
   bool success = false;
 
@@ -511,9 +511,8 @@ void rgl_texts(int* successptr, int* idata, char** text, double* vertex)
 
   if (device) {
     int ntext   = idata[0];
-    int justify = idata[2];
 
-    success = device->add( new TextSet(currentMaterial, ntext, text, vertex, justify) );
+    success = device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj) );
   }
 
   *successptr = (int) success;
