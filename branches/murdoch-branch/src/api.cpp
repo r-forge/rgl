@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.10 2004/06/29 12:54:58 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.11 2004/08/05 14:31:29 murdoch Exp $
 
 #include "lib.h"
 
@@ -75,6 +75,8 @@ EXPORT_SYMBOL void rgl_mousemode(int* successptr, int* idata);
 EXPORT_SYMBOL void rgl_selectstate(int* successptr, int* selectstate, double* locations);
 EXPORT_SYMBOL void rgl_setselectstate(int* successptr, int *idata);
 EXPORT_SYMBOL void rgl_projection(int* successptr, int* set, double* model, double* proj, int* view);
+EXPORT_SYMBOL void rgl_getUserMatrix(int* successptr, double* userMatrix);
+EXPORT_SYMBOL void rgl_setUserMatrix(int* successptr, double* userMatrix);
 
 } // extern C
 
@@ -720,6 +722,42 @@ void rgl_projection(int* successptr, int* set, double* model, double* proj, int*
 	}
 
 	*successptr = success;
+
+}
+
+void rgl_getUserMatrix(int* successptr, double* userMatrix)
+{
+	bool success = false;
+  	Device* device = deviceManager->getCurrentDevice();
+
+  	if (device) {
+
+		RGLView* rglview = device->getRGLView();
+		rglview->getUserMatrix(userMatrix);
+
+    	success = true;
+
+  	}
+
+  *successptr = success;
+}
+
+void rgl_setUserMatrix(int* successptr, double* userMatrix)
+{
+
+	bool success = false;
+  	Device* device = deviceManager->getCurrentDevice();
+
+  	if (device) {
+
+		RGLView* rglview = device->getRGLView();
+		rglview->setUserMatrix(userMatrix);
+
+		success = true;
+
+  	}
+
+  *successptr = success;
 
 }
 

@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.7 2004/06/29 12:54:58 murdoch Exp $
+## $Id: scene.R,v 1.5.2.8 2004/08/05 14:31:29 murdoch Exp $
 ##
 
 ##
@@ -586,3 +586,31 @@ text3d <- function(x, y, z, text, adj = 0.5, ... )
 {
 	rgl.texts(x, y, z, text, adj = adj, ... )
 }
+
+getUserMatrix <- function()
+{
+	ret <- .C( symbol.C("rgl_getUserMatrix"),
+    	success=FALSE,
+    	userMatrix = double(16),
+    	PACKAGE="rgl"
+  	)
+
+  	if (! ret$success)
+    	stop("getUserMatrix failed")
+    return(matrix(ret$userMatrix, 4, 4))
+}
+
+setUserMatrix <- function(userMatrix)
+{
+	ret <- .C( symbol.C("rgl_setUserMatrix"),
+    	success=FALSE,
+    	userMatrix = as.double(userMatrix),
+    	PACKAGE="rgl"
+  	)
+
+  	if (! ret$success)
+    	stop("setUserMatrix failed")
+}
+
+
+	

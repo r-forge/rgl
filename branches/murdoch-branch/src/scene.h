@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.2.6 2004/07/21 20:01:27 murdoch Exp $
+// $Id: scene.h,v 1.3.2.7 2004/08/05 14:31:30 murdoch Exp $
 
 
 #include "types.h"
@@ -176,15 +176,15 @@ public:
   bool        isInteractive() const;
   void        updateMouseMatrix(Vertex dragStart,Vertex dragCurrent);
   void 	      mergeMouseMatrix();
-  void        getRotationMatrix(double* dest);
-  void	      setRotationMatrix(double* src);
+  void        getUserMatrix(double* dest);
+  void	      setUserMatrix(double* src);
   Frustum     frustum;
 
 private:
   float       fov;
   float       zoom;
   bool        interactive;
-  GLdouble    rotationMatrix[16], mouseMatrix[16];
+  GLdouble    userMatrix[16], mouseMatrix[16];
 
 };
 
