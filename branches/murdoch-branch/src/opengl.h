@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: opengl.h,v 1.2.2.1 2004/06/22 13:22:07 murdoch Exp $
+// $Id: opengl.h,v 1.2.2.2 2004/08/09 19:29:44 murdoch Exp $
 
 #ifdef _WIN32
 #include <windows.h>

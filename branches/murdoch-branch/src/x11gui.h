@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: x11gui.h,v 1.4.2.1 2004/06/22 13:22:09 murdoch Exp $
+// $Id: x11gui.h,v 1.4.2.2 2004/08/09 19:29:45 murdoch Exp $
 
 
 #include "gui.h"

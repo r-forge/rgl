@@ -1,6 +1,6 @@
 # demo: lsystem.r
 # author: Daniel Adler
-# $Id: lsystem.r,v 1.2.2.3 2004/06/22 13:22:04 murdoch Exp $
+# $Id: lsystem.r,v 1.2.2.4 2004/08/09 19:29:43 murdoch Exp $
 
 #
 # geometry 

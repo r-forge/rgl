@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.7 2004/08/05 14:31:30 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.8 2004/08/09 19:29:44 murdoch Exp $
 
 
 #include "gui.h"
@@ -54,7 +54,7 @@ protected:
 
 private:
 
-
+  
 //
 // DRAG USER-INPUT
 //

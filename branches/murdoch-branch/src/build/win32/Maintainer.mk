@@ -3,7 +3,7 @@
 #
 # Usage: make info 
 #
-# $Id: Maintainer.mk,v 1.8.2.1 2004/06/22 13:22:09 murdoch Exp $
+# $Id: Maintainer.mk,v 1.8.2.2 2004/08/09 19:29:45 murdoch Exp $
 #
 
 all: info

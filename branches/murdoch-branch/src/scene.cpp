@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.9 2004/08/06 20:00:44 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.10 2004/08/09 19:29:44 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -32,7 +32,7 @@ void copy(double* from, Vertex* to, int size)
 class StringArrayImpl : public AutoDestroy
 {
 public:
-  StringArrayImpl(int in_ntexts, char** in_texts)
+  StringArrayImpl(int in_ntexts, char** in_texts) 
   {
     int i;
 
@@ -126,7 +126,7 @@ String StringArrayIterator::getCurrent()
   return String(array->impl->lengths[cnt], textptr );
 }
 
-bool StringArrayIterator::isDone() const
+bool StringArrayIterator::isDone() const 
 {
   if (array->impl)
     return (cnt == array->impl->ntexts) ? true : false;
@@ -176,11 +176,11 @@ static void StringToRGB8(const char* string, u8* colorptr) {
     char c;
 
     while( (c = *strptr++) != '\0' ) {
-
+  
       u8 component;
 
       component = (HexCharToNibble(c) << 4);
-
+      
       if ( (c = *strptr++) == '\0')
         break;
 
@@ -259,7 +259,7 @@ void Color::useColor() const
 //   ColorArray
 //
 
-ColorArray::ColorArray()
+ColorArray::ColorArray() 
 {
   arrayptr = NULL;
   ncolor   = 0;
@@ -340,7 +340,7 @@ void ColorArray::set( int in_ncolor, int* in_color, int in_nalpha, double* in_al
       ptr[3] = alpha;
     } else
       ptr[3] = 0xFF;
-    ptr += 4;
+    ptr += 4;    
   }
 }
 
@@ -384,7 +384,7 @@ void ColorArray::recycle(unsigned int newsize)
           arrayptr[i*4+2] = arrayptr[ m + 2];
           arrayptr[i*4+3] = arrayptr[ m + 3];
         }
-      } else
+      } else 
         arrayptr = NULL;
 
       ncolor = newsize;
@@ -525,10 +525,10 @@ Scene::Scene()
   viewpoint  = NULL;
   nlights    = 0;
   bboxDeco   = NULL;
-
+ 
   add( new Background );
   add( new Viewpoint );
-  add( new Light );
+  add( new Light ); 
 }
 
 Scene::~Scene()
@@ -543,7 +543,7 @@ Scene::~Scene()
     delete viewpoint;
 }
 
-Viewpoint* Scene::getViewpoint()
+Viewpoint* Scene::getViewpoint() 
 {
   return viewpoint;
 }
@@ -695,7 +695,7 @@ void Scene::render(RenderContext* renderContext)
   clearFlags  |= GL_DEPTH_BUFFER_BIT;
 
   // Color Buffer (optional - depends on background node)
-
+  
   clearFlags |= background->setupClear(renderContext);
 
   // clear
@@ -713,8 +713,8 @@ void Scene::render(RenderContext* renderContext)
   Sphere total_bsphere;
 
   if (data_bbox.isValid()) {
-
-    //
+    
+    // 
     // GET DATA VOLUME SPHERE
     //
 
@@ -744,7 +744,7 @@ void Scene::render(RenderContext* renderContext)
 
   background->render(renderContext);
 
-
+  
   //
   // RENDER MODEL
   //
@@ -778,7 +778,7 @@ void Scene::render(RenderContext* renderContext)
       if (!shape->getMaterial().alphablend)
         shape->render(renderContext);
     }
-
+    
     //
     // RENDER ALPHA SHADED
     //
@@ -954,12 +954,12 @@ void Viewpoint::setupOrientation(RenderContext* rctx) const
 }
 
 void Viewpoint::setupTransformation(RenderContext* rctx, const Sphere& viewSphere)
-{
+{     
   // projection
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glFrustum(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.znear, frustum.zfar);
+  glFrustum(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.znear, frustum.zfar);  
 
   // modelview
 
@@ -1015,7 +1015,7 @@ void Viewpoint::setUserMatrix(double* src)
 //
 
 Light::Light( PolarCoord in_position, bool in_viewpoint, Color in_ambient, Color in_diffuse, Color in_specular )
-: SceneNode(LIGHT),
+: SceneNode(LIGHT), 
   ambient(in_ambient),
   diffuse(in_diffuse),
   specular(in_specular),
@@ -1034,7 +1034,7 @@ Light::Light( PolarCoord in_position, bool in_viewpoint, Color in_ambient, Color
   position[3] = 0.0f;
 }
 
-void Light::setup(RenderContext* renderContext)
+void Light::setup(RenderContext* renderContext) 
 {
   glLightfv(id, GL_AMBIENT,   ambient.data  );
   glLightfv(id, GL_DIFFUSE,   diffuse.data  );
@@ -1060,7 +1060,7 @@ void Light::setup(RenderContext* renderContext)
 
 
 SphereMesh::SphereMesh()
-: center( Vertex(0.0f,0.0f,0.0f) ),
+: center( Vertex(0.0f,0.0f,0.0f) ), 
   radius( 1.0f ),
   philow(-90.0f ),
   phihigh( 90.0f ),
@@ -1097,7 +1097,7 @@ void SphereMesh::setupMesh()
     normalArray.alloc(nvertex);
 
   if (genTexCoord)
-    texCoordArray.alloc(nvertex);
+    texCoordArray.alloc(nvertex);  
 }
 
 void SphereMesh::setCenter(const Vertex& in_center)
@@ -1208,7 +1208,7 @@ void Shape::render(RenderContext* renderContext)
     glNewList(displayList, GL_COMPILE_AND_EXECUTE);
     draw(renderContext);
     glEndList();
-  } else
+  } else 
     glCallList(displayList);
 }
 
@@ -1219,7 +1219,7 @@ void Shape::render(RenderContext* renderContext)
 //
 
 Material::Material(Color bg, Color fg)
-:
+: 
   ambient(0.0f,0.0f,0.0f,1.0f),
   specular(1.0f,1.0f,1.0f,1.0f),
   emission(0.0f,0.0f,0.0f,0.0f),
@@ -1230,7 +1230,7 @@ Material::Material(Color bg, Color fg)
   front(FILL_FACE),
   back(FILL_FACE),
   smooth(true),
-  lit(true),
+  lit(true), 
   fog(true),
   useColorArray(false)
 {
@@ -1259,9 +1259,9 @@ void Material::beginUse(RenderContext* renderContext)
   glDisable(GL_CULL_FACE);
 
   for (int i=0;i<2;i++) {
-
+    
     PolygonMode mode = (i==0) ? front : back;
-
+    
     GLenum face = (i==0) ? GL_FRONT : GL_BACK;
 
     switch (mode) {
@@ -1396,7 +1396,7 @@ void Surface::setNormal(int ix, int iz)
     if (iz < nz-1)  // right/bottom
       n[num++] = vertexArray.getNormal(i, i+nx, i+1 );
   }
-  if (ix > 0) {
+  if (ix > 0) { 
     if (iz > 0)     // left/top
       n[num++] = vertexArray.getNormal(i, i-nx, i-1 );
     if (iz < nz-1)  // left/bottom
@@ -1457,8 +1457,8 @@ void Surface::draw(RenderContext* renderContext)
 //
 
 SphereSet::SphereSet(Material& in_material, int in_ncenter, double* in_center, int in_nradius, double* in_radius)
- : Shape(in_material),
-   center(in_ncenter, in_center),
+ : Shape(in_material), 
+   center(in_ncenter, in_center), 
    radius(in_nradius, in_radius)
 {
   material.colorPerVertex(false);
@@ -1469,7 +1469,7 @@ SphereSet::SphereSet(Material& in_material, int in_ncenter, double* in_center, i
     sphereMesh.setGenTexCoord(true);
 
   sphereMesh.setGlobe(16,16);
-
+  
   for (int i=0;i<center.size();i++)
     boundingBox += Sphere( center.get(i), radius.getRecycled(i) );
 }
@@ -1483,7 +1483,7 @@ void SphereSet::draw(RenderContext* renderContext)
   material.beginUse(renderContext);
 
   for(int i=0;i<center.size();i++) {
-
+  
     material.useColor(i);
 
     sphereMesh.setCenter( center.get(i) );
@@ -1505,10 +1505,10 @@ void SphereSet::draw(RenderContext* renderContext)
 //
 
 SpriteSet::SpriteSet(Material& in_material, int in_nvertex, double* in_vertex, int in_nsize, double* in_size)
- : Shape(in_material),
+ : Shape(in_material), 
   vertex(in_nvertex, in_vertex),
    size(in_nsize, in_size)
-{
+{ 
   material.colorPerVertex(false);
 
   for(int i=0;i<vertex.size();i++)
@@ -1519,7 +1519,7 @@ SpriteSet::~SpriteSet()
 { }
 
 void SpriteSet::render(RenderContext* renderContext)
-{
+{ 
   double mdata[16] = { 0 };
 
   glGetDoublev(GL_MODELVIEW_MATRIX, mdata);
@@ -1527,11 +1527,11 @@ void SpriteSet::render(RenderContext* renderContext)
   Matrix4x4 m(mdata);
 
   material.beginUse(renderContext);
-
+  
   glPushMatrix();
 
   glLoadIdentity();
-
+  
   bool doTex = (material.texture) ? true : false;
 
   glNormal3f(0.0f,0.0f,1.0f);
@@ -1572,7 +1572,7 @@ void SpriteSet::render(RenderContext* renderContext)
 }
 
 void SpriteSet::draw(RenderContext* renderContext)
-{
+{ 
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1615,11 +1615,11 @@ void PrimitiveSet::draw(RenderContext* renderContext) {
 //   PointSet
 //
 
-PointSet::PointSet(Material& in_material, int in_nelements, double* in_vertex)
-  : PrimitiveSet(in_material, GL_POINTS, in_nelements, in_vertex)
+PointSet::PointSet(Material& in_material, int in_nelements, double* in_vertex) 
+  : PrimitiveSet(in_material, GL_POINTS, in_nelements, in_vertex) 
 {
   material.lit = false;
-}
+} 
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1627,7 +1627,7 @@ PointSet::PointSet(Material& in_material, int in_nelements, double* in_vertex)
 //   LineSet
 //
 
-LineSet::LineSet(Material& in_material, int in_nelements, double* in_vertex)
+LineSet::LineSet(Material& in_material, int in_nelements, double* in_vertex) 
   : PrimitiveSet(in_material, GL_LINES, in_nelements, in_vertex)
 {
   material.lit = false;
@@ -1650,7 +1650,7 @@ LineStripSet::LineStripSet(Material& in_material, int in_nelements, double* in_v
 //   FaceSet
 //
 
-FaceSet::FaceSet(Material& in_material, GLenum in_type, int in_nelements, double* in_vertex)
+FaceSet::FaceSet(Material& in_material, GLenum in_type, int in_nelements, double* in_vertex)  
 : PrimitiveSet(in_material, in_type, in_nelements, in_vertex)
 {
 }
@@ -1671,8 +1671,8 @@ void FaceSet::draw(RenderContext* renderContext) {
 //   TriangleSet
 //
 
-TriangleSet::TriangleSet(Material& in_material, int in_nelements, double* in_vertex)
-  : FaceSet(in_material, GL_TRIANGLES,     in_nelements, in_vertex)
+TriangleSet::TriangleSet(Material& in_material, int in_nelements, double* in_vertex) 
+  : FaceSet(in_material, GL_TRIANGLES,     in_nelements, in_vertex) 
 {
   if (material.lit) {
     normalArray.alloc(nelements);
@@ -1688,8 +1688,8 @@ TriangleSet::TriangleSet(Material& in_material, int in_nelements, double* in_ver
 //   QuadSet
 //
 
-QuadSet::QuadSet(Material& in_material, int in_nelements, double* in_vertex)
-  : FaceSet(in_material, GL_QUADS,     in_nelements, in_vertex)
+QuadSet::QuadSet(Material& in_material, int in_nelements, double* in_vertex) 
+  : FaceSet(in_material, GL_QUADS,     in_nelements, in_vertex) 
 {
   if (material.lit) {
     normalArray.alloc(nelements);
@@ -1811,7 +1811,7 @@ void Background::render(RenderContext* renderContext)
   const AABox& boundingBox = renderContext->scene->getBoundingBox();
 
   // setup fog
-
+  
   if ((fogtype != FOG_NONE) && (boundingBox.isValid() )) {
     // Sphere bsphere(boundingBox);
 
@@ -1838,8 +1838,8 @@ void Background::render(RenderContext* renderContext)
     glDisable(GL_FOG);
   }
 
-  // render bg sphere
-
+  // render bg sphere 
+  
   if (sphere) {
 
     float fov = renderContext->viewpoint->getFOV();
@@ -1874,11 +1874,11 @@ void Background::render(RenderContext* renderContext)
     glTranslatef(0.0f,0.0f,-znear);
 
     renderContext->viewpoint->setupOrientation(renderContext);
-
+    
 
     Shape::render(renderContext);
 
-  }
+  } 
 }
 
 void Background::draw(RenderContext* renderContext)
@@ -1886,9 +1886,9 @@ void Background::draw(RenderContext* renderContext)
   glPushAttrib(GL_ENABLE_BIT);
 
   material.beginUse(renderContext);
-
+  
   material.useColor(1);
-
+ 
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
 
@@ -1961,7 +1961,7 @@ Texture::~Texture()
 }
 
 
-bool Texture::isValid() const
+bool Texture::isValid() const 
 {
   return (pixmap) ? true : false;
 }
@@ -1971,10 +1971,10 @@ unsigned int texsize(unsigned int s)
   return 1U << msb(s-1);
 }
 
-static void printGluErrorMessage(GLint error)
+static void printGluErrorMessage(GLint error) 
 {
   const GLubyte* gluError;
-  char buf[256];
+  char buf[256];        
   gluError = gluErrorString (error);
   sprintf(buf, "GLU Library Error : %s", (const char*) gluError);
   printMessage(buf);
@@ -2053,18 +2053,18 @@ void Texture::beginUse(RenderContext* renderContext)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, ualign);
     GLenum gl_type = GL_UNSIGNED_BYTE;
-
-    unsigned int maxSize;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, (int*) &maxSize);
-
-    if (mipmap) {
-      int gluError = gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, pixmap->width, pixmap->height, format, gl_type, pixmap->data);
+    
+    unsigned int maxSize;    
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, (int*) &maxSize);        
+    
+    if (mipmap) {                  
+      int gluError = gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, pixmap->width, pixmap->height, format, gl_type, pixmap->data);    
       if (gluError)
         printGluErrorMessage(gluError);
     } else {
       unsigned int width  = texsize(pixmap->width);
       unsigned int height = texsize(pixmap->height);
-
+      
       if ( (width > maxSize) || (height > maxSize) ) {
         char buf[256];
         sprintf(buf, "GL Library : Maximum texture size of %dx%d exceeded.\n(Perhaps enabling mipmapping could help.)", maxSize,maxSize);
@@ -2080,7 +2080,7 @@ void Texture::beginUse(RenderContext* renderContext)
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, pixmap->width, pixmap->height, 0, format, gl_type , pixmap->data);
       }
     }
-
+    
     delete pixmap;
     pixmap = NULL;
   }
@@ -2122,7 +2122,7 @@ AxisInfo::AxisInfo()
 AxisInfo::AxisInfo(int in_nticks, double* in_ticks, char** in_texts, int in_len, float in_unit)
 : textArray(in_nticks, in_texts)
 {
-
+ 
   int i;
 
   nticks = in_nticks;
@@ -2140,7 +2140,7 @@ AxisInfo::AxisInfo(int in_nticks, double* in_ticks, char** in_texts, int in_len,
       ticks[i] = (float) in_ticks[i];
 
   } else {
-
+    
     if (unit > 0)
       mode = AXIS_UNIT;
     else if (len > 0)
@@ -2151,7 +2151,7 @@ AxisInfo::AxisInfo(int in_nticks, double* in_ticks, char** in_texts, int in_len,
   }
 }
 
-AxisInfo::AxisInfo(AxisInfo& from)
+AxisInfo::AxisInfo(AxisInfo& from) 
 : textArray(from.textArray)
 {
   mode = from.mode;
@@ -2235,27 +2235,27 @@ struct Edge{
   Vertex4 dir;
 };
 
-static Edge xaxisedge[4] = {
-  Edge( 5,4, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
+static Edge xaxisedge[4] = { 
+  Edge( 5,4, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
   Edge( 0,1, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ),
   Edge( 6,7, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
   Edge( 3,2, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) )
 };
-static Edge yaxisedge[8] = {
+static Edge yaxisedge[8] = { 
   Edge( 5,7, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 7,5, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
-  Edge( 6,4, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 4,6, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
-  Edge( 2,0, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ),
+  Edge( 7,5, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
+  Edge( 6,4, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ), 
+  Edge( 4,6, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
+  Edge( 2,0, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ), 
   Edge( 0,2, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 3,1, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
+  Edge( 3,1, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
   Edge( 1,3, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) )
 };
-static Edge zaxisedge[4] = {
-  Edge( 1,5, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 4,0, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 7,3, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
-  Edge( 2,6, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) )
+static Edge zaxisedge[4] = { 
+  Edge( 1,5, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
+  Edge( 4,0, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ), 
+  Edge( 7,3, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
+  Edge( 2,6, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ) 
 };
 
 
@@ -2326,7 +2326,7 @@ void BBoxDeco::render(RenderContext* renderContext)
 
     for(i=0;i<8;i++)
       eyev[i] = modelview * boxv[i];
-
+ 
     // setup material
 
     material.beginUse(renderContext);
@@ -2345,7 +2345,7 @@ void BBoxDeco::render(RenderContext* renderContext)
 
       const Vertex4 q = modelview * side[i].normal;
       const Vertex4 view(0.0f,0.0f,1.0f,0.0f);
-
+      
       float cos_a = view * q;
 
       const bool front = (cos_a >= 0.0f) ? true : false;
@@ -2364,7 +2364,7 @@ void BBoxDeco::render(RenderContext* renderContext)
           int to   = side[i].vidx[(j+1)%4];
 
           adjacent[from][to] = 1;
-
+          
           // feed vertex
 
           Vertex4& v = boxv[ side[i].vidx[j] ];
@@ -2401,7 +2401,7 @@ void BBoxDeco::render(RenderContext* renderContext)
       switch(i)
       {
         case 0:
-          axis     = &xaxis;
+          axis     = &xaxis;       
           axisedge = xaxisedge;
           nedges   = 4;
           valueptr = &v.x;
@@ -2431,23 +2431,23 @@ void BBoxDeco::render(RenderContext* renderContext)
         continue;
 
       // search z-nearest contours
-
+      
       float d = FLT_MAX;
       Edge* edge = NULL;
 
       for(j=0;j<nedges;j++) {
-
+  
         int from = axisedge[j].from;
         int to   = axisedge[j].to;
 
         if ((adjacent[from][to] == 1) && (adjacent[to][from] == 0)) {
 
           // found contour
-
+          
           float dtmp = -(eyev[from].z + eyev[to].z)/2.0f;
 
           if (dtmp < d) {
-
+  
             // found near contour
 
             d = dtmp;
@@ -2455,7 +2455,7 @@ void BBoxDeco::render(RenderContext* renderContext)
 
           }
 
-        }
+        } 
 
       }
 
@@ -2478,7 +2478,7 @@ void BBoxDeco::render(RenderContext* renderContext)
                 // clip marks
 
                 if ((value >= low) && (value <= high)) {
-
+                
                   String string = iter.getCurrent();
                   *valueptr = value;
                   axis->draw(renderContext, v, edge->dir, marklen, string);
@@ -2494,7 +2494,7 @@ void BBoxDeco::render(RenderContext* renderContext)
               for(int k=0;k<axis->len;k++)
               {
                 float value = low + delta * (float)k;
-
+                
                 *valueptr = value;
 
                 char text[32];

@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.10 2004/08/06 20:00:43 murdoch Exp $
+## $Id: scene.R,v 1.5.2.11 2004/08/09 19:29:43 murdoch Exp $
 ##
 
 ##
@@ -397,7 +397,6 @@ rgl.sprites <- function( x, y, z, radius=1.0, ... )
 ## convert user coordinate to window coordinate
 ## Ming Chen
 
-
 rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
 {
   
@@ -520,7 +519,7 @@ rgl.getprojection <- function()
     )
     
     if (! ret$success)
-	    stop("rgl_getprojection")
+	    stop("rgl_projection")
 	    
     list(model = matrix(ret$model, 4, 4),
     	 proj = matrix(ret$proj, 4, 4),

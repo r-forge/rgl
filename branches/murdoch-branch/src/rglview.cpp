@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.8 2004/08/05 15:38:00 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.9 2004/08/09 19:29:44 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -198,7 +198,7 @@ void RGLView::wheelRotate(int dir)
   float zoom = viewpoint->getZoom();
 
 #define ZOOM_STEP   ((ZOOM_MAX - ZOOM_MIN) / 10)
-
+  
   switch(dir)
   {
     case GUI_WheelForward:
