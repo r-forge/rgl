@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.9 2004/08/05 15:38:00 murdoch Exp $
+## $Id: scene.R,v 1.5.2.10 2004/08/06 20:00:43 murdoch Exp $
 ##
 
 ##
@@ -64,14 +64,16 @@ rgl.pop <- function( type = "shapes" )
 ##
 ##
 
-rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, interactive = TRUE )
+rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, interactive = TRUE, userMatrix )
 {
-  zoom <- rgl.clamp(zoom,0,1)
+  zoom <- rgl.clamp(zoom,-0.1,1)
   phi  <- rgl.clamp(phi,-90,90)
   fov  <- rgl.clamp(fov,0,180)
 
+  if (missing(userMatrix)) 
+    userMatrix <- rotate3d(phi*pi/180, 1, 0, 0) %*% rotate3d(-theta*pi/180, 0, 1, 0)
   idata <- as.integer(c(interactive))
-  ddata <- as.numeric(c(theta,phi,fov,zoom))
+  ddata <- as.numeric(c(fov,zoom,userMatrix[1:16]))
 
   ret <- .C( symbol.C("rgl_viewpoint"),
     success=FALSE,
@@ -84,6 +86,22 @@ rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, inte
     stop("rgl_viewpoint")
 }
 
+##
+## get zoom
+##
+##
+
+rgl.zoom <- function()
+{
+    ret <- .C( symbol.C("rgl_zoom"), 
+      success=FALSE,
+      zoom = numeric(1), 
+      PACKAGE = "rgl")
+      
+    if (! ret$success)
+      stop("rgl_zoom")
+    ret$zoom  
+}
 
 ##
 ## set background

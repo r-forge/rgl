@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.11 2004/08/05 14:31:29 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.12 2004/08/06 20:00:44 murdoch Exp $
 
 #include "lib.h"
 
@@ -77,6 +77,7 @@ EXPORT_SYMBOL void rgl_setselectstate(int* successptr, int *idata);
 EXPORT_SYMBOL void rgl_projection(int* successptr, int* set, double* model, double* proj, int* view);
 EXPORT_SYMBOL void rgl_getUserMatrix(int* successptr, double* userMatrix);
 EXPORT_SYMBOL void rgl_setUserMatrix(int* successptr, double* userMatrix);
+EXPORT_SYMBOL void rgl_zoom(int* successptr, double* zoom);
 
 } // extern C
 
@@ -354,17 +355,30 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
 
   if (device) {
 
-    float theta       = (float) ddata[0];
-    float phi         = (float) ddata[1];
-    float fov         = (float) ddata[2];
-    float zoom        = (float) ddata[3];
+    float fov         = (float) ddata[0];
+    float zoom        = (float) ddata[1];
 
     int   interactive =         idata[0];
 
-    success = device->add( new Viewpoint( PolarCoord(theta, phi), fov, zoom, interactive) );
+    success = device->add( new Viewpoint(ddata+2, fov, zoom, interactive) );
 
   }
 
+  *successptr = success;
+}
+
+void rgl_zoom(int* successptr, double* zoom)
+{
+  bool success = false;
+  Device* device = deviceManager->getAnyDevice();
+
+  if ( device ) {
+    RGLView* rglview = device->getRGLView();
+    Scene* scene = rglview->getScene();
+    Viewpoint* viewpoint = scene->getViewpoint();
+    *zoom = viewpoint->getZoom();
+    success = true;
+  }
   *successptr = success;
 }
 
