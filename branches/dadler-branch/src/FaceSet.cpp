@@ -1,24 +1,24 @@
 #include "PrimitiveSet.hpp"
 
+#if 0
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
 //   FaceSet
 //
 
-FaceSet::FaceSet(Material& in_material, GLenum in_type, int in_nelements, double* in_vertex)  
-: PrimitiveSet(in_material, in_type, in_nelements, in_vertex)
-{
-}
 
-void FaceSet::draw(RenderContext* renderContext) {
+template<int T, int N>
+void FaceSet<T,N>::draw(RenderContext* renderContext) {
   if (material.lit)
     normalArray.beginUse();
 
-  PrimitiveSet::draw(renderContext);
+  PrimitiveSet<T,N>::draw(renderContext);
 
   if (material.lit)
     normalArray.endUse();
 }
 
 
+
+#endif 

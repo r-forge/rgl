@@ -1,7 +1,7 @@
 # rgl-demo: subdivision surfaces
 # author: Daniel Adler
 # notes: demo contains preview material of r3d, a generic 3D interface for R
-# $Id: subdivision.r,v 1.3 2004/05/28 07:05:26 dadler Exp $
+# $Id: subdivision.r,v 1.3.2.1 2004/05/30 08:35:03 dadler Exp $
 
 #
 # R3D
@@ -392,18 +392,18 @@ subdivide <- function(mesh,normalize=F,depth=1) {
   return(mesh)  
 }
 
-render.part <- function(x, tx,depth, func, ...) {
+render.part <- function(x, tx,depth, func, color, ...) {
   x <- translate3d(x,tx,0,0)
   surface3d(x, color="gray30",front="lines",alpha=0.5,back="lines")
-  surface3d(func(x,depth=depth, ...),color="red")
+  surface3d(func(x,depth=depth, ...), alpha=0.5, color=color )
 }
 
 render.levels <- function(ty,func, ... ) {
   x <- translate3d(o3d,0,ty,0)
-  render.part(x,-5.5, 0,func, ... )
-  render.part(x,-1.75,1,func, ... )
-  render.part(x, 1.75,2,func, ... )
-  render.part(x, 5.5, 3,func, ... )
+  render.part(x,-5.5, 0,func, "blue",   ... )
+  render.part(x,-1.75,1,func, "yellow", ... )
+  render.part(x, 1.75,2,func, "red",    ... )
+  render.part(x, 5.5, 3,func, "green",  ... )
 }
 
 rgl.clear()

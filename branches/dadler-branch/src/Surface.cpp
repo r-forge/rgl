@@ -107,6 +107,3 @@ void Surface::draw(RenderContext* renderContext)
 
   material.endUse(renderContext);
 }
-
-
-
