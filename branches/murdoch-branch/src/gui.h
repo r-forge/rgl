@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: gui.h,v 1.5 2004/02/28 18:45:38 dadler Exp $
+// $Id: gui.h,v 1.5.2.1 2004/05/12 14:08:57 murdoch Exp $
 
 #include "types.h"
 #include "glgui.h"
@@ -63,7 +63,13 @@ public:
   virtual void show(void) = 0;
   virtual void hide(void) = 0;
   virtual void update(void) = 0;
- 
+
+  //Added by Ming Chen begin
+  //#ifdef _WIN32
+  virtual void bringToTop(void) = 0;
+  //#endif
+  //Added by Ming Chen end
+
   /// @doc notifyDestroy will be called on success
   virtual void destroy(void) = 0;
   virtual void beginGL(void) = 0;
@@ -193,6 +199,8 @@ public:
   void keyPress(int code);
   void wheelRotate(int dir);
 
+  //Added by Ming Chen
+  void bringToTop(void);
 
 // data:
   View* child;

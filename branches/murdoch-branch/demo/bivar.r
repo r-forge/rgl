@@ -1,6 +1,6 @@
 # rgl demo: rgl-bivar.r
 # author: Daniel Adler
-# $Id: bivar.r,v 1.3 2004/03/03 22:59:20 dadler Exp $
+# $Id: bivar.r,v 1.3.2.1 2004/05/12 14:08:57 murdoch Exp $
 
 if ( require(sm) == TRUE ) {
 
@@ -40,6 +40,9 @@ if ( require(sm) == TRUE ) {
   
   # Draws parameteric density
   rgl.surface(xgrid,zgrid,bi.y*yscale,color="#CCCCFF",front="lines")
+  
+  # Added by Ming Chen
+  rgl.bringtotop()
 
 } 
 
