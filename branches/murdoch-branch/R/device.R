@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: device.R,v 1.3.2.3 2004/06/22 13:22:04 murdoch Exp $
+## $Id: device.R,v 1.3.2.4 2004/08/09 19:29:43 murdoch Exp $
 ##
 
 ##
