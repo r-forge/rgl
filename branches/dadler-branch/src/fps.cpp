@@ -1,9 +1,11 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: fps.cpp,v 1.1 2003/03/25 00:13:21 dadler Exp $
+// $Id: fps.cpp,v 1.1.1.1.4.1 2004/05/29 10:43:33 dadler Exp $
 
 #include "fps.h"
+
+#include "glgui.h"
 
 #include <stdio.h>
 

@@ -86,6 +86,15 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 FP10.OBJ kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opengl32.lib glu32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
+# Begin Custom Build
+TargetPath=.\Debug\rgl.dll
+InputPath=.\Debug\rgl.dll
+SOURCE="$(InputPath)"
+
+"$(InputPath)/rgl_res.rc" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	echo $(TargetPath)
+
+# End Custom Build
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy Debug\rgl.dll ..\..\..\rgl.dll
@@ -118,6 +127,10 @@ SOURCE=..\..\..\fps.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\geom.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\glgui.cpp
 # End Source File
 # Begin Source File
@@ -132,6 +145,10 @@ SOURCE=..\..\..\math.cpp
 
 SOURCE=..\..\..\pixmap.cpp
 # ADD CPP /I "../../../lpng" /I "../../../zlib"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\render.cpp
 # End Source File
 # Begin Source File
 
@@ -171,6 +188,10 @@ SOURCE=..\..\..\fps.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\geom.hpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\gui.h
 # End Source File
 # Begin Source File
@@ -188,6 +209,14 @@ SOURCE=..\..\..\opengl.h
 # Begin Source File
 
 SOURCE=..\..\..\pixmap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\pragma.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\render.h
 # End Source File
 # Begin Source File
 
@@ -212,6 +241,158 @@ SOURCE=..\..\..\win32gui.h
 # Begin Source File
 
 SOURCE=..\..\..\rgl_res.rc
+# End Source File
+# End Group
+# Begin Group "Scene"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\Background.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Background.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\BBoxDeco.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\BBoxDeco.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Color.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Color.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\FaceSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Light.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Light.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\LineSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Material.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Material.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\PointSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\PrimitiveSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\PrimitiveSet.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\QuadSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\RenderContext.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SceneNode.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Shape.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Shape.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SphereMesh.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SphereMesh.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SphereSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SphereSet.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SpriteSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\SpriteSet.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\String.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\String.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Surface.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Surface.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\TextSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\TextSet.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Texture.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Texture.hpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\TriangleSet.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Viewpoint.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\Viewpoint.hpp
 # End Source File
 # End Group
 # Begin Source File

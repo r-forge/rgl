@@ -4,12 +4,13 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1 2003/03/25 00:13:21 dadler Exp $
+// $Id: rglview.h,v 1.1.1.1.4.1 2004/05/29 10:43:33 dadler Exp $
 
 
 #include "gui.h"
 #include "scene.h"
 #include "fps.h"
+#include "pixmap.h"
 
 using namespace gui;
 
