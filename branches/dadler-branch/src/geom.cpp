@@ -40,6 +40,11 @@ void AABox::operator += (const Sphere& sphere)
   *this += sphere.center + Vertex(sphere.radius,sphere.radius,sphere.radius);
 }
 
+bool AABox::operator < (const AABox& that) const
+{
+  return true;
+}
+
 bool AABox::isValid(void) const
 {
   return ((vmax.x >= vmin.x) && (vmax.y >= vmin.y) && (vmax.z >= vmin.z)) ? true : false;

@@ -94,4 +94,7 @@ void Viewpoint::setupTransformation(RenderContext* rctx, const Sphere& viewSpher
 }
 
 
-
+Vertex Viewpoint::getCOP(const Sphere& viewSphere) const
+{
+  return viewSphere.center + ( position.vector() * frustum.distance * 2.0f );
+}

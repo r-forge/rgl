@@ -2,6 +2,8 @@ DADLER-BRANCH 'towards 0.65' TODO :
 ==================================
 
 - move rgl's demos to rgldemos.
+- z-sorted triangle rendering
+
 - rgl's demo will ask user to download package 'rgldemos'.
 - update new build structure
 

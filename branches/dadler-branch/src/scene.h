@@ -4,7 +4,11 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.4.1 2004/05/29 10:43:33 dadler Exp $
+// $Id: scene.h,v 1.3.4.2 2004/05/29 13:16:57 dadler Exp $
+
+#include "types.h"
+#include <windows.h>
+#include <vector>
 
 #include "SceneNode.hpp"
 
@@ -80,6 +84,10 @@ private:
    * compute bounding-box
    **/
   void calcDataBBox();
+  /**
+   * add shapes
+   **/
+  void addShape(Shape* shape);
 
   // ---[ bounded slots ]----------------------------------------------------
   
@@ -112,6 +120,9 @@ private:
    * list of shapes
    **/
   List shapes;
+
+  std::vector<Shape*> unsortedShapes;
+  std::vector<Shape*> zsortShapes;
 
   // ---[ grouping data ]----------------------------------------------------
   

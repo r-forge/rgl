@@ -1,7 +1,8 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.7.2.1 2004/05/29 10:43:33 dadler Exp $
+// $Id: scene.cpp,v 1.7.2.2 2004/05/29 13:16:57 dadler Exp $
+
 
 #include "scene.h"
 #include "math.h"
@@ -28,6 +29,8 @@
 #include "Background.cpp"
 #include "BBoxDeco.cpp"
  */
+
+#include <map>
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -73,6 +76,8 @@ bool Scene::clear(TypeID typeID)
   switch(typeID) {
     case SHAPE:
       shapes.deleteItems();
+      zsortShapes.clear();
+      unsortedShapes.clear();
       data_bbox.invalidate();
       success = true;
       break;
@@ -90,6 +95,16 @@ bool Scene::clear(TypeID typeID)
       break;
   }
   return success;
+}
+
+void Scene::addShape(Shape* shape) {
+  const AABox& bbox = shape->getBoundingBox();
+  data_bbox += bbox;
+
+  if ( shape->getMaterial().isBlended() ) {
+    zsortShapes.push_back(shape);
+  } else
+    unsortedShapes.push_back(shape);
 }
 
 bool Scene::add(SceneNode* node)
@@ -112,10 +127,8 @@ bool Scene::add(SceneNode* node)
     case SHAPE:
       {
         Shape* shape = (Shape*) node;
+        addShape(shape);
 
-        data_bbox += shape->getBoundingBox();
-
-        shapes.addTail( shape );
         success = true;
       }
       break;
@@ -159,6 +172,12 @@ bool Scene::pop(TypeID type)
     {
       Node* tail = shapes.getTail();
       if (tail) {
+        Shape* shape = (Shape*) tail;
+        if ( shape->getMaterial().isBlended() )
+          zsortShapes.pop_back();
+        else
+          unsortedShapes.pop_back();
+
         delete shapes.remove(tail);
 
         calcDataBBox();
@@ -288,26 +307,48 @@ void Scene::render(RenderContext* renderContext)
 
     glEnable(GL_DEPTH_TEST);
 
-    ListIterator iter(&shapes);
+    {
+      std::vector<Shape*>::iterator iter;
 
-    for(iter.first(); !iter.isDone(); iter.next() ) {
-      Shape* shape = (Shape*) iter.getCurrent();
-
-      if (!shape->getMaterial().alphablend)
+      for (iter = unsortedShapes.begin() ; iter != unsortedShapes.end() ; ++iter ) {
+        Shape* shape = *iter;
         shape->render(renderContext);
+      }
     }
-    
+
     //
     // RENDER ALPHA SHADED
     //
+    {
+      std::vector<Shape*>::iterator iter;
+      std::multimap<float, int> distanceMap;
+      int index = 0;
 
-    for(iter.first(); !iter.isDone(); iter.next() ) {
-      Shape* shape = (Shape*) iter.getCurrent();
+      const Vertex& cop    = viewpoint->getCOP(total_bsphere);
 
-      if (shape->getMaterial().alphablend)
-        shape->render(renderContext);
+      for (iter = zsortShapes.begin() ; iter != zsortShapes.end() ; ++iter ) {
+        Shape* shape = *iter;
+      
+        const AABox& aabox = shape->getBoundingBox();
+
+        const Vertex& center = aabox.getCenter();
+
+        float distance = ( cop - center ).getLength();
+
+        distanceMap.insert( std::pair<float,int>(-distance, index) );
+        index++;
+
+      }
+
+      {
+        std::multimap<float,int>::iterator iter;
+        for (iter = distanceMap.begin() ; iter != distanceMap.end() ; ++ iter ) {
+          int index = iter->second;
+          Shape* shape = zsortShapes[index];
+          shape->render(renderContext);
+        }
+      }
     }
-
   }
 }
 
