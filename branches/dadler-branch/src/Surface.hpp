@@ -13,7 +13,14 @@
 class Surface : public Shape {
 public:
   Surface(Material& material, int nx, int nz, double* x, double* z, double* y);
-  void draw(RenderContext* renderContext);
+  /**
+   * overload
+   **/
+  virtual void draw(RenderContext* renderContext);
+  /**
+   * overload
+   **/
+  virtual void renderZSort(RenderContext* renderContext);
 private:
   void setNormal(int ix, int iz);
 

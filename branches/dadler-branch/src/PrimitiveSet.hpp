@@ -7,46 +7,6 @@
 
 #include <map>
 
-#if 0
-class ElementSet : public Shape {
-  ElementSet(int type, int nverticesper) {
-  }
-  void renderBegin()
-  {
-  }
-  void renderElement(int index)
-  {
-    glDrawArrays(type,index,1);
-  }
-  void renderRange(int index0, int index1)
-  {
-    glDrawArrays(type,index0,index1-index0+1);
-  }
-  void renderEnd()
-  {
-  }
-  Vertex getCenter(int index)
-  {    
-  }
-  virtual void renderZSorted(RenderContext* renderContext)
-  {
-    Vertex cop = renderContext->cop;
-  
-    std::multimap<float,int> distanceMap;
-    for (int index = 0 ; index < nelements ; ++index ) {
-      float distance = ( getCenter(index) - cop ).getLength();
-      distanceMap.insert( std::pair<float,int>(-distance,index) );
-    }
-
-    drawBegin(renderContext);
-    for ( std::multimap<float,int>::iterator iter = distanceMap.begin(); iter != distanceMap.end() ; ++ iter ) {
-      drawElement( renderContext, iter->second );
-    }  
-    drawEnd(renderContext);
-  }
-}
-#endif
-
 //
 // ABSTRACT CLASS
 //   PrimitiveSet
@@ -57,62 +17,28 @@ public:
   /**
    * overloaded
    **/
-  virtual void draw(RenderContext* renderContext)
-  {
-    drawBegin(renderContext);
-    drawAll(renderContext);
-    drawEnd(renderContext);
-  }
+  virtual void draw(RenderContext* renderContext);
   /**
    * overloaded
    **/
-  virtual void renderZSort(RenderContext* renderContext)
-  {
-    Vertex cop = renderContext->cop;
-  
-    std::multimap<float,int> distanceMap;
-    for (int index = 0 ; index < nprimitives ; ++index ) {
-      float distance = ( getCenter(index) - cop ).getLength();
-      distanceMap.insert( std::pair<float,int>(-distance,index) );
-    }
-
-    drawBegin(renderContext);
-    for ( std::multimap<float,int>::iterator iter = distanceMap.begin(); iter != distanceMap.end() ; ++ iter ) {
-      drawElement( renderContext, iter->second );
-    }  
-    drawEnd(renderContext);
-  }
+  virtual void renderZSort(RenderContext* renderContext);
 protected:
 
+  /**
+   * abstract class constructor
+   **/
   PrimitiveSet (
-
       Material& in_material, 
       int in_nvertices, 
       double* vertex, 
       int in_type, 
       int in_nverticesperelement
+  );
 
-  )
-    :
-  Shape(in_material)
-  {
-    type                = in_type;
-    nverticesperelement = in_nverticesperelement;
-    nvertices           = in_nvertices;
-    nprimitives         = in_nvertices / nverticesperelement;
-
-    material.colorPerVertex(true, nvertices);
-
-    vertexArray.alloc(nvertices);
-    for(int i=0;i<nvertices;i++) {
-      vertexArray[i].x = (float) vertex[i*3+0];
-      vertexArray[i].y = (float) vertex[i*3+1];
-      vertexArray[i].z = (float) vertex[i*3+2];
-      boundingBox += vertexArray[i];
-    }
-  }
-
-  Vertex getCenter(int index)
+  /**
+   * get primitive center point
+   **/
+  inline Vertex getCenter(int index)
   {
     Vertex accu;
     int begin = index*nverticesperelement;
@@ -122,27 +48,31 @@ protected:
     return accu * ( 1.0f / ( (float) nverticesperelement ) );
   }
 
-  virtual void drawBegin(RenderContext* renderContext)
-  {
-    material.beginUse(renderContext);
-    vertexArray.beginUse();
-  }
+  // ---[ PRIMITIVE DRAW INTERFACE ]------------------------------------------
 
-  virtual void drawAll(RenderContext* renderContext)
-  {
-    glDrawArrays(type, 0, nverticesperelement*nprimitives );
-  }
-
-  virtual void drawElement(RenderContext* renderContext, int index)
-  {
-    glDrawArrays(type, index*nverticesperelement, nverticesperelement);
-  }
-
-  virtual void drawEnd(RenderContext* renderContext)
-  {
-    vertexArray.endUse();
-    material.endUse(renderContext);
-  }
+  /**
+   * begin sending primitives 
+   * interface
+   **/
+  virtual void drawBegin(RenderContext* renderContext);
+  
+  /**
+   * send all elements
+   * interface
+   **/
+  virtual void drawAll(RenderContext* renderContext);
+  
+  /**
+   * send primitive
+   * interface
+   **/
+  virtual void drawElement(RenderContext* renderContext, int index);
+  
+  /**
+   * end sending primitives
+   * interface
+   **/
+  virtual void drawEnd(RenderContext* renderContext);
 
   int type;
   int nverticesperelement;
@@ -152,21 +82,6 @@ protected:
 
 };
 
-class PointSet : public PrimitiveSet
-{ 
-public:
-  PointSet(Material& material, int nvertices, double* vertices)
-    : PrimitiveSet(material, nvertices, vertices, GL_POINTS, 1)
-  { }
-};
-
-class LineSet : public PrimitiveSet
-{ 
-public:
-  LineSet(Material& material, int nvertices, double* vertices)
-    : PrimitiveSet(material, nvertices, vertices, GL_LINES, 2)
-  { }
-};
 
 //
 // ABSTRACT CLASS
@@ -179,50 +94,72 @@ protected:
   /**
    * Constructor
    **/
-  FaceSet(Material& in_material, int in_nelements, double* in_vertex, int in_type, int in_nverticesperelement)
-  : PrimitiveSet(in_material, in_nelements, in_vertex, in_type, in_nverticesperelement)
-  {
-    if (material.lit) {
-      normalArray.alloc(nvertices);
-      for (int i=0;i<=nvertices-nverticesperelement;i+=nverticesperelement) {
-        normalArray[i+3] = normalArray[i+2] = normalArray[i+1] = normalArray[i] = vertexArray.getNormal(i,i+1,i+2);
-      }
-    }
-  }
+  FaceSet(
+    Material& in_material, 
+    int in_nelements, 
+    double* in_vertex, 
+    int in_type, 
+    int in_nverticesperelement
+  );
+  
+  /**
+   * overload
+   **/
+  virtual void drawBegin(RenderContext* renderContext);
 
-  virtual void drawBegin(RenderContext* renderContext) {
-    
-    PrimitiveSet::drawBegin(renderContext);
-
-    if (material.lit)
-      normalArray.beginUse();
-  }
-
-  virtual void drawEnd(RenderContext* renderContext) {
-    
-    if (material.lit)    
-      normalArray.endUse();
-
-    PrimitiveSet::drawEnd(renderContext);
-
-  }
-
+  /**
+   * overload
+   **/
+  virtual void drawEnd(RenderContext* renderContext);
+private:
   NormalArray normalArray;
 };
+
+//
+// CLASS
+//   PointSet
+//
+
+class PointSet : public PrimitiveSet
+{ 
+public:
+  PointSet(Material& material, int nvertices, double* vertices);
+};
+
+//
+// CLASS
+//   LineSet
+//
+
+class LineSet : public PrimitiveSet
+{ 
+public:
+  LineSet(Material& material, int nvertices, double* vertices);
+};
+
+//
+// CLASS
+//   TriangleSet
+//
 
 class TriangleSet : public FaceSet
 { 
 public:
-  TriangleSet(Material& material, int in_nvertex, double* in_vertex)
-    : FaceSet(material,in_nvertex, in_vertex, GL_TRIANGLES, 3)
+  TriangleSet(Material& in_material, int in_nvertex, double* in_vertex)
+    : FaceSet(in_material,in_nvertex, in_vertex, GL_TRIANGLES, 3)
   { }
 };
+
+//
+// CLASS
+//   QuadSet
+//
 
 class QuadSet : public FaceSet
 { 
 public:
-  QuadSet(Material& material, int in_nvertex, double* in_vertex)
-    : FaceSet(material,in_nvertex,in_vertex, GL_QUADS, 4)
+  QuadSet(Material& in_material, int in_nvertex, double* in_vertex)
+    : FaceSet(in_material,in_nvertex,in_vertex, GL_QUADS, 4)
   { }
 };
 

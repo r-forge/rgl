@@ -1,18 +1,15 @@
 #include "PrimitiveSet.hpp"
 
-#if 0
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
 //   PointSet
 //
 
-PointSet::PointSet(Material& in_material, int in_nelements, double* in_vertex) 
-  : PrimitiveSet<GL_POINTS,1>(in_material, in_nelements, in_vertex) 
+PointSet::PointSet(Material& in_material, int in_nvertices, double* in_vertices) 
+  : PrimitiveSet(in_material, in_nvertices, in_vertices, GL_POINTS, 1)
 {
   material.lit = false;
 } 
 
-#endif
 

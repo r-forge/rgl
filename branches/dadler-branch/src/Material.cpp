@@ -36,16 +36,18 @@ void Material::beginUse(RenderContext* renderContext)
 {
   int ncolor = colors.getLength();
 
-  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_POLYGON_BIT );
+  glPushAttrib( /* GL_DEPTH_BUFFER_BIT | */ GL_ENABLE_BIT | GL_POLYGON_BIT );
 
-  if (alphablend) {
+#if 0
+  if (alphablend) {    
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE );
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE );
   } else {
     glDepthMask(GL_TRUE);
   }
+#endif
 
   glDisable(GL_CULL_FACE);
 
@@ -78,7 +80,7 @@ void Material::beginUse(RenderContext* renderContext)
     glEnable(GL_LIGHTING);
 
 #ifdef GL_VERSION_1_2
-//    glLightModeli(GL_LIGHT_MODEL_COLOUR_CONTROL, (texture) ? GL_SEPARATE_SPECULAR_COLOR : GL_SINGLE_COLOR );
+    // glLightModeli(GL_LIGHT_MODEL_COLOUR_CONTROL, (texture) ? GL_SEPARATE_SPECULAR_COLOR : GL_SINGLE_COLOR );
 #endif
 
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);

@@ -1,15 +1,13 @@
 #include "PrimitiveSet.hpp"
 
-#if 0
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
 //   LineSet
 //
 
-LineSet::LineSet(Material& in_material, int in_nelements, double* in_vertex) 
-  : PrimitiveSet<GL_LINES,2>(in_material, in_nelements, in_vertex) 
+LineSet::LineSet(Material& in_material, int in_nvertices, double* in_vertices) 
+  : PrimitiveSet(in_material, in_nvertices, in_vertices, GL_LINES, 2)
 {
   material.lit = false;
 }
-#endif
