@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.5 2004/07/16 18:27:58 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.6 2004/07/21 20:01:27 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -983,6 +983,18 @@ void Viewpoint::mergeMouseMatrix()
     M.getData((double *)rotationMatrix);
     N.setIdentity();
     N.getData((double *)mouseMatrix);
+}
+
+void Viewpoint::getRotationMatrix(double* dest)
+{
+	for(int i=0; i<16;i++)
+		dest[i] = rotationMatrix[i];
+}
+
+void Viewpoint::setRotationMatrix(double* src)
+{
+	for(int i=0; i<16;i++)
+		rotationMatrix[i] = src[i];
 }
 
 //////////////////////////////////////////////////////////////////////////////
