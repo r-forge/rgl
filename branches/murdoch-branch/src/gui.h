@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: gui.h,v 1.5.2.1 2004/05/12 14:08:57 murdoch Exp $
+// $Id: gui.h,v 1.5.2.2 2004/05/14 16:02:51 murdoch Exp $
 
 #include "types.h"
 #include "glgui.h"
@@ -43,7 +43,7 @@ enum {
   GUI_KeyRight,
   GUI_KeyInsert
 };
-  
+
 //
 // IMPLEMENTATION INTERFACE
 //
@@ -64,11 +64,9 @@ public:
   virtual void hide(void) = 0;
   virtual void update(void) = 0;
 
-  //Added by Ming Chen begin
-  //#ifdef _WIN32
+#ifdef _WIN32
   virtual void bringToTop(void) = 0;
-  //#endif
-  //Added by Ming Chen end
+#endif
 
   /// @doc notifyDestroy will be called on success
   virtual void destroy(void) = 0;
@@ -79,7 +77,7 @@ public:
   virtual void releaseMouse(void) = 0;
   // OpenGL support (FIXME: remove)
   GLBitmapFont font;
-protected: 
+protected:
   Window*      window;
 };
 
@@ -104,7 +102,7 @@ extern gui::GUIFactory* getGUIFactory();
 
 
 namespace gui {
-  
+
 //
 // ABSTRACT GUI TOOLKIT
 //
@@ -123,7 +121,7 @@ public:
   virtual ~View();
 
 // services:
-  
+
   virtual void setSize(int width, int height);
   virtual void setLocation(int basex, int basey);
   virtual void update(void);
@@ -154,13 +152,13 @@ public:
   int flags;
 
   WindowImpl* windowImpl;
-  
+
   friend class Window;
 };
 
 //
 // WINDOW
-// 
+//
 // INITIAL STATE
 //   - visibility: hidden
 //   - location: 0,0
@@ -199,8 +197,9 @@ public:
   void keyPress(int code);
   void wheelRotate(int dir);
 
-  //Added by Ming Chen
+#ifdef _WIN32
   void bringToTop(void);
+#endif
 
 // data:
   View* child;

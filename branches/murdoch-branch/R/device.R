@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: device.R,v 1.3.2.1 2004/05/12 14:08:56 murdoch Exp $
+## $Id: device.R,v 1.3.2.2 2004/05/14 16:02:51 murdoch Exp $
 ##
 
 ##
@@ -102,16 +102,3 @@ rgl.snapshot <- function( filename, fmt="png" )
     print("failed")
 }
 
-## Added by Ming Chen
-## bring device to top
-##
-##
-
-rgl.bringtotop <- function() {
-
-  ret <- .C( symbol.C("rgl_dev_bringtotop"), success=FALSE, PACKAGE="rgl" )
-
-  if (! ret$success)
-    stop("failed")
-
-}

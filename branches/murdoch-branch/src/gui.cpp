@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: gui.cpp,v 1.4.2.1 2004/05/12 14:08:57 murdoch Exp $
+// $Id: gui.cpp,v 1.4.2.2 2004/05/14 16:02:51 murdoch Exp $
 
 #include "gui.h"
 #include "lib.h"
@@ -139,7 +139,7 @@ void View::captureLost()
 Window::Window(View* in_child, GUIFactory* factory)
  : View(0,0,in_child->width,in_child->height,WINDOW_IMPL_OWNER)
 {
-  child          = in_child; 
+  child          = in_child;
   title          = "untitled";
   destroyHandler = NULL;
 
@@ -194,12 +194,12 @@ void Window::setVisibility(bool state)
     windowImpl->hide();
 }
 
-//Added by Ming Chen begin
+#ifdef _WIN32
 void Window::bringToTop(void)
 {
   windowImpl->bringToTop();
 }
-//Added by Ming Chen end
+#endif
 
 //
 // EVENTS:
@@ -235,7 +235,7 @@ void Window::notifyDestroy(void)
     delete child;
     child = NULL;
   }
-  
+
   if (destroyHandler)
     destroyHandler->notifyDestroy(destroyHandler_userdata);
 }

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.1.1.1.2.1 2004/05/12 14:08:57 murdoch Exp $
+// $Id: device.cpp,v 1.1.1.1.2.2 2004/05/14 16:02:51 murdoch Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -64,13 +64,13 @@ void Device::close(void)
   delete this;
 }
 
-//Added by Ming Chen begin
+#ifdef _WIN32
 void Device::bringToTop(void)
 {
   window->bringToTop();
 }
-//Add by Ming Chen end
-	
+#endif
+
 //
 // scene management:
 //
@@ -83,7 +83,7 @@ bool Device::clear(TypeID stackTypeID)
   return success;
 }
 
-bool Device::add(SceneNode* node) 
+bool Device::add(SceneNode* node)
 {
   bool success;
   if ( success = scene->add(node) )
@@ -92,7 +92,7 @@ bool Device::add(SceneNode* node)
 }
 
 bool Device::pop(TypeID stackTypeID)
-{  
+{
   bool success;
   if ( success = scene->pop(stackTypeID) )
     rglview->update();
@@ -100,7 +100,7 @@ bool Device::pop(TypeID stackTypeID)
 }
 
 //
-// export 
+// export
 //
 
 bool Device::snapshot(int format, const char* filename)

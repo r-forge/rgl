@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: device.h,v 1.1.1.1.2.1 2004/05/12 14:08:57 murdoch Exp $
+// $Id: device.h,v 1.1.1.1.2.2 2004/05/14 16:02:51 murdoch Exp $
 
 #include "types.h"
 #include "rglview.h"
@@ -31,7 +31,7 @@ public: // -- all methods are blocking until action completed
   void setDestroyHandler(DestroyHandler* destroyHandler, void* userdata);
   void setName(const char* string);
   bool open(void); // -- if failed, instance is invalid and should be deleted
-  void close(void); // -- when done, instance is invalid and should be deleted  
+  void close(void); // -- when done, instance is invalid and should be deleted
   bool snapshot(int format, const char* filename);
 
   bool clear(TypeID stackTypeID);
@@ -42,6 +42,10 @@ public: // -- all methods are blocking until action completed
   void bringToTop(void);
 
   void notifyDestroy(void* userdata);
+
+#ifdef _WIN32
+  void bringToTop(void);
+#endif
 // event handlers
 private:
   void update(void);
