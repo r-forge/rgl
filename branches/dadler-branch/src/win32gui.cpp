@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: win32gui.cpp,v 1.5.2.1 2004/06/10 23:10:24 dadler Exp $
+// $Id: win32gui.cpp,v 1.5.2.2 2004/06/11 13:31:15 dadler Exp $
 
 #include "win32gui.h"
 
@@ -323,7 +323,7 @@ namespace gui {
 
         case WM_KEYDOWN:
 
-          if (int keycode = translate_key(wParam) ) {
+          if (int keycode = translate_key(static_cast<int>(wParam)) ) {
             window->keyPress(keycode);
           } else
             return -1;
