@@ -6,7 +6,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: types.h,v 1.5.2.2 2004/06/04 07:47:14 dadler Exp $
+// $Id: types.h,v 1.5.2.3 2004/06/04 16:28:43 dadler Exp $
 
 
 #include <cstring>
@@ -246,7 +246,7 @@ inline int   clamp(int   v, int   floor, int   ceil) { return (v<floor) ? floor 
 /**
  * Listener utility
  **/
-
+#if 0
 #include <vector>
 
 template<class ListenerT>
@@ -276,5 +276,6 @@ public:
 private:
   std::vector<ListenerT*> listeners;
 };
+#endif
 
 #endif /* TYPES_H */
