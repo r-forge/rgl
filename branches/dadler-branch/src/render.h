@@ -10,6 +10,9 @@
 //   VertexArray
 //
 
+/**
+ * VertexArray
+ **/
 class VertexArray
 {
 public:
@@ -33,6 +36,9 @@ inline Vertex& VertexArray::operator[](int index) {
   return (Vertex&) arrayptr[index*3];
 }
 
+/**
+ * NormalArray
+ **/
 class NormalArray : public VertexArray 
 {
 public:
@@ -45,6 +51,9 @@ struct TexCoord
   float s,t;
 };
 
+/**
+ * TexCoordArray
+ **/
 class TexCoordArray 
 {
 public:
