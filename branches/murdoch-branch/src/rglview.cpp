@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.6 2004/07/16 18:27:58 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.7 2004/08/05 14:31:30 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -500,5 +500,21 @@ void RGLView::mouseSelectionEnd(int mouseX,int mouseY)
 	mousePosition[3] = (float)(height- mouseY)/(float)height;
 	mouseMode = mmNAVIGATING;
 	selectState = msDONE;
+	View::update();
+}
+
+void RGLView::getUserMatrix(double* dest)
+{
+	Viewpoint* viewpoint = scene->getViewpoint();
+
+	viewpoint->getUserMatrix(dest);
+}
+
+void RGLView::setUserMatrix(double* src)
+{
+	Viewpoint* viewpoint = scene->getViewpoint();
+
+	viewpoint->setUserMatrix(src);
+
 	View::update();
 }

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.6 2004/07/21 20:01:27 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.7 2004/08/05 14:31:30 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -886,7 +886,7 @@ void Viewpoint::setPosition(const PolarCoord& in_position)
     M.setRotate(0, in_position.phi);
     N.setRotate(1, -in_position.theta);
     M = M * N;
-    M.getData((double*)rotationMatrix);
+    M.getData((double*)userMatrix);
 }
 
 void Viewpoint::clearMouseMatrix()
@@ -938,7 +938,7 @@ void Viewpoint::setupFrustum(RenderContext* rctx, const Sphere& viewSphere)
 void Viewpoint::setupOrientation(RenderContext* rctx) const
 {
   glMultMatrixd(mouseMatrix);
-  glMultMatrixd(rotationMatrix);
+  glMultMatrixd(userMatrix);
 
 }
 
@@ -978,23 +978,23 @@ void Viewpoint::updateMouseMatrix(Vertex dragStart, Vertex dragCurrent)
 
 void Viewpoint::mergeMouseMatrix()
 {
-    Matrix4x4 M((double *)rotationMatrix), N((double *)mouseMatrix);
+    Matrix4x4 M((double *)userMatrix), N((double *)mouseMatrix);
     M = N * M;
-    M.getData((double *)rotationMatrix);
+    M.getData((double *)userMatrix);
     N.setIdentity();
     N.getData((double *)mouseMatrix);
 }
 
-void Viewpoint::getRotationMatrix(double* dest)
+void Viewpoint::getUserMatrix(double* dest)
 {
 	for(int i=0; i<16;i++)
-		dest[i] = rotationMatrix[i];
+		dest[i] = userMatrix[i];
 }
 
-void Viewpoint::setRotationMatrix(double* src)
+void Viewpoint::setUserMatrix(double* src)
 {
 	for(int i=0; i<16;i++)
-		rotationMatrix[i] = src[i];
+		userMatrix[i] = src[i];
 }
 
 //////////////////////////////////////////////////////////////////////////////

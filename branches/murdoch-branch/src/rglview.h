@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.6 2004/07/16 18:27:58 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.7 2004/08/05 14:31:30 murdoch Exp $
 
 
 #include "gui.h"
@@ -41,6 +41,8 @@ public:
   MouseSelectionID getSelectState();
   void        setSelectState(MouseSelectionID state);
   double*     getMousePosition();
+  void        getUserMatrix(double* dest);
+  void        setUserMatrix(double* src);
   // These are set after rendering the scene
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewport[4];
