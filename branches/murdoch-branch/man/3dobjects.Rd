@@ -32,7 +32,7 @@ if different at each end of a line segment, or each vertex of a polygon, the col
 are blended over the extent of the object.  Quadrilaterals must be entirely 
 in one plane, or the results are undefined.
 
-These functions call the lower level functions \code{\link{rgl.points}}, \code{\link{rgl.linestrip}},
+These functions call the lower level functions \code{\link{rgl.points}}, \code{\link{rgl.linestrips}},
 and so on, and are provided for convenience.
 
 The appearance of the new objects are defined by the material properties.
