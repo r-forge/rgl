@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.10 2004/08/09 19:29:44 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.11 2004/08/18 16:13:49 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -32,7 +32,7 @@ void copy(double* from, Vertex* to, int size)
 class StringArrayImpl : public AutoDestroy
 {
 public:
-  StringArrayImpl(int in_ntexts, char** in_texts) 
+  StringArrayImpl(int in_ntexts, char** in_texts)
   {
     int i;
 
@@ -126,7 +126,7 @@ String StringArrayIterator::getCurrent()
   return String(array->impl->lengths[cnt], textptr );
 }
 
-bool StringArrayIterator::isDone() const 
+bool StringArrayIterator::isDone() const
 {
   if (array->impl)
     return (cnt == array->impl->ntexts) ? true : false;
@@ -176,11 +176,11 @@ static void StringToRGB8(const char* string, u8* colorptr) {
     char c;
 
     while( (c = *strptr++) != '\0' ) {
-  
+
       u8 component;
 
       component = (HexCharToNibble(c) << 4);
-      
+
       if ( (c = *strptr++) == '\0')
         break;
 
@@ -259,7 +259,7 @@ void Color::useColor() const
 //   ColorArray
 //
 
-ColorArray::ColorArray() 
+ColorArray::ColorArray()
 {
   arrayptr = NULL;
   ncolor   = 0;
@@ -714,7 +714,7 @@ void Scene::render(RenderContext* renderContext)
 
   if (data_bbox.isValid()) {
     
-    // 
+    //
     // GET DATA VOLUME SPHERE
     //
 
@@ -871,6 +871,7 @@ void Scene::calcDataBBox()
 
 Viewpoint::Viewpoint(PolarCoord in_position, float in_fov, float in_zoom, bool in_interactive) :
     SceneNode(VIEWPOINT),
+    position( in_position ),
     fov(in_fov),
     zoom(in_zoom),
     interactive(in_interactive)
@@ -879,8 +880,15 @@ Viewpoint::Viewpoint(PolarCoord in_position, float in_fov, float in_zoom, bool i
     clearMouseMatrix();
 }
 
+
+PolarCoord& Viewpoint::getPosition()
+{
+  return position;
+}
+
 Viewpoint::Viewpoint(double* in_userMatrix, float in_fov, float in_zoom, bool in_interactive) :
     SceneNode(VIEWPOINT),
+    position( PolarCoord(0.0f, 0.0f) ),
     fov(in_fov),
     zoom(in_zoom),
     interactive(in_interactive)
@@ -898,6 +906,7 @@ void Viewpoint::setPosition(const PolarCoord& in_position)
     N.setRotate(1, -in_position.theta);
     M = M * N;
     M.getData((double*)userMatrix);
+    position = in_position;
 }
 
 void Viewpoint::clearMouseMatrix()
@@ -985,6 +994,15 @@ void Viewpoint::updateMouseMatrix(Vertex dragStart, Vertex dragCurrent)
 	glRotatef((GLfloat)angle, (GLfloat)axis.x, (GLfloat)axis.y, (GLfloat)axis.z);
 	glGetDoublev(GL_MODELVIEW_MATRIX,mouseMatrix);
 	glPopMatrix();
+}
+
+void Viewpoint::updateMouseMatrix(PolarCoord newpos)
+{
+	Matrix4x4 M,N;
+    M.setRotate(0, newpos.phi);
+    N.setRotate(1, -newpos.theta);
+    M = M * N;
+    M.getData((double*)mouseMatrix);
 }
 
 void Viewpoint::mergeMouseMatrix()
@@ -1458,7 +1476,7 @@ void Surface::draw(RenderContext* renderContext)
 
 SphereSet::SphereSet(Material& in_material, int in_ncenter, double* in_center, int in_nradius, double* in_radius)
  : Shape(in_material), 
-   center(in_ncenter, in_center), 
+   center(in_ncenter, in_center),
    radius(in_nradius, in_radius)
 {
   material.colorPerVertex(false);
@@ -1616,7 +1634,7 @@ void PrimitiveSet::draw(RenderContext* renderContext) {
 //
 
 PointSet::PointSet(Material& in_material, int in_nelements, double* in_vertex) 
-  : PrimitiveSet(in_material, GL_POINTS, in_nelements, in_vertex) 
+  : PrimitiveSet(in_material, GL_POINTS, in_nelements, in_vertex)
 {
   material.lit = false;
 } 
@@ -1672,7 +1690,7 @@ void FaceSet::draw(RenderContext* renderContext) {
 //
 
 TriangleSet::TriangleSet(Material& in_material, int in_nelements, double* in_vertex) 
-  : FaceSet(in_material, GL_TRIANGLES,     in_nelements, in_vertex) 
+  : FaceSet(in_material, GL_TRIANGLES,     in_nelements, in_vertex)
 {
   if (material.lit) {
     normalArray.alloc(nelements);
@@ -1689,7 +1707,7 @@ TriangleSet::TriangleSet(Material& in_material, int in_nelements, double* in_ver
 //
 
 QuadSet::QuadSet(Material& in_material, int in_nelements, double* in_vertex) 
-  : FaceSet(in_material, GL_QUADS,     in_nelements, in_vertex) 
+  : FaceSet(in_material, GL_QUADS,     in_nelements, in_vertex)
 {
   if (material.lit) {
     normalArray.alloc(nelements);
@@ -1839,7 +1857,7 @@ void Background::render(RenderContext* renderContext)
   }
 
   // render bg sphere 
-  
+
   if (sphere) {
 
     float fov = renderContext->viewpoint->getFOV();
@@ -1974,7 +1992,7 @@ unsigned int texsize(unsigned int s)
 static void printGluErrorMessage(GLint error) 
 {
   const GLubyte* gluError;
-  char buf[256];        
+  char buf[256];
   gluError = gluErrorString (error);
   sprintf(buf, "GLU Library Error : %s", (const char*) gluError);
   printMessage(buf);
@@ -2054,11 +2072,11 @@ void Texture::beginUse(RenderContext* renderContext)
     glPixelStorei(GL_UNPACK_ALIGNMENT, ualign);
     GLenum gl_type = GL_UNSIGNED_BYTE;
     
-    unsigned int maxSize;    
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, (int*) &maxSize);        
-    
-    if (mipmap) {                  
-      int gluError = gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, pixmap->width, pixmap->height, format, gl_type, pixmap->data);    
+    unsigned int maxSize;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, (int*) &maxSize);
+
+    if (mipmap) {
+      int gluError = gluBuild2DMipmaps(GL_TEXTURE_2D, internalFormat, pixmap->width, pixmap->height, format, gl_type, pixmap->data);
       if (gluError)
         printGluErrorMessage(gluError);
     } else {
@@ -2236,7 +2254,7 @@ struct Edge{
 };
 
 static Edge xaxisedge[4] = { 
-  Edge( 5,4, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
+  Edge( 5,4, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
   Edge( 0,1, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ),
   Edge( 6,7, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
   Edge( 3,2, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) )
@@ -2244,18 +2262,18 @@ static Edge xaxisedge[4] = {
 static Edge yaxisedge[8] = { 
   Edge( 5,7, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
   Edge( 7,5, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
-  Edge( 6,4, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ), 
-  Edge( 4,6, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ), 
-  Edge( 2,0, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ), 
+  Edge( 6,4, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
+  Edge( 4,6, Vertex4( 0.0f, 0.0f, 1.0f, 0.0f) ),
+  Edge( 2,0, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) ),
   Edge( 0,2, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
   Edge( 3,1, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
   Edge( 1,3, Vertex4( 0.0f, 0.0f,-1.0f, 0.0f) )
 };
 static Edge zaxisedge[4] = { 
-  Edge( 1,5, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
-  Edge( 4,0, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ), 
-  Edge( 7,3, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ), 
-  Edge( 2,6, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ) 
+  Edge( 1,5, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
+  Edge( 4,0, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) ),
+  Edge( 7,3, Vertex4( 1.0f, 0.0f, 0.0f, 0.0f) ),
+  Edge( 2,6, Vertex4(-1.0f, 0.0f, 0.0f, 0.0f) )
 };
 
 
