@@ -1,110 +1,131 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: devicemanager.cpp,v 1.1.1.1.4.1 2004/06/10 23:10:24 dadler Exp $
+// $Id: devicemanager.cpp,v 1.1.1.1.4.2 2004/06/11 13:31:15 dadler Exp $
 
 #include "devicemanager.h"
 #include "types.h"
 #include <stdio.h>
+#include <algorithm>
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// STRUCT
-//   DeviceInfo
-//
+// --- DEVICE DISPOSED EVENT -------------------------------------------------
 
+enum {
+  DEVICE_DISPOSED = 0
+};
 
-DeviceManager::DeviceInfo::DeviceInfo(IDevice* inDevice, int inId)
-{ 
-  device = inDevice;
-  id = inId;
-}
-
-
-DeviceManager::DeviceInfo::~DeviceInfo()
+struct DeviceEvent : public Event
 {
-  if (device)
-    delete device;
-}
+  int      type;
+  IDevice* device;
+  DeviceEvent(IEventHandler* h, IDevice* d, int in_type)
+  : Event(h), type(in_type), device(d)
+  { }
+};
 
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// CLASS
-//   DeviceManager
-//
+// ---- DEVICE MANAGER IMPLEMENTATION ----------------------------------------
 
 DeviceManager::DeviceManager()
-{
-  current = NULL;
-  idCount = 1;
-}
-
+: idCount(1), idMap(), devices(), current( NULL )
+{ }
 
 DeviceManager::~DeviceManager()
 {
+  disableFocusManagement();
+  
+  // broadcast close
+  
+  for (list<IDevice*>::iterator i = devices.begin() ; i != devices.end() ; ++ i )
+    (*i)->close();
 
-  //
-  // unset destroy handler on all open devices
-  //
-
-  ListIterator iter(&deviceInfos);
-
-  for(iter.first(); !iter.isDone(); iter.next()) {
-    DeviceInfo* info = (DeviceInfo*) iter.getCurrent();
-    info->device->setDestroyHandler(NULL,NULL);
+  // wait till disposed
+  
+  while( devices.size() > 0 ) {
+    update();
+    Thread::sleep(1000);
   }
-
-  //
-  // destroy devices
-  //
-
-  deviceInfos.deleteItems();
-
+  
 }
 
+/**
+ * update device manager state
+ **/
 
-//
-// DESTROY HANDLER for class Device
-//
-
-void DeviceManager::notifyDestroy(void* userdata)
+void DeviceManager::update()
 {
-  DeviceInfo* destroyed = (DeviceInfo*) userdata;
+  dispatchEvents();
+}
 
-  // device already destroyed
-  destroyed->device = NULL;
+/**
+ * DISABLE FOCUS MANAGEMENT
+ *
+ * disables focus management by setting the current focus to null.
+ * it helps while the destructor closes devices and does not
+ * have to fix up the current focus. 
+ **/
 
-  if (current == destroyed) {
+void DeviceManager::disableFocusManagement()
+{
+  current = NULL;
+}
 
-    // current device is destroyed, adjust focus
+bool DeviceManager::isFocusManagementEnabled()
+{
+  return ( current != NULL ) ? true : false;
+}
 
-    RingIterator ringiter(&deviceInfos);
+/**
+ * Event processing
+ **/
 
-    ringiter.set(current);
-    ringiter.next();
+void DeviceManager::processEvent(Event* e)
+{
+  DeviceEvent* deviceEvent = reinterpret_cast<DeviceEvent*>(e); 
+  switch(deviceEvent->type) {
+    case DEVICE_DISPOSED:
+      removeDevice(deviceEvent->device);
+      break;
+  }
+}
 
-    DeviceInfo* newcurrent = (DeviceInfo*) ringiter.getCurrent();
+/**
+ * Device Listener
+ **/
 
-    if (newcurrent == current) {
-      // there's only one open device
-      deviceInfos.remove(destroyed);
-      delete destroyed;
-      current = NULL;
-      setCurrent(0);
+void DeviceManager::deviceDisposed(IDevice* device)
+{
+  postEvent( new DeviceEvent(this,device,DEVICE_DISPOSED) );
+}
+
+/**
+ * remove device from list possibly updating current focus.
+ **/
+
+void DeviceManager::removeDevice(IDevice* device)
+{
+  list<IDevice*>::iterator i = find(devices.begin(), devices.end(), device);
+  
+  if ( i != devices.end() ) {
+    int id = device->getID();
+    idMap.erase( idMap.find(id) );
+    if ( isFocusManagementEnabled() ) {
+      // FIX FOCUS MANAGEMENT
+      if ( *i == current ) {
+        list<IDevice*>::iterator next = i; 
+        ++next;
+        if ( next == devices.end() )
+          next = devices.begin(); 
+        if ( *next != current ) {
+          current = NULL;
+          setCurrent( (*next)->getID() );
+        } else
+          current = NULL;
+      }
     }
-    else {
-      // more than one, so focus the new one
-      deviceInfos.remove(destroyed);
-      delete destroyed;
-      current = NULL;
-      setCurrent(newcurrent->id);
-    }
-  } else {
-
-    deviceInfos.remove(destroyed);
-    delete destroyed;
-
+    
+    devices.remove(device);
+    
+    delete device;
   }
 }
 
@@ -114,28 +135,19 @@ void DeviceManager::notifyDestroy(void* userdata)
 
 bool DeviceManager::openDevice(void)
 {
-  bool success = false;
-  
-  // IDevice* device = new ProxyDevice( new Device() );
+  bool success = false;  
   IDevice* device = createDevice(); 
   if (device) {
-
+    device->addDeviceListener(this);
     if ( device->open() ) {
-
-      int id;
-
-      id = idCount++;
-
-      DeviceInfo* deviceInfo = new DeviceInfo(device,id);
-
-      deviceInfos.addTail( deviceInfo );
-      device->setDestroyHandler( this, (void*) deviceInfo );
-
-      success = setCurrent(id);
-    }
-
+      int id = idCount++; 
+      device->setID(id);
+      idMap.insert( pair<int,IDevice*>(id,device) ); 
+      devices.push_back(device);
+      setCurrent(id);
+      success = true;
+    }       
   }
-
   return success;
 }
 
@@ -146,7 +158,7 @@ bool DeviceManager::openDevice(void)
 
 IDevice* DeviceManager::getCurrentDevice(void)
 {
-  return (current) ? current->device : NULL;
+  return current;
 }
 
 //
@@ -155,7 +167,7 @@ IDevice* DeviceManager::getCurrentDevice(void)
 
 IDevice* DeviceManager::getAnyDevice(void)
 {
-  if (current == NULL)
+  if ( current == NULL )
     openDevice();
 
   return getCurrentDevice();
@@ -169,7 +181,7 @@ IDevice* DeviceManager::getAnyDevice(void)
 
 int DeviceManager::getCurrent()
 {
-  return (current) ? current->id : 0;
+  return (current != NULL ) ? current->getID() : 0;
 }
 
 
@@ -179,39 +191,24 @@ int DeviceManager::getCurrent()
 
 bool DeviceManager::setCurrent(int id)
 {
-  bool success = false;
-  DeviceInfo* found = NULL;
+  map<int,IDevice*>::iterator i = idMap.find(id);
+  char buffer[64];
 
-  ListIterator iter(&deviceInfos);
-
-  for( iter.first(); !iter.isDone() ; iter.next() ) {
-
-    DeviceInfo* deviceInfo = (DeviceInfo*) iter.getCurrent();
-
-    if (deviceInfo->id == id) {
-      found = deviceInfo;
-      break;
+  if ( i != idMap.end() ) {    
+    if ( current != NULL ) {
+      sprintf(buffer, "RGL device %d", current->getID() );
+      current->setName(buffer);
     }
+
+    current = i->second;
+
+    sprintf(buffer, "RGL device %d [R Focus]", current->getID() );
+    current->setName(buffer);
+
+    return true;
   }
 
-  if (found) {
-
-    char buffer[64];
-
-    if (current) {
-      sprintf(buffer, "RGL device %d (inactive)", current->id);
-      current->device->setName(buffer);
-    }
-    
-    current = found;
-
-    sprintf(buffer, "RGL device %d (active)", current->id);
-    current->device->setName(buffer);
-    
-    success = true;
-  }
-
-  return success;
+  return false;
 }
 
 // 

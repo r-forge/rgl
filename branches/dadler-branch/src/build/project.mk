@@ -29,6 +29,7 @@ $(SCENE_MODS)	\
 api 		\
 device 		\
 devicemanager	\
+exec		\
 fps 		\
 geom		\
 glgui		\

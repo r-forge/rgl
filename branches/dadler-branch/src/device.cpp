@@ -1,22 +1,19 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.2.2.2 2004/06/11 07:49:49 dadler Exp $
+// $Id: device.cpp,v 1.2.2.3 2004/06/11 13:31:15 dadler Exp $
 
 #include "device.h"
 #include "rglview.h"
 #include "gui.h"
+#include "lib.h"
 
-/**
- * Command class
- **/
+// --- COMMAND CLASS ---------------------------------------------------------
 
 Command::Command(Device* me, CommandPtr f, void* u) : Event( static_cast<IEventHandler*>(me) ), func(f) , userdata(u)
 { }
 
-/**
- * Device class
- **/
+// --- DEVICE CLASS ----------------------------------------------------------
 
 Device::Device()
 {
@@ -27,9 +24,6 @@ Device::Device()
 
 Device::~Device()
 {
-  if (destroyHandler)
-    destroyHandler->notifyDestroy(destroyHandler_userdata);
-
   if (window) {
     window->setDestroyHandler(NULL, NULL);
     delete window;
@@ -38,6 +32,27 @@ Device::~Device()
   if (scene) {
     delete scene;
   }
+
+}
+
+void Device::setID(int id)
+{
+  this->id = id;
+}
+
+int  Device::getID() 
+{
+  return id;
+}
+
+void Device::addDeviceListener(IDeviceListener* l)
+{
+  deviceListeners.push_back(l);
+}
+
+void Device::removeDeviceListener(IDeviceListener* l)
+{
+  deviceListeners.remove(l);
 }
 
 void Device::processEvent(Event* e)
@@ -51,8 +66,6 @@ void Device::do_open(void*)
   window->setVisibility(true);  
 }
  
-#include "lib.h"
-
 bool Device::open()
 {
   start();
@@ -62,17 +75,17 @@ bool Device::open()
 
 void Device::do_close(void*)
 {
-  
+  if (window) {
+    window->setDestroyHandler(NULL,NULL);
+    delete window;
+    window = NULL;
+  }
+  fireDeviceDisposed();
 }
 
 void Device::close()
 {
-/*
-  postWaitReply( new Command(this,&Device::do_close,NULL) );
-  while ( isRunning() )
-    sleep(1000);
- */
-
+  postEvent( new Command(this,&Device::do_close,NULL) );
 }
 
 /**
@@ -93,10 +106,16 @@ void Device::shutdown()
   delete this;
 }
 
+void Device::fireDeviceDisposed()
+{
+  for (list<IDeviceListener*>::iterator i = deviceListeners.begin() ; i != deviceListeners.end() ; ++ i )
+    (*i)->deviceDisposed(this);
+}
+
 void Device::notifyDestroy(void* userdata)
 {
   window = NULL;
-  delete this;
+  fireDeviceDisposed();
 }
 
 void Device::setDestroyHandler(DestroyHandler* inDestroyHandler, void* userdata)
@@ -174,10 +193,10 @@ void Device::do_pop(void* userdata)
   TypeID stackTypeID = reinterpret_cast<TypeID>(userdata);
   bool success;
   if ( success = scene->pop(stackTypeID) )
-    rglview->update();
+    rglview->update();  
 //  return success;
 }
-
+ 
 bool Device::pop(TypeID stackTypeID)
 {
   postEvent( new Command(this, &Device::do_pop, reinterpret_cast<void*>(stackTypeID) ) );  

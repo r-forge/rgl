@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.5.2.2 2004/06/10 23:10:24 dadler Exp $
+// $Id: api.cpp,v 1.5.2.3 2004/06/11 13:31:15 dadler Exp $
 
 #include "lib.h"
 #include "scene.h"
@@ -79,6 +79,15 @@ EXPORT_SYMBOL void rgl_sprites  (int* successptr, int* idata, double* vertex, do
 
 DeviceManager* deviceManager = NULL;
 
+/**
+ * update client state
+ **/
+
+void rgl_update()
+{
+  deviceManager->update();
+}
+
 //
 // FUNCTION
 //   rgl_init
@@ -86,6 +95,7 @@ DeviceManager* deviceManager = NULL;
 
 #include "lib.h"
 #include "x3d.h"
+
 
 void rgl_init(int* successptr)
 {
@@ -110,6 +120,8 @@ void rgl_init(int* successptr)
 
 void rgl_quit(int* successptr)
 {
+  rgl_update();
+  
   if (deviceManager) {
     delete deviceManager;
     deviceManager = NULL;
@@ -128,6 +140,8 @@ void rgl_quit(int* successptr)
 
 void rgl_dev_open(int* successptr)
 {
+  rgl_update();
+  
   bool success;
 
   success = deviceManager->openDevice();
@@ -143,6 +157,8 @@ void rgl_dev_open(int* successptr)
 
 void rgl_dev_close(int* successptr)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device;
@@ -162,6 +178,8 @@ void rgl_dev_close(int* successptr)
 #ifdef _WIN32
 void rgl_dev_bringtotop(int* successptr)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device;
@@ -189,6 +207,8 @@ void rgl_dev_bringtotop(int* successptr)
 
 void rgl_dev_getcurrent(int* successptr, int* idptr)
 {
+  rgl_update();
+  
   int id;
 
   id  = deviceManager->getCurrent();
@@ -208,6 +228,8 @@ void rgl_dev_getcurrent(int* successptr, int* idptr)
 
 void rgl_dev_setcurrent(int* successptr, int* idata)
 {
+  rgl_update();
+  
   bool success = false;
 
   int id = idata[0];
@@ -236,6 +258,8 @@ static Material currentMaterial(Color(1.0f,1.0f,1.0f),Color(1.0f,0.0f,0.0f));
 
 void rgl_clear(int* successptr, int *idata)
 {
+  rgl_update();
+  
   bool success = false;
   IDevice* device = deviceManager->getAnyDevice();
 
@@ -264,6 +288,8 @@ void rgl_clear(int* successptr, int *idata)
 
 void rgl_pop(int* successptr, int* idata)
 {
+  rgl_update();
+  
   bool success = false;
   IDevice* device = deviceManager->getCurrentDevice();
 
@@ -292,6 +318,8 @@ void rgl_pop(int* successptr, int* idata)
 
 void rgl_bg(int* successptr, int* idata)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -313,6 +341,8 @@ void rgl_bg(int* successptr, int* idata)
 
 void rgl_light ( int* successptr, int* idata, double* ddata )
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -342,6 +372,8 @@ void rgl_light ( int* successptr, int* idata, double* ddata )
 
 void rgl_viewpoint(int* successptr, int* idata, double* ddata)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -364,6 +396,8 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
 
 void rgl_primitive(int* successptr, int* idata, double* vertex)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -401,6 +435,8 @@ void rgl_primitive(int* successptr, int* idata, double* vertex)
 
 void rgl_surface(int* successptr, int* idata, double* x, double* z, double* y)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -418,6 +454,8 @@ void rgl_surface(int* successptr, int* idata, double* x, double* z, double* y)
 
 void rgl_spheres(int* successptr, int* idata, double* vertex, double* radius)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -434,6 +472,8 @@ void rgl_spheres(int* successptr, int* idata, double* vertex, double* radius)
 
 void rgl_sprites(int* successptr, int* idata, double* vertex, double* radius)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -450,6 +490,8 @@ void rgl_sprites(int* successptr, int* idata, double* vertex, double* radius)
 
 void rgl_material(int *successptr, int* idata, char** cdata, double* ddata)
 {
+  rgl_update();
+  
   Material& mat = currentMaterial;
 
   bool success = false;
@@ -498,6 +540,8 @@ void rgl_material(int *successptr, int* idata, char** cdata, double* ddata)
 
 void rgl_texts(int* successptr, int* idata, char** text, double* vertex)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -519,6 +563,8 @@ void rgl_bbox(int* successptr,
               double* yat, char** ytext,
               double* zat, char** ztext)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getAnyDevice();
@@ -550,6 +596,8 @@ void rgl_bbox(int* successptr,
 
 void rgl_snapshot(int* successptr, int* idata, char** cdata)
 {
+  rgl_update();
+  
   bool success = false;
 
   IDevice* device = deviceManager->getCurrentDevice();

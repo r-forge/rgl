@@ -4,10 +4,11 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: devicemanager.h,v 1.1.1.1.4.1 2004/06/10 23:10:24 dadler Exp $
+// $Id: devicemanager.h,v 1.1.1.1.4.2 2004/06/11 13:31:15 dadler Exp $
 
 #include "types.h"
 #include "device.h"
+#include "exec.hpp"
 
 //
 // CLASS
@@ -25,7 +26,24 @@
 //   o R API implementation
 //
 
-class DeviceManager : public DestroyHandler {
+/**
+ * Device Manager interface
+ **/
+ 
+struct IDeviceManager
+{
+  virtual void     update() = 0;
+  virtual bool     openDevice() = 0;
+  virtual IDevice* getCurrentDevice() = 0;
+  virtual IDevice* getAnyDevice() = 0;
+  virtual bool     setCurrent(int id) = 0;
+  virtual int      getCurrent() = 0;
+};
+
+/**
+ * Device manager implementation
+ **/
+class DeviceManager : protected EventQueue, public IEventHandler, public IDeviceListener {
 
 public:
 
@@ -33,38 +51,39 @@ public:
 
   DeviceManager();
   virtual ~DeviceManager();
-
-// device services:
-
-  bool     openDevice(void);
-  IDevice* getCurrentDevice(void);
-  IDevice* getAnyDevice(void);
-  bool     setCurrent(int id);
-  int      getCurrent();
-
-// device destroy handler:
-
-  void    notifyDestroy(void* userdata);
+  
+  // --- IDeviceManager implementation -----------------------------------------
+  
+  virtual void     update();
+  virtual bool     openDevice();
+  virtual IDevice* getCurrentDevice();
+  virtual IDevice* getAnyDevice();
+  virtual bool     setCurrent(int id);
+  virtual int      getCurrent();
+  
+  // --- IDeviceListener implementation ----------------------------------------
+  
+  virtual void     deviceDisposed(IDevice* device);
 
 protected:
+    
+  IDevice*         createDevice();
 
-  IDevice* createDevice();
+  // --- IEventHandler implementation ------------------------------------------
+
+  virtual void     processEvent(Event* event);
 
 private:
 
-  class DeviceInfo : public Node
-  {
-  public:
-    DeviceInfo(IDevice* device, int id);
-    ~DeviceInfo();
-    IDevice* device;
-    int id;
-  };
+  void disableFocusManagement();
+  bool isFocusManagementEnabled();  
+  
+  void removeDevice(IDevice* device);
 
-  DeviceInfo* current;
-  List        deviceInfos;
-  int         idCount;
-
+  int                        idCount;
+  map<int,IDevice*>          idMap;
+  list< IDevice* >           devices;
+  IDevice*                   current;
 };
 
 #endif /* DEVICE_MANAGER_H */

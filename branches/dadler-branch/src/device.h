@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: device.h,v 1.2.2.1 2004/06/10 23:10:24 dadler Exp $
+// $Id: device.h,v 1.2.2.2 2004/06/11 13:31:15 dadler Exp $
 
 #include "types.h"
 #include "rglview.h"
@@ -20,29 +20,78 @@
 // - dispatches scene services to current view's scene
 //
 
+struct IDevice;
+struct IDeviceListener;
+
+/**
+ * DeviceListener interface.
+ **/
+
+struct IDeviceListener
+{
+  virtual void deviceDisposed(IDevice* device) = 0;
+};
+
+/**
+ * Device interface.
+ **/
+
 struct IDevice 
 {
   virtual ~IDevice() { }
-  // virtual void destroy() = 0;
+  
+  virtual void addDeviceListener(IDeviceListener* disposeListener) = 0;
+  virtual void removeDeviceListener(IDeviceListener* disposeListener) = 0;
+     
+  /**
+   * set id.
+   **/
+  virtual void setID(int id) = 0;
+
+  /**
+   * get id.
+   **/
+  virtual int  getID() = 0;
+
   /**
    * open device.
    **/
   virtual bool open(void) = 0; // -- if failed, instance is invalid and should be deleted
   /**
-   * shutdown device. this call will block until finished.
+   * close device.
    **/
-  virtual void shutdown(void) = 0;
-  virtual void setDestroyHandler(DestroyHandler* destroyHandler, void* userdata) = 0;
-  virtual void setName(char* string) = 0;
   virtual void close(void) = 0; // -- when done, instance is invalid and should be deleted
+  /**
+   * set device name.
+   **/
+  virtual void setName(char* string) = 0;
+  /**
+   * create snapshot
+   **/
   virtual bool snapshot(int format, const char* filename) = 0;
+  /**
+   * clear scene
+   **/
   virtual bool clear(TypeID stackTypeID) = 0;
+  /**
+   * add scene node.
+   **/
   virtual bool add(SceneNode* node) = 0;
+  /**
+   * remove scene node.
+   **/
   virtual bool pop(TypeID stackTypeID) = 0;
+  /**
+   * bring to top (win32 only)
+   **/
   virtual void bringToTop(void) = 0;
 };
 
+// --- DEVICE IMPLEMENTATION ---------------------------------------------------
+
 #include "exec.hpp"
+#include <list>
+using namespace std;
 
 class Device;
 
@@ -56,16 +105,23 @@ public:
   Command(Device* me, CommandPtr f, void* userdata);
 };
 
-class Device : public Task, public DestroyHandler, public IDevice
+class Device : public Task, public IDevice, public IEventHandler, public DestroyHandler
 {
 public: // -- all methods are blocking until action completed
 
   Device();
   virtual ~Device();
-  virtual void run();
-  virtual void shutdown();
-  // virtual void destroy(void);
-  virtual void setDestroyHandler(DestroyHandler* destroyHandler, void* userdata);
+
+  
+  /** 
+   * interface implementation
+   **/
+
+  virtual void setID(int id);
+  virtual int  getID();
+  virtual void addDeviceListener(IDeviceListener* disposeListener);
+  virtual void removeDeviceListener(IDeviceListener* disposeListener);
+
   virtual void setName(char* string);
   virtual bool open(void); // -- if failed, instance is invalid and should be deleted
   virtual void close(void); // -- when done, instance is invalid and should be deleted
@@ -73,12 +129,23 @@ public: // -- all methods are blocking until action completed
   virtual bool clear(TypeID stackTypeID);
   virtual bool add(SceneNode* node);
   virtual bool pop(TypeID stackTypeID);
-  virtual void notifyDestroy(void* userdata);
   virtual void bringToTop(void);
+  
+  /**
+   * thread implementation
+   **/
+  virtual void run();
+
+  virtual void notifyDestroy(void* userdata);
+  
+  virtual void shutdown();
+  // virtual void destroy(void);
+  virtual void setDestroyHandler(DestroyHandler* destroyHandler, void* userdata);
 protected:
   virtual void processEvent(Event* e);
 // event handlers
 private:
+  void fireDeviceDisposed();
   void update(void);
 
   void do_open(void*);
@@ -89,6 +156,7 @@ private:
   void do_add(void*);
   void do_pop(void*);
 
+  int     id;
   Window* window;
   RGLView* rglview;
   Scene* scene;
@@ -96,9 +164,13 @@ private:
 // destroy handler:
   DestroyHandler* destroyHandler;
   void* destroyHandler_userdata;
+  
+  list<IDeviceListener*> deviceListeners;
 
   friend class Command;
 };
+
+#if 0
 
 class ProxyDevice : public IDevice
 {
@@ -132,5 +204,7 @@ public:
 
   
 };
+
+#endif
 
 #endif /* DEVICE_H */
