@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.8 2004/08/05 14:31:29 murdoch Exp $
+## $Id: scene.R,v 1.5.2.9 2004/08/05 15:38:00 murdoch Exp $
 ##
 
 ##
@@ -611,6 +611,4 @@ setUserMatrix <- function(userMatrix)
   	if (! ret$success)
     	stop("setUserMatrix failed")
 }
-
-
 	
