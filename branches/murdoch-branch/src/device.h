@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: device.h,v 1.1.1.1.2.5 2004/06/22 13:22:06 murdoch Exp $
+// $Id: device.h,v 1.1.1.1.2.6 2004/06/22 13:50:11 murdoch Exp $
 
 #include "types.h"
 #include "rglview.h"
@@ -38,11 +38,16 @@ public: // -- all methods are blocking until action completed
   bool add(SceneNode* node);
   bool pop(TypeID stackTypeID);
 
+  //Added by Ming Chen
+  //void bringToTop(void);
+
   void notifyDestroy(void* userdata);
 
 #ifdef _WIN32
   void bringToTop(void);
 #endif
+
+  RGLView* getRGLView(void);
 // event handlers
 private:
   void update(void);

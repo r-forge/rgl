@@ -1,5 +1,6 @@
 \name{rgl.texts}
 \alias{rgl.texts}
+\alias{text3d}
 \title{add text set shape}
 \description{
   Adds text to the scene. The text is positioned in 3D space. 

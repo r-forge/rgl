@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: enum.R,v 1.3.2.2 2004/06/22 13:22:04 murdoch Exp $
+## $Id: enum.R,v 1.3.2.3 2004/06/22 13:50:10 murdoch Exp $
 ##
 
 
@@ -52,7 +52,7 @@ rgl.enum.fogtype <- function (fogtype)
   return ( rgl.enum (fogtype, none=1, linear=2, exp=3, exp2=4) )
 
 rgl.enum.primtype <- function (primtype)
-  return ( rgl.enum( primtype, points=1, lines=2, triangles=3, quadrangles=4 ) )
+  return ( rgl.enum( primtype, points=1, lines=2, triangles=3, quadrangles=4, linestrips=5 ) )
 
 rgl.enum.halign <- function( halign)
   return ( rgl.enum (halign, left=-1, center=0, right=1 ) )
