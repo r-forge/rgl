@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.4.2 2004/06/06 08:42:23 dadler Exp $
+// $Id: rglview.cpp,v 1.2.4.3 2004/06/10 23:10:24 dadler Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -69,13 +69,15 @@ void RGLView::paint(void) {
   renderContext.time = t;
   renderContext.deltaTime = dt;
 
+  windowImpl->beginGL();
+
   renderContext.rect.x = 0;
   renderContext.rect.y = 0;
   renderContext.rect.width = this->width;
   renderContext.rect.height = this->height;
 
-  windowImpl->beginGL();
   scene->render(&renderContext);
+
   if (flags & FSHOWFPS)
     fps.render(renderContext.time, &renderContext );
   glFinish();

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: devicemanager.cpp,v 1.1 2003/03/25 00:13:21 dadler Exp $
+// $Id: devicemanager.cpp,v 1.1.1.1.4.1 2004/06/10 23:10:24 dadler Exp $
 
 #include "devicemanager.h"
 #include "types.h"
@@ -14,7 +14,7 @@
 //
 
 
-DeviceManager::DeviceInfo::DeviceInfo(Device* inDevice, int inId)
+DeviceManager::DeviceInfo::DeviceInfo(IDevice* inDevice, int inId)
 { 
   device = inDevice;
   id = inId;
@@ -116,7 +116,8 @@ bool DeviceManager::openDevice(void)
 {
   bool success = false;
   
-  Device* device = new Device();
+  // IDevice* device = new ProxyDevice( new Device() );
+  IDevice* device = createDevice(); 
   if (device) {
 
     if ( device->open() ) {
@@ -143,7 +144,7 @@ bool DeviceManager::openDevice(void)
 // METHOD getCurrent
 //
 
-Device* DeviceManager::getCurrentDevice(void)
+IDevice* DeviceManager::getCurrentDevice(void)
 {
   return (current) ? current->device : NULL;
 }
@@ -152,7 +153,7 @@ Device* DeviceManager::getCurrentDevice(void)
 // METHOD getAnyDevice
 //
 
-Device* DeviceManager::getAnyDevice(void)
+IDevice* DeviceManager::getAnyDevice(void)
 {
   if (current == NULL)
     openDevice();
@@ -212,3 +213,14 @@ bool DeviceManager::setCurrent(int id)
 
   return success;
 }
+
+// 
+// Device Factory Method
+//
+
+IDevice* DeviceManager::createDevice() 
+{
+  return new Device();
+}
+
+

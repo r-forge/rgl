@@ -1,1 +1,1 @@
-include build/vc/Makefile 
+include build/mingw/Makefile 

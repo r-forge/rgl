@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.5.2.1 2004/05/29 10:43:32 dadler Exp $
+// $Id: api.cpp,v 1.5.2.2 2004/06/10 23:10:24 dadler Exp $
 
 #include "lib.h"
 #include "scene.h"
@@ -85,6 +85,7 @@ DeviceManager* deviceManager = NULL;
 //
 
 #include "lib.h"
+#include "x3d.h"
 
 void rgl_init(int* successptr)
 {
@@ -92,6 +93,7 @@ void rgl_init(int* successptr)
 
   if ( lib_init() ) {
     deviceManager = new DeviceManager();
+    rx3d_lib_init();
     success = true;
   }
 
@@ -111,6 +113,7 @@ void rgl_quit(int* successptr)
   if (deviceManager) {
     delete deviceManager;
     deviceManager = NULL;
+    rx3d_lib_quit();
   }
 
   lib_quit();
@@ -142,7 +145,7 @@ void rgl_dev_close(int* successptr)
 {
   bool success = false;
 
-  Device* device;
+  IDevice* device;
 
   device = deviceManager->getCurrentDevice();
 
@@ -161,7 +164,7 @@ void rgl_dev_bringtotop(int* successptr)
 {
   bool success = false;
 
-  Device* device;
+  IDevice* device;
 
   device = deviceManager->getCurrentDevice();
 
@@ -234,7 +237,7 @@ static Material currentMaterial(Color(1.0f,1.0f,1.0f),Color(1.0f,0.0f,0.0f));
 void rgl_clear(int* successptr, int *idata)
 {
   bool success = false;
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
 
@@ -262,7 +265,7 @@ void rgl_clear(int* successptr, int *idata)
 void rgl_pop(int* successptr, int* idata)
 {
   bool success = false;
-  Device* device = deviceManager->getCurrentDevice();
+  IDevice* device = deviceManager->getCurrentDevice();
 
   if (device) {
 
@@ -291,7 +294,7 @@ void rgl_bg(int* successptr, int* idata)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
   if (device) {
     bool sphere    = ( idata[0] ) ? true : false;
     int  fogtype   = idata[1];
@@ -312,7 +315,7 @@ void rgl_light ( int* successptr, int* idata, double* ddata )
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if ( device ) {
 
@@ -341,7 +344,7 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
 
@@ -363,7 +366,7 @@ void rgl_primitive(int* successptr, int* idata, double* vertex)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if ( device ) {
 
@@ -400,7 +403,7 @@ void rgl_surface(int* successptr, int* idata, double* x, double* z, double* y)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
     int nx         = idata[0];
@@ -417,7 +420,7 @@ void rgl_spheres(int* successptr, int* idata, double* vertex, double* radius)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
     int nvertex = idata[0];
@@ -433,7 +436,7 @@ void rgl_sprites(int* successptr, int* idata, double* vertex, double* radius)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
     int nvertex = idata[0];
@@ -497,7 +500,7 @@ void rgl_texts(int* successptr, int* idata, char** text, double* vertex)
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
     int ntext   = idata[0];
@@ -518,7 +521,7 @@ void rgl_bbox(int* successptr,
 {
   bool success = false;
 
-  Device* device = deviceManager->getAnyDevice();
+  IDevice* device = deviceManager->getAnyDevice();
 
   if (device) {
 
@@ -549,7 +552,7 @@ void rgl_snapshot(int* successptr, int* idata, char** cdata)
 {
   bool success = false;
 
-  Device* device = deviceManager->getCurrentDevice();
+  IDevice* device = deviceManager->getCurrentDevice();
 
   if (device) {
 

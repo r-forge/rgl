@@ -8,6 +8,7 @@
 
 #include "types.h"
 
+/*
 enum TypeID { 
   SHAPE=1, 
   LIGHT, 
@@ -15,6 +16,15 @@ enum TypeID {
   VIEWPOINT, 
   BACKGROUND 
 };
+*/
+
+#define SHAPE 1
+#define LIGHT 2
+#define BBOXDECO 3
+#define VIEWPOINT 4
+#define BACKGROUND 5
+
+typedef unsigned int TypeID;
 
 class SceneNode : public Node
 {

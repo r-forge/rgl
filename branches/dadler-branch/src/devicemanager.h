@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: devicemanager.h,v 1.1 2003/03/25 00:13:21 dadler Exp $
+// $Id: devicemanager.h,v 1.1.1.1.4.1 2004/06/10 23:10:24 dadler Exp $
 
 #include "types.h"
 #include "device.h"
@@ -36,24 +36,28 @@ public:
 
 // device services:
 
-  bool    openDevice(void);
-  Device* getCurrentDevice(void);
-  Device* getAnyDevice(void);
-  bool    setCurrent(int id);
-  int     getCurrent();
+  bool     openDevice(void);
+  IDevice* getCurrentDevice(void);
+  IDevice* getAnyDevice(void);
+  bool     setCurrent(int id);
+  int      getCurrent();
 
 // device destroy handler:
 
   void    notifyDestroy(void* userdata);
+
+protected:
+
+  IDevice* createDevice();
 
 private:
 
   class DeviceInfo : public Node
   {
   public:
-    DeviceInfo(Device* device, int id);
+    DeviceInfo(IDevice* device, int id);
     ~DeviceInfo();
-    Device* device;
+    IDevice* device;
     int id;
   };
 

@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: win32gui.h,v 1.3 2004/05/28 12:06:31 dadler Exp $
+// $Id: win32gui.h,v 1.3.2.1 2004/06/10 23:10:24 dadler Exp $
 
 
 #include "gui.h"
@@ -23,6 +23,12 @@ namespace gui {
   
     WindowImpl* createWindowImpl(Window* window);
       
+  };
+
+  class Win32GUIToolKit
+  {
+  public:
+    static void pollAndDispatch();
   };
 
 } // namespace gui

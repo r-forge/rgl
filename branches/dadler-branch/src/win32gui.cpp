@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: win32gui.cpp,v 1.5 2004/05/28 08:41:07 dadler Exp $
+// $Id: win32gui.cpp,v 1.5.2.1 2004/06/10 23:10:24 dadler Exp $
 
 #include "win32gui.h"
 
@@ -506,6 +506,15 @@ namespace gui {
     }
 
     return impl;
+  }
+
+  void Win32GUIToolKit::pollAndDispatch()
+  {
+		MSG m;
+    while ( PeekMessageA(&m,0,0,0,PM_REMOVE) ) {
+      TranslateMessage(&m);
+      DispatchMessage(&m);
+    }
   }
 
 } // namespace gui
