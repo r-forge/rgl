@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.6 2004/06/24 18:02:18 murdoch Exp $
+## $Id: scene.R,v 1.5.2.7 2004/06/29 12:54:58 murdoch Exp $
 ##
 
 ##
@@ -460,7 +460,7 @@ rgl.selectstate <- function()
 }
 
 
-rgl.locator <- function()
+rgl.select <- function()
 {
 	rgl.mousemode("selection")
 	
@@ -529,8 +529,8 @@ rgl.setprojection <- function(projection)
     	 view = ret$view)
 }   
      
-locator3d <- function() {
-  rect <- rgl.locator()
+select3d <- function() {
+  rect <- rgl.select()
   llx <- rect[1]
   lly <- rect[2]
   urx <- rect[3]

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.4 2004/06/24 18:02:19 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.5 2004/06/29 12:54:59 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -34,8 +34,8 @@ RGLView::RGLView(Scene* in_scene)
   scene = in_scene;
   drag  = 0;
   flags = 0;
-  mouseMode = NORMAL;
-  selectState = NONE;
+  mouseMode = mmNAVIGATING;
+  selectState = msNONE;
 }
 
 RGLView::~RGLView()
@@ -88,9 +88,9 @@ void RGLView::paint(void) {
     glGetDoublev(GL_PROJECTION_MATRIX,projMatrix);
     glGetIntegerv(GL_VIEWPORT,viewport);
 
-  if (selectState == MIDDLE)
+  if (selectState == msCHANGING)
     select.render(mousePosition);
-  if (flags & FSHOWFPS && selectState == NONE)
+  if (flags & FSHOWFPS && selectState == msNONE)
     fps.render(renderContext.time, &renderContext );
 
   glFinish();
@@ -120,7 +120,7 @@ void RGLView::buttonPress(int button, int mouseX, int mouseY)
 {
 
 
-    if (mouseMode == SELECTION)
+    if (mouseMode == mmSELECTING)
   	mouseSelectionBegin(mouseX,mouseY);
     else{
 	Viewpoint* viewpoint = scene->getViewpoint();
@@ -150,7 +150,7 @@ void RGLView::buttonRelease(int button, int mouseX, int mouseY)
 {
 
 
-  if (mouseMode == SELECTION)
+  if (mouseMode == mmSELECTING)
       mouseSelectionEnd(mouseX,mouseY);
   else{
   	if (drag == button) {
@@ -176,7 +176,7 @@ void RGLView::mouseMove(int mouseX, int mouseY)
   mouseX = clamp(mouseX, 0, width-1);
   mouseY = clamp(mouseY, 0, height-1);
 
-  if (mouseMode == SELECTION)
+  if (mouseMode == mmSELECTING)
       mouseSelectionContinue(mouseX,mouseY);
   switch(drag) {
     case BUTTON_DRAGDIRECTION:
@@ -425,6 +425,25 @@ bool RGLView::snapshot(PixmapFileFormatID formatID, const char* filename)
   return success;
 }
 
+void RGLView::setMouseMode(MouseModeID mode)
+{
+    	mouseMode = mode;
+}
+
+MouseSelectionID RGLView::getSelectState()
+{
+    	return selectState;
+}
+
+void RGLView::setSelectState(MouseSelectionID state)
+{
+    	selectState = state;
+}
+
+double* RGLView::getMousePosition()
+{
+    	return mousePosition;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -436,7 +455,7 @@ void RGLView::mouseSelectionBegin(int mouseX,int mouseY)
        	windowImpl->captureMouse(this);
 	mousePosition[0] = (float)mouseX/(float)width;
 	mousePosition[1] = (float)(height - mouseY)/(float)height;
-	selectState = MIDDLE;
+	selectState = msCHANGING;
 }
 
 void RGLView::mouseSelectionContinue(int mouseX,int mouseY)
@@ -448,10 +467,10 @@ void RGLView::mouseSelectionContinue(int mouseX,int mouseY)
 
 void RGLView::mouseSelectionEnd(int mouseX,int mouseY)
 {
-       	windowImpl->releaseMouse();
+    windowImpl->releaseMouse();
 	mousePosition[2] = (float)mouseX/(float)width;
 	mousePosition[3] = (float)(height- mouseY)/(float)height;
-	mouseMode = NORMAL;
-	selectState = DONE;
+	mouseMode = mmNAVIGATING;
+	selectState = msDONE;
 	View::update();
 }

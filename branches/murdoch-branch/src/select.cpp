@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: select.cpp,v 1.1.2.2 2004/06/24 18:02:19 murdoch Exp $
+// $Id: select.cpp,v 1.1.2.3 2004/06/29 12:54:59 murdoch Exp $
 
 #include "select.h"
 
@@ -22,6 +22,7 @@ void SELECT::render(double* position)
   glOrtho(0.0f,1.0f,0.0f,1.0f,0.0f,1.0f);
 
   glColor3f(0.5f,0.5f,0.5f);
+  glLineWidth(2.0);
 
   glBegin(GL_LINE_LOOP);
   	glVertex2f(llx, lly);
