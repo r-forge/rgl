@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.8 2004/06/24 18:02:19 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.9 2004/06/25 18:46:08 murdoch Exp $
 
 #include "lib.h"
 
@@ -41,7 +41,7 @@ EXPORT_SYMBOL void rgl_dev_close     (int* successptr);
 EXPORT_SYMBOL void rgl_dev_getcurrent(int* successptr, int* idptr);
 EXPORT_SYMBOL void rgl_dev_setcurrent(int* successptr, int* idata);
 #ifdef _WIN32
-EXPORT_SYMBOL void rgl_dev_bringtotop(int* successptr);
+EXPORT_SYMBOL void rgl_dev_bringtotop(int* successptr, int* stay);
 #endif
 
 // device services
@@ -164,7 +164,7 @@ void rgl_dev_close(int* successptr)
 }
 
 #ifdef _WIN32
-void rgl_dev_bringtotop(int* successptr)
+void rgl_dev_bringtotop(int* successptr, int* stay)
 {
   bool success = false;
 
@@ -174,7 +174,7 @@ void rgl_dev_bringtotop(int* successptr)
 
   if (device) {
 
-    device->bringToTop();
+    device->bringToTop(*stay);
     success = true;
 
   }

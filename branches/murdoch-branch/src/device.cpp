@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.1.1.1.2.5 2004/06/22 13:50:11 murdoch Exp $
+// $Id: device.cpp,v 1.1.1.1.2.6 2004/06/25 18:46:08 murdoch Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -65,9 +65,9 @@ void Device::close(void)
 }
 
 #ifdef _WIN32
-void Device::bringToTop(void)
+void Device::bringToTop(int stay)
 {
-  window->bringToTop();
+  window->bringToTop(stay);
 }
 #endif
 
