@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.7.2.5 2004/06/04 07:45:55 dadler Exp $
+// $Id: scene.cpp,v 1.7.2.6 2004/06/06 06:50:07 dadler Exp $
 
 
 #include "scene.h"
@@ -223,7 +223,7 @@ void Scene::render(RenderContext* renderContext)
   if (tested == false) {
     tested = true;
     const unsigned char* text = glGetString(GL_EXTENSIONS);
-    printMessage(text);
+    printMessage( reinterpret_cast<const char*>(text) );
   }
 
 
