@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.8 2004/08/09 19:29:44 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.9 2004/08/18 16:13:49 murdoch Exp $
 
 
 #include "gui.h"
@@ -14,8 +14,8 @@
 
 using namespace gui;
 
-enum MouseModeID {mmNAVIGATING=1, mmSELECTING };
-enum MouseSelectionID {msNONE=1, msCHANGING, msDONE};
+enum MouseModeID {mmNAVIGATING = 1, mmPOLAR, mmSELECTING};
+enum MouseSelectionID {msNONE = 1, msCHANGING, msDONE};
 
 class RGLView : public View
 {
@@ -66,6 +66,14 @@ private:
   void adjustDirectionBegin(int mouseX, int mouseY);
   void adjustDirectionUpdate(int mouseX, int mouseY);
   void adjustDirectionEnd();
+
+  void polarBegin(int mouseX, int mouseY);
+  void polarUpdate(int mouseX, int mouseY);
+  void polarEnd();
+
+  void trackballBegin(int mouseX, int mouseY);
+  void trackballUpdate(int mouseX, int mouseY);
+  void trackballEnd();
 
   PolarCoord camBase, dragBase, dragCurrent;
   Vertex rotBase, rotCurrent;

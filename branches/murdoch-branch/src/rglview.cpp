@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.9 2004/08/09 19:29:44 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.10 2004/08/18 16:13:49 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -250,41 +250,41 @@ void RGLView::captureLost()
 //   screen space is the same as in OpenGL, starting 0,0 at left/bottom(!)
 //
 
-//static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
-//
-//  float cubelen, cx,cy,dx,dy,r;
-//
-//  cubelen = (float) getMin(width,height);
-//  r   = cubelen * 0.5f;
-//
-//  cx  = ((float)width)  * 0.5f;
-//  cy  = ((float)height) * 0.5f;
-//  dx  = ((float)mouseX) - cx;
-//  dy  = ((float)mouseY) - cy;
-//
-//  //
-//  // dx,dy = distance to center in pixels
-//  //
-//
-//  dx = clamp(dx, -r,r);
-//  dy = clamp(dy, -r,r);
-//
-//  //
-//  // sin theta = dx / r
-//  // sin phi   = dy / r
-//  //
-//  // phi   = arc sin ( sin theta )
-//  // theta = arc sin ( sin phi   )
-//  //
-//
-//  return PolarCoord(
-//
-//    rad2degf( asinf( dx/r ) ),
-//    rad2degf( asinf( dy/r ) )
-//
-//  );
-//
-//}
+static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
+
+  float cubelen, cx,cy,dx,dy,r;
+
+  cubelen = (float) getMin(width,height);
+  r   = cubelen * 0.5f;
+
+  cx  = ((float)width)  * 0.5f;
+  cy  = ((float)height) * 0.5f;
+  dx  = ((float)mouseX) - cx;
+  dy  = ((float)mouseY) - cy;
+
+  //
+  // dx,dy = distance to center in pixels
+  //
+
+  dx = clamp(dx, -r,r);
+  dy = clamp(dy, -r,r);
+
+  //
+  // sin theta = dx / r
+  // sin phi   = dy / r
+  //
+  // phi   = arc sin ( sin theta )
+  // theta = arc sin ( sin phi   )
+  //
+
+  return PolarCoord(
+
+    rad2degf( asinf( dx/r ) ),
+    rad2degf( asinf( dy/r ) )
+
+  );
+
+}
 
 static Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
 
@@ -322,15 +322,55 @@ static Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
 
 void RGLView::adjustDirectionBegin(int mouseX, int mouseY)
 {
-  rotBase = screenToVector(width,height,mouseX,height-mouseY);
+  switch (mouseMode) {
+    case mmNAVIGATING:
+  	trackballBegin(mouseX, mouseY);
+  	break;
+    case mmPOLAR:
+  	polarBegin(mouseX, mouseY);
+  	break;
+    case mmSELECTING: ;
+  }
 }
 
 
 void RGLView::adjustDirectionUpdate(int mouseX, int mouseY)
 {
-  Viewpoint* viewpoint = scene->getViewpoint();
+  switch (mouseMode) {
+    case mmNAVIGATING:
+    	trackballUpdate(mouseX, mouseY);
+    	break;
+    case mmPOLAR:
+        polarUpdate(mouseX, mouseY);
+        break;
+    case mmSELECTING: ;
+  }
+}
 
-  rotCurrent = screenToVector(width,height,mouseX,height-mouseY);
+
+void RGLView::adjustDirectionEnd()
+{
+  switch (mouseMode) {
+    case mmNAVIGATING:
+ 	trackballEnd();
+	break;
+    case mmPOLAR:
+        polarEnd();
+        break;
+    case mmSELECTING: ;
+  }
+}
+
+void RGLView::trackballBegin(int mouseX, int mouseY)
+{
+	rotBase = screenToVector(width,height,mouseX,height-mouseY);
+}
+
+void RGLView::trackballUpdate(int mouseX, int mouseY)
+{
+	Viewpoint* viewpoint = scene->getViewpoint();
+
+  	rotCurrent = screenToVector(width,height,mouseX,height-mouseY);
 
 	windowImpl->beginGL();
 	viewpoint->updateMouseMatrix(rotBase,rotCurrent);
@@ -339,11 +379,47 @@ void RGLView::adjustDirectionUpdate(int mouseX, int mouseY)
 	View::update();
 }
 
-
-void RGLView::adjustDirectionEnd()
+void RGLView::trackballEnd()
 {
-    Viewpoint* viewpoint = scene->getViewpoint();
+	Viewpoint* viewpoint = scene->getViewpoint();
     viewpoint->mergeMouseMatrix();
+}
+
+void RGLView::polarBegin(int mouseX, int mouseY)
+{
+	Viewpoint* viewpoint = scene->getViewpoint();
+
+  	camBase = viewpoint->getPosition();
+
+	dragBase = screenToPolar(width,height,mouseX,height-mouseY);
+
+}
+
+void RGLView::polarUpdate(int mouseX, int mouseY)
+{
+	Viewpoint* viewpoint = scene->getViewpoint();
+
+	// float phiDragNow, thetaDragNow;
+
+	dragCurrent = screenToPolar(width,height,mouseX,height-mouseY);
+
+  	PolarCoord newpos = camBase - ( dragCurrent - dragBase );
+//	PolarCoord newpos = dragBase - dragCurrent;
+
+	newpos.phi = clamp( newpos.phi, -90.0f, 90.0f );
+
+  	viewpoint->setPosition( newpos );
+
+	View::update();
+
+}
+
+void RGLView::polarEnd()
+{
+
+ //    Viewpoint* viewpoint = scene->getViewpoint();
+ //    viewpoint->mergeMouseMatrix();
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -456,6 +532,11 @@ bool RGLView::snapshot(PixmapFileFormatID formatID, const char* filename)
 void RGLView::setMouseMode(MouseModeID mode)
 {
     	mouseMode = mode;
+    	if (mouseMode == mmPOLAR) {
+	    Viewpoint* viewpoint = scene->getViewpoint();
+	    viewpoint->setPosition( viewpoint->getPosition() );
+	    View::update();
+	}
 }
 
 MouseSelectionID RGLView::getSelectState()

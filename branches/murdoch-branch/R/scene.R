@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.11 2004/08/09 19:29:43 murdoch Exp $
+## $Id: scene.R,v 1.5.2.12 2004/08/18 16:13:48 murdoch Exp $
 ##
 
 ##
@@ -68,7 +68,7 @@ rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, inte
 {
   zoom <- rgl.clamp(zoom,-0.1,1)
   phi  <- rgl.clamp(phi,-90,90)
-  fov  <- rgl.clamp(fov,0,180)
+  fov  <- rgl.clamp(fov,1,179)
 
   if (missing(userMatrix)) 
     userMatrix <- rotate3d(phi*pi/180, 1, 0, 0) %*% rotate3d(-theta*pi/180, 0, 1, 0)
@@ -87,21 +87,51 @@ rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, inte
 }
 
 ##
-## get zoom
+## get and set zoom
 ##
 ##
 
-rgl.zoom <- function()
+rgl.zoom <- function(in_zoom)
 {
-    ret <- .C( symbol.C("rgl_zoom"), 
+	ret <- .C( symbol.C("rgl_getZoom"), 
+		  success=FALSE,
+		  zoom = double(1), 
+		  PACKAGE = "rgl")
+
+	if (! ret$success)
+		stop("rgl_zoom")
+	lastroom  <- ret$zoom
+	
+	if (! missing(in_zoom))
+		rgl.viewpoint(zoom = in_zoom, fov = rgl.fov(),userMatrix = getUserMatrix()) 
+	
+	lastroom
+	
+}
+
+
+
+##
+## get and set FOV
+##
+##
+
+rgl.fov <- function(in_fov)
+{
+    ret <- .C( symbol.C("rgl_getFOV"), 
       success=FALSE,
-      zoom = numeric(1), 
+      fov = double(1), 
       PACKAGE = "rgl")
       
     if (! ret$success)
-      stop("rgl_zoom")
-    ret$zoom  
-}
+      stop("rgl_fov")
+    lastfov <- ret$fov
+    
+    if (! missing(in_fov))
+    	rgl.viewpoint(fov=in_fov,zoom = rgl.zoom(),userMatrix = getUserMatrix()) 
+    lastfov
+    
+}	
 
 ##
 ## set background
@@ -395,7 +425,8 @@ rgl.sprites <- function( x, y, z, radius=1.0, ... )
 
 ##
 ## convert user coordinate to window coordinate
-## Ming Chen
+## 
+
 
 rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
 {
@@ -421,7 +452,7 @@ rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
 
 ##
 ## convert window coordiate to user coordiante
-## Ming Chen
+## 
 
 rgl.window2user <- function( x, y, z = 0, projection = rgl.getprojection())
 {
@@ -445,22 +476,22 @@ rgl.window2user <- function( x, y, z = 0, projection = rgl.getprojection())
   return(matrix(ret$point, ncol(window), 3, byrow = TRUE))
 }
 
-rgl.mousemode <- function(mode = "current")
+rgl.mouseHandlers <- function(arg = c('trackball','polar','selection'))
 {
-	mode <- rgl.enum(mode, current = 0, normal = 1, selection = 2)
+	mode <- match.arg(arg)
+	mode <- rgl.enum(mode,trackball = 1, polar = 2, selection = 3)
 	idata <- as.integer(mode)
 	
 	ret <- .C( symbol.C("rgl_mousemode"), 
-	    success=FALSE,
-	    mode=idata,
-	    PACKAGE="rgl"
-	)
-	
-	if (! ret$success)
-	    stop("rgl_mousemode")
-
-	c("normal", "selection")[ret$mode]
+		    success=FALSE,
+		    mode=idata,
+		    PACKAGE="rgl"
+		)
+		
+		if (! ret$success)
+		    stop("rgl_mouseHandlers")
 }
+
 
 rgl.selectstate <- function()
 {
@@ -479,14 +510,19 @@ rgl.selectstate <- function()
 
 rgl.select <- function()
 {
-	rgl.mousemode("selection")
+	
+	rgl.mouseHandlers("selection")
+	
 	
 	# number 3 means the mouse selection is done. ?? how to change 3 to done
 	while ((result <- rgl.selectstate())$state != 3)
 		Sys.sleep(0.1)
 	
 	rgl.setselectstate("none")
-	rgl.mousemode("normal")
+	
+	rgl.mouseHandlers("trackball")
+	
+	
 	return(result$mouseposition)
 }
 
@@ -519,7 +555,7 @@ rgl.getprojection <- function()
     )
     
     if (! ret$success)
-	    stop("rgl_projection")
+	    stop("rgl_getprojection")
 	    
     list(model = matrix(ret$model, 4, 4),
     	 proj = matrix(ret$proj, 4, 4),

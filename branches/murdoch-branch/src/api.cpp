@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.12 2004/08/06 20:00:44 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.13 2004/08/18 16:13:49 murdoch Exp $
 
 #include "lib.h"
 
@@ -77,7 +77,9 @@ EXPORT_SYMBOL void rgl_setselectstate(int* successptr, int *idata);
 EXPORT_SYMBOL void rgl_projection(int* successptr, int* set, double* model, double* proj, int* view);
 EXPORT_SYMBOL void rgl_getUserMatrix(int* successptr, double* userMatrix);
 EXPORT_SYMBOL void rgl_setUserMatrix(int* successptr, double* userMatrix);
-EXPORT_SYMBOL void rgl_zoom(int* successptr, double* zoom);
+EXPORT_SYMBOL void rgl_getZoom(int* successptr, double* zoom);
+EXPORT_SYMBOL void rgl_getFOV(int* successptr, double* fov);
+
 
 } // extern C
 
@@ -367,7 +369,7 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
   *successptr = success;
 }
 
-void rgl_zoom(int* successptr, double* zoom)
+void rgl_getZoom(int* successptr, double* zoom)
 {
   bool success = false;
   Device* device = deviceManager->getAnyDevice();
@@ -377,6 +379,22 @@ void rgl_zoom(int* successptr, double* zoom)
     Scene* scene = rglview->getScene();
     Viewpoint* viewpoint = scene->getViewpoint();
     *zoom = viewpoint->getZoom();
+    success = true;
+  }
+  *successptr = success;
+}
+
+
+void rgl_getFOV(int* successptr, double* fov)
+{
+  bool success = false;
+  Device* device = deviceManager->getAnyDevice();
+
+  if ( device ) {
+    RGLView* rglview = device->getRGLView();
+    Scene* scene = rglview->getScene();
+    Viewpoint* viewpoint = scene->getViewpoint();
+    *fov = viewpoint->getFOV();
     success = true;
   }
   *successptr = success;
