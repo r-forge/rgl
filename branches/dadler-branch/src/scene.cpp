@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.7.2.4 2004/05/30 08:35:04 dadler Exp $
+// $Id: scene.cpp,v 1.7.2.5 2004/06/04 07:45:55 dadler Exp $
 
 
 #include "scene.h"
@@ -214,8 +214,19 @@ bool Scene::pop(TypeID type)
   return success;
 }
 
+static bool tested  = false;
+
+#include "lib.h"
+
 void Scene::render(RenderContext* renderContext)
 {
+  if (tested == false) {
+    tested = true;
+    const unsigned char* text = glGetString(GL_EXTENSIONS);
+    printMessage(text);
+  }
+
+
   renderContext->scene     = this;
   renderContext->viewpoint = viewpoint;
 
@@ -230,16 +241,18 @@ void Scene::render(RenderContext* renderContext)
 
   glClearDepth(1.0);
   glDepthFunc(GL_LESS);
+  glDepthMask(GL_TRUE);
 
-  clearFlags  |= GL_DEPTH_BUFFER_BIT;
+  // if ( unsortedShapes.size() )
+    clearFlags  |= GL_DEPTH_BUFFER_BIT;
 
   // Color Buffer (optional - depends on background node)
   
-  clearFlags |= background->setupClear(renderContext);
+  clearFlags |= background->getClearFlags(renderContext);
 
   // clear
-
   glClear(clearFlags);
+  // renderContext.clear(viewport);
 
 
   //
@@ -268,7 +281,7 @@ void Scene::render(RenderContext* renderContext)
   // SETUP VIEWPORT TRANSFORMATION
   //
 
-  glViewport(0,0,renderContext->size.width, renderContext->size.height);
+  glViewport(renderContext->rect.x,renderContext->rect.y,renderContext->rect.width, renderContext->rect.height);
 
 
   //
@@ -282,6 +295,12 @@ void Scene::render(RenderContext* renderContext)
   //
   // RENDER BACKGROUND
   //
+
+  // DISABLE Z-BUFFER TEST
+  glDisable(GL_DEPTH_TEST);
+
+  // DISABLE Z-BUFFER FOR WRITING
+  glDepthMask(GL_FALSE);
 
   background->render(renderContext);
 
@@ -309,7 +328,14 @@ void Scene::render(RenderContext* renderContext)
     // RENDER SOLID SHAPES
     //
 
+    // ENABLE Z-BUFFER TEST 
     glEnable(GL_DEPTH_TEST);
+
+    // ENABLE Z-BUFFER FOR WRITING
+    glDepthMask(GL_TRUE);
+
+    // DISABLE BLENDING
+    glDisable(GL_BLEND);
 
     {
       std::vector<Shape*>::iterator iter;
@@ -329,6 +355,15 @@ void Scene::render(RenderContext* renderContext)
     // render shapes in bounding-box sorted order according to cop-distance
     // FIXME: must be (cop+znear)-distance
     //
+
+    // DISABLE Z-BUFFER FOR WRITING
+    glDepthMask(GL_FALSE);
+    
+    // SETUP BLENDING
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+    // ENABLE BLENDING
+    glEnable(GL_BLEND);
 
     //
     // CALCULATE CENTER OF PROJECTION
