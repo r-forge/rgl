@@ -4,18 +4,14 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.1 2004/06/22 12:40:14 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.2 2004/06/22 13:22:08 murdoch Exp $
 
 
 #include "gui.h"
 #include "scene.h"
 #include "fps.h"
-#include "select.h"
 
 using namespace gui;
-
-enum MouseModeID { mmCURRENT=0, NORMAL, SELECTION };
-enum MouseSelectionID { msCURRENT=0, NONE, MIDDLE, DONE};
 
 class RGLView : public View
 {
@@ -36,13 +32,6 @@ public:
   void keyPress(int code);
   Scene* getScene();
 
-  MouseModeID mouseMode;
-  MouseSelectionID selectState;
-  double  mousePosition[4];
-  // These are set after rendering the scene
-  GLdouble modelMatrix[16], projMatrix[16];
-  GLint viewport[4];
-
 protected:
 
   void setWindowImpl(WindowImpl* impl);
@@ -50,7 +39,7 @@ protected:
 
 private:
 
-
+  
 //
 // DRAG USER-INPUT
 //
@@ -82,24 +71,18 @@ private:
 
   int fovBaseY;
 
-// o DRAG FEATURE: mouseSelection
-  void mouseSelectionBegin(int mouseX,int mouseY);
-  void mouseSelectionContinue(int mouseX,int mouseY);
-  void mouseSelectionEnd(int mouseX,int mouseY);
-
-
+  
 //
 // RENDER SYSTEM
 //
-
+  
 // o LAYERS
-
+  
   Scene*  scene;
   FPS     fps;
-  SELECT  select;
 
 // o CONTEXT
-
+  
   RenderContext renderContext;
 
   bool autoUpdate;
@@ -110,9 +93,7 @@ private:
   };
 
   int  flags;
-
+  
 };
-
-
 
 #endif /* RGLVIEW_H */

@@ -2,7 +2,6 @@
 \alias{rgl.primitive}
 \alias{rgl.points}
 \alias{rgl.lines}
-\alias{rgl.linestrips}
 \alias{rgl.triangles}
 \alias{rgl.quads}
 \title{add primitive set shape}
@@ -12,7 +11,6 @@
 \usage{
 rgl.points(x, y, z, ... )
 rgl.lines(x, y, z, ... )
-rgl.linestrips(x, y, z, ...)
 rgl.triangles(x, y, z, ... )
 rgl.quads(x, y, z, ... )
 }
