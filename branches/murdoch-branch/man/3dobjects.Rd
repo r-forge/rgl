@@ -20,11 +20,7 @@ quads3d(x, y, z, ...)
   \item{ ... }{Material properties. See \code{\link{rgl.material}} for details.}  
 }
 \details{
-  Adds a shape node to the scene. The appearance is defined by the material properties.
-  See \code{\link{rgl.material}} for details.
-}
 
-\details{
 The functions \code{points3d}, \code{lines3d}, \code{segments3d},
 \code{triangles3d} and \code{quads3d} add points, joined lines, line segments,
 filled triangles or quadrilaterals to the plots.  They correspond to the OpenGL types
@@ -39,9 +35,11 @@ in one plane, or the results are undefined.
 These functions call the lower level functions \code{\link{rgl.points}}, \code{\link{rgl.linestrip}},
 and so on, and are provided for convenience.
 
+The appearance of the new objects are defined by the material properties.
+See \code{\link{rgl.material}} for details.
 }
 \author{
-  Duncan Murdoch
+  Ming Chen and Duncan Murdoch
 }
 
 \examples{
