@@ -1,6 +1,6 @@
 # demo: lsystem.r
 # author: Daniel Adler
-# $Id: lsystem.r,v 1.2.2.1 2004/05/12 14:08:57 murdoch Exp $
+# $Id: lsystem.r,v 1.2.2.2 2004/05/14 16:02:51 murdoch Exp $
 
 #
 # geometry 
@@ -191,5 +191,3 @@ rgl.demo.lsystem <- function (level=0) {
 
 rgl.demo.lsystem(level=1)
 
-# Added by Ming Chen
-rgl.bringtotop()
