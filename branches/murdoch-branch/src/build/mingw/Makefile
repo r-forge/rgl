@@ -2,7 +2,7 @@
 # Makefile for win32/mingwl
 # This file is part of RGL
 #
-# $Id: Makefile,v 1.9 2004/04/16 09:27:12 dadler Exp $
+# $Id: Makefile,v 1.9.2.1 2004/06/22 12:40:15 murdoch Exp $
 #
 
 all: target
@@ -18,8 +18,8 @@ ifeq ($(strip $(DEBUG) ),1)
 CPPFLAGS+=-DDEBUG
 CFLAGS+=-g
 else
-CPPFLAGS+=-DNDEBUG
-CFLAGS+=-O2 -fomit-frame-pointer
+CPPFLAGS+=-DDEBUG
+CFLAGS+=-g
 endif
 
 # ---[ C++ LANGUAGE ]----------------------------------------------------------
