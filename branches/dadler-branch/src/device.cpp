@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.2.2.1 2004/06/10 23:10:24 dadler Exp $
+// $Id: device.cpp,v 1.2.2.2 2004/06/11 07:49:49 dadler Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -42,14 +42,12 @@ Device::~Device()
 
 void Device::processEvent(Event* e)
 {
-  printMessage("Device: processEvent");
   Command* ethis = reinterpret_cast<Command*>(e);
     (this->*(ethis->func) )( ethis->userdata);
 }
 
 void Device::do_open(void*)
 {
-  printMessage("Device: open window...");
   window->setVisibility(true);  
 }
  
@@ -57,11 +55,8 @@ void Device::do_open(void*)
 
 bool Device::open()
 {
-  printMessage("Manager: starting thread now...");
   start();
-  printMessage("Manager: Device started... sending command...");
   postEvent( new Command(this,&Device::do_open,NULL) );
-  printMessage("Manager: posted...");
   return true;
 }
 
@@ -72,11 +67,12 @@ void Device::do_close(void*)
 
 void Device::close()
 {
-  /*
-  post( new Command(this,&Device::do_close,NULL) );
-  Thread::sleep(5);
-  delete this;
-   */
+/*
+  postWaitReply( new Command(this,&Device::do_close,NULL) );
+  while ( isRunning() )
+    sleep(1000);
+ */
+
 }
 
 /**
@@ -85,13 +81,10 @@ void Device::close()
 
 void Device::run()
 {
-  printMessage("Device: init console ...");
   scene   = new Scene();
   rglview = new RGLView(scene);
   window  = new Window( rglview, getGUIFactory() );
   window->setDestroyHandler(this, window);
-  printMessage("Device: run main loop...");
-
   Task::run();
 }
 
@@ -147,7 +140,6 @@ void Device::bringToTop(void)
 
 void Device::do_clear(void* userdata)
 {
-  printMessage("clear!");
   TypeID stackTypeID = (int) userdata;
   bool success;
   if ( success = scene->clear(stackTypeID) )
