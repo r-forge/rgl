@@ -1,14 +1,20 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: select.cpp,v 1.1.2.1 2004/06/22 13:50:12 murdoch Exp $
+// $Id: select.cpp,v 1.1.2.2 2004/06/24 18:02:19 murdoch Exp $
 
 #include "select.h"
 
 #include <stdio.h>
 
-void SELECT::render(double llx, double lly, double urx, double ury)
+void SELECT::render(double* position)
 {
+  double llx, lly, urx, ury;
+  llx = *position;
+  lly = *(position+1);
+  urx = *(position+2);
+  ury = *(position+3);
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glMatrixMode(GL_PROJECTION);

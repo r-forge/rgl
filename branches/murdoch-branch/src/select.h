@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: select.h,v 1.1.2.1 2004/06/22 13:50:12 murdoch Exp $
+// $Id: select.h,v 1.1.2.2 2004/06/24 18:02:19 murdoch Exp $
 
 #include "scene.h"
 
@@ -16,7 +16,7 @@ class SELECT
 {
 public:
   inline SELECT() { };
-  void render(double llx, double lly, double urx, double ury);
+  void render(double* position);
 };
 
 #endif // PLX_SELECT_H

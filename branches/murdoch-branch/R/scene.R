@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.5 2004/06/23 22:05:09 murdoch Exp $
+## $Id: scene.R,v 1.5.2.6 2004/06/24 18:02:18 murdoch Exp $
 ##
 
 ##
@@ -493,12 +493,17 @@ rgl.setselectstate <- function(state = "current")
 rgl.getprojection <- function()
 {
     ret <- .C( symbol.C("rgl_projection"),
+    	success=FALSE,
     	set = as.integer(0),
     	model = double(16),
     	proj = double(16),
     	view = integer(4),
     	PACKAGE = "rgl"
     )
+    
+    if (! ret$success)
+	    stop("rgl_getprojection")
+	    
     list(model = matrix(ret$model, 4, 4),
     	 proj = matrix(ret$proj, 4, 4),
     	 view = ret$view)

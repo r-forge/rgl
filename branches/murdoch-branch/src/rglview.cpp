@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.3 2004/06/22 13:50:11 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.4 2004/06/24 18:02:19 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -31,7 +31,7 @@
 RGLView::RGLView(Scene* in_scene)
  : View(0,0,256,256,0), camBase(0.0f,0.0f), dragBase(0.0f,0.0f),dragCurrent(0.0f,0.0f), autoUpdate(false)
 {
-  scene = in_scene;   
+  scene = in_scene;
   drag  = 0;
   flags = 0;
   mouseMode = NORMAL;
@@ -89,8 +89,8 @@ void RGLView::paint(void) {
     glGetIntegerv(GL_VIEWPORT,viewport);
 
   if (selectState == MIDDLE)
-    select.render(mousePosition[0], mousePosition[1], mousePosition[2], mousePosition[3]);
-  if (flags & FSHOWFPS)
+    select.render(mousePosition);
+  if (flags & FSHOWFPS && selectState == NONE)
     fps.render(renderContext.time, &renderContext );
 
   glFinish();
@@ -118,12 +118,7 @@ void RGLView::keyPress(int key)
 
 void RGLView::buttonPress(int button, int mouseX, int mouseY)
 {
-  /*
-  // Debug
-  char buffer[100];
-  sprintf(buffer, "%d and %d",mouseX, mouseY);
-  printMessage(buffer);
-  */
+
 
     if (mouseMode == SELECTION)
   	mouseSelectionBegin(mouseX,mouseY);
@@ -153,12 +148,7 @@ void RGLView::buttonPress(int button, int mouseX, int mouseY)
 
 void RGLView::buttonRelease(int button, int mouseX, int mouseY)
 {
-  /*
-  //Debug
-  char buffer[100];
-  sprintf(buffer, "%d and %d",mouseX, mouseY);
-  printMessage(buffer);
-  */
+
 
   if (mouseMode == SELECTION)
       mouseSelectionEnd(mouseX,mouseY);
@@ -291,7 +281,7 @@ static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
 
     rad2degf( asinf( dx/r ) ),
     rad2degf( asinf( dy/r ) )
-    
+
   );
 
 }
@@ -318,7 +308,7 @@ void RGLView::adjustDirectionUpdate(int mouseX, int mouseY)
   PolarCoord newpos = camBase - ( dragCurrent - dragBase );
 
   newpos.phi = clamp( newpos.phi, -90.0f, 90.0f );
-  
+
   viewpoint->setPosition( newpos );
   View::update();
 }
@@ -411,7 +401,7 @@ bool RGLView::snapshot(PixmapFileFormatID formatID, const char* filename)
     // alloc pixmap memory
 
     Pixmap snapshot;
-  
+
     snapshot.init(RGB24, width, height, 8);
 
     // read front buffer
