@@ -1,3 +1,11 @@
+DADLER-BRANCH 'towards 0.65' TODO :
+==================================
+
+- move rgl's demos to rgldemos.
+- rgl's demo will ask user to download package 'rgldemos'.
+- update new build structure
+
+
 TODO
 ====
 - package vignette 

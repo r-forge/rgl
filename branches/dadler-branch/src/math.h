@@ -1,35 +1,22 @@
-#ifndef MATH_H
-#define MATH_H
+#ifndef RGL_MATH_H
+#define RGL_MATH_H
 
 // C++ header file
 // This file is part of RGL
 //
-// $Id: math.h,v 1.4 2003/11/21 21:56:03 dadler Exp $
+// $Id: math.h,v 1.4.4.1 2004/05/29 10:43:33 dadler Exp $
 
 #include <math.h>
 #include <float.h>
 
-/**
- * get most significant bit
- * @param x unsigned value
- * @return bit position between 1..32 or 0 if value was 0
- **/
-inline int msb(unsigned int x) {
-  if (x) {
-    int bit = sizeof(int)*8;
-    unsigned int mask = 1<<((sizeof(int)*8)-1);
-    while ( !(x & mask) ) {
-      --bit; mask >>= 1;
-    }
-    return bit;
-  } else
-    return 0;
-}
+
+#include "types.h"
 
 #ifndef PI
 #define PI      3.1415926535897932384626433832795
 #endif
 
+/*
 #ifndef sinf
 #define sinf(X) sin(X)
 #define cosf(X) cos(X)
@@ -38,17 +25,10 @@ inline int msb(unsigned int x) {
 #define tanf(X) tan(X)
 #define sqrtf(X) sqrt(X)
 #endif
+ */
 
 inline float deg2radf(float deg) { return ((float)(PI/180.0)) * deg; }
 inline float rad2degf(float rad) { return rad / ((float)(PI/180.0)); }
-
-inline int   getMin(int a, int b)     { return (a <= b) ? a : b; }
-inline float getMin(float a, float b) { return (a <= b) ? a : b; }
-inline int   getMax(int a, int b)     { return (a >= b) ? a : b; }
-inline float getMax(float a, float b) { return (a >= b) ? a : b; }
-
-inline float clamp(float v, float floor, float ceil) { return (v<floor) ? floor : ( (v>ceil) ? ceil : v ); }
-inline int   clamp(int   v, int   floor, int   ceil) { return (v<floor) ? floor : ( (v>ceil) ? ceil : v ); }
 
 struct Vertex
 {
@@ -66,6 +46,12 @@ struct Vertex
   void   rotateY(float degree);
   float x,y,z;
 };
+
+template<>
+inline void copy(double* from, Vertex* to, int size)
+{
+  copy(from, (float*) to, size*3);
+}
 
 typedef Vertex  Vertex3;
 typedef Vertex3 Normal;
@@ -129,53 +115,6 @@ struct PolarCoord
   float phi;
 };
 
-
-//
-// CLASS
-//   AABox (axis-aligned box)
-//
-
-class Sphere;
-
-class AABox {
-public:
-  AABox();
-  void invalidate(void);
-  bool isValid(void) const;
-  void operator += (const AABox& aabox);
-  void operator += (const Sphere& sphere);
-  void operator += (const Vertex& vertex);
-  Vertex getCenter(void) const;
-  Vertex vmin, vmax;
-};
-
-
-//
-// CLASS
-//   Sphere
-//
-
-class Sphere {
-public:
-  Sphere() : center(0,0,0), radius(1) {};
-  Sphere(const Vertex& center, const float radius);
-  Sphere(const float radius);
-  Sphere(const AABox& aabox);
-  Vertex center;
-  float radius;
-};
-
-
-//
-// CLASS
-//   Frustum
-//
-
-class Frustum {
-public:
-  void enclose(float sphere_radius, float fovangle, RectSize& winsize);
-  float left, right, bottom, top, znear, zfar, distance;
-};
 
 
 #endif /* MATH_H */

@@ -1,9 +1,10 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.5 2004/05/28 07:05:26 dadler Exp $
+// $Id: api.cpp,v 1.5.2.1 2004/05/29 10:43:32 dadler Exp $
 
 #include "lib.h"
+#include "scene.h"
 
 //
 // RGL API EXPORT MACRO
@@ -292,7 +293,7 @@ void rgl_bg(int* successptr, int* idata)
 
   Device* device = deviceManager->getAnyDevice();
   if (device) {
-    bool sphere    = (bool) idata[0];
+    bool sphere    = ( idata[0] ) ? true : false;
     int  fogtype   = idata[1];
 
     success = device->add( new Background(currentMaterial, sphere, fogtype) );
@@ -315,7 +316,7 @@ void rgl_light ( int* successptr, int* idata, double* ddata )
 
   if ( device ) {
 
-    bool  viewpoint_rel = (bool)  idata[0];
+    bool  viewpoint_rel = ( idata[0] ) ? true : false;
 
     Color ambient;
     Color diffuse;
@@ -349,7 +350,7 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
     float fov         = (float) ddata[2];
     float zoom        = (float) ddata[3];
 
-    int   interactive =         idata[0];
+    bool  interactive = ( idata[0] ) ? true : false;
 
     success = device->add( new Viewpoint( PolarCoord(theta, phi), fov, zoom, interactive) );
 
@@ -527,7 +528,7 @@ void rgl_bbox(int* successptr,
     int   xlen       =        idata[3];
     int   ylen       =        idata[4];
     int   zlen       =        idata[5];
-    int   marklen_rel =       idata[6];
+    bool  marklen_rel =       ( idata[6] ) ? true : false;
 
     float xunit      = (float) ddata[0];
     float yunit      = (float) ddata[1];
@@ -538,7 +539,7 @@ void rgl_bbox(int* successptr,
     AxisInfo yaxis(yticks, yat, ytext, ylen, yunit);
     AxisInfo zaxis(zticks, zat, ztext, zlen, zunit);
 
-    success = device->add( new BBoxDeco(currentMaterial, xaxis, yaxis, zaxis, marklen, (bool) marklen_rel ) );
+    success = device->add( new BBoxDeco(currentMaterial, xaxis, yaxis, zaxis, marklen, marklen_rel ) );
   }
 
   *successptr = (int) success;
