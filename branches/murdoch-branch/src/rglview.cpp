@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.7 2004/08/05 14:31:30 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.8 2004/08/05 15:38:00 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -250,41 +250,41 @@ void RGLView::captureLost()
 //   screen space is the same as in OpenGL, starting 0,0 at left/bottom(!)
 //
 
-static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
-
-  float cubelen, cx,cy,dx,dy,r;
-
-  cubelen = (float) getMin(width,height);
-  r   = cubelen * 0.5f;
-
-  cx  = ((float)width)  * 0.5f;
-  cy  = ((float)height) * 0.5f;
-  dx  = ((float)mouseX) - cx;
-  dy  = ((float)mouseY) - cy;
-
-  //
-  // dx,dy = distance to center in pixels
-  //
-
-  dx = clamp(dx, -r,r);
-  dy = clamp(dy, -r,r);
-
-  //
-  // sin theta = dx / r
-  // sin phi   = dy / r
-  //
-  // phi   = arc sin ( sin theta )
-  // theta = arc sin ( sin phi   )
-  //
-
-  return PolarCoord(
-
-    rad2degf( asinf( dx/r ) ),
-    rad2degf( asinf( dy/r ) )
-
-  );
-
-}
+//static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
+//
+//  float cubelen, cx,cy,dx,dy,r;
+//
+//  cubelen = (float) getMin(width,height);
+//  r   = cubelen * 0.5f;
+//
+//  cx  = ((float)width)  * 0.5f;
+//  cy  = ((float)height) * 0.5f;
+//  dx  = ((float)mouseX) - cx;
+//  dy  = ((float)mouseY) - cy;
+//
+//  //
+//  // dx,dy = distance to center in pixels
+//  //
+//
+//  dx = clamp(dx, -r,r);
+//  dy = clamp(dy, -r,r);
+//
+//  //
+//  // sin theta = dx / r
+//  // sin phi   = dy / r
+//  //
+//  // phi   = arc sin ( sin theta )
+//  // theta = arc sin ( sin phi   )
+//  //
+//
+//  return PolarCoord(
+//
+//    rad2degf( asinf( dx/r ) ),
+//    rad2degf( asinf( dy/r ) )
+//
+//  );
+//
+//}
 
 static Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
 

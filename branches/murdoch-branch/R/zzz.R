@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: zzz.R,v 1.8.2.1 2004/08/05 14:31:29 murdoch Exp $
+## $Id: zzz.R,v 1.8.2.2 2004/08/05 15:38:00 murdoch Exp $
 ##
 
 ##
@@ -31,13 +31,6 @@
   
   library.dynam( "rgl", pkg, lib)
   
-  # for the comboBox widget 
-  require(tcltk)
-  extra <- system.file("exec", package = "rgl")
-  if(.Platform$OS.type == "windows")
-		extra <- gsub("\\\\", "/", extra)
-  addTclPath(extra)
-		
   ret <- .C( symbol.C("rgl_init"), 
     success=FALSE , 
     PACKAGE="rgl"
