@@ -11,7 +11,8 @@ class RenderContext
 {
 public:
   Scene* scene;
-  RectSize size;
+  Rect     rect;
+  // RectSize size;
   Viewpoint* viewpoint;
   GLBitmapFont* font;
   double time;
