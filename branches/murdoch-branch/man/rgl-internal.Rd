@@ -19,7 +19,6 @@
 \alias{rgl.enum.halign}
 \alias{rgl.enum.texmagfilter}
 \alias{rgl.enum.texminfilter}
-\alias{rgl.mousemode}
 \alias{rgl.select}
 \alias{rgl.selectstate}
 \alias{rgl.setselectstate}
@@ -48,7 +47,6 @@ rgl.enum.primtype(primtype)
 rgl.enum.halign(halign)
 rgl.enum.texmagfilter(magfiltertype)
 rgl.enum.texminfilter(minfiltertype)
-rgl.mousemode(mode)
 rgl.selectstate()
 rgl.select()
 rgl.setselectstate(state)

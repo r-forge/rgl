@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.12 2004/08/18 16:13:48 murdoch Exp $
+## $Id: scene.R,v 1.5.2.13 2004/08/19 14:07:59 murdoch Exp $
 ##
 
 ##
@@ -91,7 +91,7 @@ rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, inte
 ##
 ##
 
-rgl.zoom <- function(in_zoom)
+rgl.zoom <- function(zoom)
 {
 	ret <- .C( symbol.C("rgl_getZoom"), 
 		  success=FALSE,
@@ -102,8 +102,8 @@ rgl.zoom <- function(in_zoom)
 		stop("rgl_zoom")
 	lastroom  <- ret$zoom
 	
-	if (! missing(in_zoom))
-		rgl.viewpoint(zoom = in_zoom, fov = rgl.fov(),userMatrix = getUserMatrix()) 
+	if (! missing(zoom))
+		rgl.viewpoint(zoom = zoom, fov = rgl.fov(), userMatrix = rgl.userMatrix()) 
 	
 	lastroom
 	
@@ -116,7 +116,7 @@ rgl.zoom <- function(in_zoom)
 ##
 ##
 
-rgl.fov <- function(in_fov)
+rgl.fov <- function(fov)
 {
     ret <- .C( symbol.C("rgl_getFOV"), 
       success=FALSE,
@@ -127,8 +127,8 @@ rgl.fov <- function(in_fov)
       stop("rgl_fov")
     lastfov <- ret$fov
     
-    if (! missing(in_fov))
-    	rgl.viewpoint(fov=in_fov,zoom = rgl.zoom(),userMatrix = getUserMatrix()) 
+    if (! missing(fov))
+    	rgl.viewpoint(fov=fov, zoom = rgl.zoom(), userMatrix = getUserMatrix()) 
     lastfov
     
 }	
@@ -428,7 +428,7 @@ rgl.sprites <- function( x, y, z, radius=1.0, ... )
 ## 
 
 
-rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
+rgl.user2window <- function( x, y, z, projection = rgl.projection())
 {
   
   points <- rbind(x,y,z)
@@ -454,7 +454,7 @@ rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
 ## convert window coordiate to user coordiante
 ## 
 
-rgl.window2user <- function( x, y, z = 0, projection = rgl.getprojection())
+rgl.window2user <- function( x, y, z = 0, projection = rgl.projection())
 {
   
   window <- rbind(x,y,z)
@@ -476,10 +476,10 @@ rgl.window2user <- function( x, y, z = 0, projection = rgl.getprojection())
   return(matrix(ret$point, ncol(window), 3, byrow = TRUE))
 }
 
-rgl.mouseHandlers <- function(arg = c('trackball','polar','selection'))
+rgl.mouseHandlers <- function(type = c('trackball','polar','selection'))
 {
-	mode <- match.arg(arg)
-	mode <- rgl.enum(mode,trackball = 1, polar = 2, selection = 3)
+	mode <- match.arg(type)
+	mode <- rgl.enum(mode, trackball = 1, polar = 2, selection = 3)
 	idata <- as.integer(mode)
 	
 	ret <- .C( symbol.C("rgl_mousemode"), 
@@ -490,6 +490,7 @@ rgl.mouseHandlers <- function(arg = c('trackball','polar','selection'))
 		
 		if (! ret$success)
 		    stop("rgl_mouseHandlers")
+	c('trackball', 'polar', 'selection')[idata]
 }
 
 
@@ -543,11 +544,10 @@ rgl.setselectstate <- function(state = "current")
 	c("none", "middle", "done")[ret$state]
 }
 
-rgl.getprojection <- function()
+rgl.projection <- function()
 {
     ret <- .C( symbol.C("rgl_projection"),
-    	success=FALSE,
-    	set = as.integer(0),
+    	success = FALSE,
     	model = double(16),
     	proj = double(16),
     	view = integer(4),
@@ -555,28 +555,8 @@ rgl.getprojection <- function()
     )
     
     if (! ret$success)
-	    stop("rgl_getprojection")
+	    stop("rgl_projection failed")
 	    
-    list(model = matrix(ret$model, 4, 4),
-    	 proj = matrix(ret$proj, 4, 4),
-    	 view = ret$view)
-}
-
-rgl.setprojection <- function(projection)
-{
-    model <- as.double(projection$model)
-    stopifnot(length(model) == 16)
-    proj <- as.double(projection$proj)
-    stopifnot(length(proj) == 16)
-    view <- as.integer(projection$view)
-    stopifnot(length(view) == 4)
-    ret <- .C( symbol.C("rgl_projection"),
-    	set = as.integer(1),
-    	model = model,
-    	proj = proj,
-    	view = view,
-    	PACKAGE = "rgl"
-    )
     list(model = matrix(ret$model, 4, 4),
     	 proj = matrix(ret$proj, 4, 4),
     	 view = ret$view)
@@ -599,7 +579,7 @@ select3d <- function() {
   	lly <- ury
   	ury <- temp
   }
-  proj <- rgl.getprojection();
+  proj <- rgl.projection();
   function(x,y,z) {
     pixel <- rgl.user2window(x,y,z,proj=proj)
     apply(pixel,1,function(p) (llx <= p[1]) && (p[1] <= urx)
@@ -640,9 +620,9 @@ text3d <- function(x, y, z, text, adj = 0.5, ... )
 	rgl.texts(x, y, z, text, adj = adj, ... )
 }
 
-getUserMatrix <- function()
+rgl.userMatrix <- function(userMatrix)
 {
-	ret <- .C( symbol.C("rgl_getUserMatrix"),
+	prev <- .C( symbol.C("rgl_getUserMatrix"),
     	success=FALSE,
     	userMatrix = double(16),
     	PACKAGE="rgl"
@@ -650,18 +630,16 @@ getUserMatrix <- function()
 
   	if (! ret$success)
     	stop("getUserMatrix failed")
-    return(matrix(ret$userMatrix, 4, 4))
-}
+    	prev <- matrix(prev$userMatrix, 4, 4)
+    	if (!missing(userMatrix)) {
+	    ret <- .C( symbol.C("rgl_setUserMatrix"),
+    			success=FALSE,
+    			userMatrix = as.double(userMatrix),
+    			PACKAGE="rgl"
+  			)
 
-setUserMatrix <- function(userMatrix)
-{
-	ret <- .C( symbol.C("rgl_setUserMatrix"),
-    	success=FALSE,
-    	userMatrix = as.double(userMatrix),
-    	PACKAGE="rgl"
-  	)
-
-  	if (! ret$success)
-    	stop("setUserMatrix failed")
+  	    if (! ret$success)
+    	    stop("setUserMatrix failed")
+	}
+	prev
 }
-	
