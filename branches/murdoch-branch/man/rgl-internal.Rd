@@ -19,6 +19,12 @@
 \alias{rgl.enum.halign}
 \alias{rgl.enum.texmagfilter}
 \alias{rgl.enum.texminfilter}
+\alias{rgl.mousemode}
+\alias{rgl.select}
+\alias{rgl.selectstate}
+\alias{rgl.setselectstate}
+\alias{rgl.getprojection}
+\alias{rgl.setprojection}
 \description{
   internal rgl functions
 }
@@ -42,6 +48,11 @@ rgl.enum.primtype(primtype)
 rgl.enum.halign(halign)
 rgl.enum.texmagfilter(magfiltertype)
 rgl.enum.texminfilter(minfiltertype)
+rgl.mousemode(mode)
+rgl.selectstate()
+rgl.select()
+rgl.setselectstate(state)
+rgl.getprojection()
 }
 \details{
   These are not to be called by the user.

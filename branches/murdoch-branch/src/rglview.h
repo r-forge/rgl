@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.4 2004/06/24 18:02:19 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.5 2004/06/29 12:54:59 murdoch Exp $
 
 
 #include "gui.h"
@@ -14,8 +14,8 @@
 
 using namespace gui;
 
-enum MouseModeID { mmCURRENT=0, NORMAL, SELECTION };
-enum MouseSelectionID { msCURRENT=0, NONE, MIDDLE, DONE};
+enum MouseModeID {mmNAVIGATING=1, mmSELECTING };
+enum MouseSelectionID {msNONE=1, msCHANGING, msDONE};
 
 class RGLView : public View
 {
@@ -36,9 +36,11 @@ public:
   void keyPress(int code);
   Scene* getScene();
 
-  MouseModeID mouseMode;
-  MouseSelectionID selectState;
-  double  mousePosition[4];
+  MouseModeID getMouseMode();
+  void        setMouseMode(MouseModeID mode);
+  MouseSelectionID getSelectState();
+  void        setSelectState(MouseSelectionID state);
+  double*     getMousePosition();
   // These are set after rendering the scene
   GLdouble modelMatrix[16], projMatrix[16];
   GLint viewport[4];
@@ -109,6 +111,10 @@ private:
   };
 
   int  flags;
+
+  MouseModeID mouseMode;
+  MouseSelectionID selectState;
+  double  mousePosition[4];
 
 };
 

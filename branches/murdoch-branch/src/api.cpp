@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.9 2004/06/25 18:46:08 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.10 2004/06/29 12:54:58 murdoch Exp $
 
 #include "lib.h"
 
@@ -618,7 +618,7 @@ void rgl_window2user(int* successptr, int* idata, double* point, double* pixel, 
   *successptr = (int) success;
 }
 
-
+#include "rglview.h"
 
 void rgl_mousemode(int* successptr, int *idata)
 {
@@ -629,7 +629,7 @@ void rgl_mousemode(int* successptr, int *idata)
 
     MouseModeID mouseMode = (MouseModeID) idata[0];
 	RGLView* rglview = device->getRGLView();
-	rglview->mouseMode = mouseMode;
+	rglview->setMouseMode(mouseMode);
 
     success = true;
 
@@ -648,12 +648,13 @@ void rgl_selectstate(int* successptr, int* selectstate, double* locations)
   	if (device){
 
 		RGLView* rglview = device->getRGLView();
-		selectstate[0] = (int)rglview->selectState;
+		selectstate[0] = (int)rglview->getSelectState();
+		double* mousePosition = rglview->getMousePosition();
 
-		locations[0] = (double)rglview->mousePosition[0];
-		locations[1] = (double)rglview->mousePosition[1];
-		locations[2] = (double)rglview->mousePosition[2];
-		locations[3] = (double)rglview->mousePosition[3];
+		locations[0] = *mousePosition;
+		locations[1] = *(mousePosition+1);
+		locations[2] = *(mousePosition+2);
+		locations[3] = *(mousePosition+3);
 
 		success = true;
 	}
@@ -671,7 +672,7 @@ void rgl_setselectstate(int* successptr, int *idata)
 
     MouseSelectionID selectState = (MouseSelectionID) idata[0];
 	RGLView* rglview = device->getRGLView();
-	rglview->selectState = selectState;
+	rglview->setSelectState(selectState);
 
     success = true;
 
