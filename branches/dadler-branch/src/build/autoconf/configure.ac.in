@@ -5,7 +5,7 @@
 ## Process this file with autoconf to produce a configure script.
 ## origin: src/build/autoconf/configure.ac.in
 ##
-## $Id: configure.ac.in,v 1.11 2004/02/27 17:46:51 dadler Exp $
+## $Id: configure.ac.in,v 1.11.4.1 2004/06/11 14:36:11 dadler Exp $
 ##
 
 AC_PREREQ(2.50)
@@ -33,7 +33,8 @@ CFLAGS="-Wall -pedantic"
 ## C++ language
 
 LIBS="-lstdc++"
-CXXFLAGS="${CFLAGS} -fno-exceptions -fno-rtti"
+CXXFLAGS="${CFLAGS}"
+#-fno-exceptions -fno-rtti
 
 
 ## X11 backend

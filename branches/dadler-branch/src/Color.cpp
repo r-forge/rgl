@@ -1,6 +1,7 @@
 #include "Color.hpp"
-
 #include "types.h"
+
+#include <cstdlib>
 
 //
 // COLOR UTILS

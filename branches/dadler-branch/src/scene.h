@@ -4,10 +4,9 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.4.2 2004/05/29 13:16:57 dadler Exp $
+// $Id: scene.h,v 1.3.4.3 2004/06/11 14:36:10 dadler Exp $
 
 #include "types.h"
-#include <windows.h>
 #include <vector>
 
 #include "SceneNode.hpp"
