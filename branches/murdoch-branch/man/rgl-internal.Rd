@@ -22,8 +22,6 @@
 \alias{rgl.select}
 \alias{rgl.selectstate}
 \alias{rgl.setselectstate}
-\alias{rgl.getprojection}
-\alias{rgl.setprojection}
 \description{
   internal rgl functions
 }
@@ -50,7 +48,6 @@ rgl.enum.texminfilter(minfiltertype)
 rgl.selectstate()
 rgl.select()
 rgl.setselectstate(state)
-rgl.getprojection()
 }
 \details{
   These are not to be called by the user.
