@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2 2003/11/21 15:16:11 dadler Exp $
+// $Id: rglview.cpp,v 1.2.4.1 2004/06/04 07:49:38 dadler Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -59,15 +59,6 @@ Scene* RGLView::getScene() {
   return scene;
 }
 
-void RGLView::resize(int width, int height) {
-
-  View::resize(width, height);
-
-  renderContext.size.width = width;
-  renderContext.size.height = height;
-
-}
-
 void RGLView::paint(void) {
 
   double last = renderContext.time;
@@ -78,11 +69,17 @@ void RGLView::paint(void) {
   renderContext.time = t;
   renderContext.deltaTime = dt;
 
+  renderContext.rect.x = 50;
+  renderContext.rect.y = 50;
+  renderContext.rect.width = this->width- 100;
+  renderContext.rect.height = this->height- 100;
+
   windowImpl->beginGL();
   scene->render(&renderContext);
   if (flags & FSHOWFPS)
     fps.render(renderContext.time, &renderContext );
   glFinish();
+
   windowImpl->endGL();
 
 //  if (flags & FAUTOUPDATE)
@@ -360,6 +357,7 @@ void RGLView::adjustZoomEnd()
 {
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
 // snapshot
 //
