@@ -15,8 +15,22 @@ private:
 public:
   SpriteSet(Material& in_material, int nvertex, double* vertex, int nsize, double* size);
   ~SpriteSet();
-  void render(RenderContext* renderContext);
-  void draw(RenderContext* renderContext);
+
+  /**
+   * overload
+   **/
+  virtual void render(RenderContext* renderContext);
+  
+  /**
+   * overload
+   **/
+  virtual void renderZSort(RenderContext* renderContext);
+
+  /**
+   * overload
+   **/
+  virtual void draw(RenderContext* renderContext);
+
 };
 
 #endif // SPRITE_SET_HPP

@@ -31,3 +31,7 @@ void Shape::render(RenderContext* renderContext)
 }
 
 
+void Shape::renderZSort(RenderContext* renderContext)
+{
+  render(renderContext);
+}

@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.7.2.2 2004/05/29 13:16:57 dadler Exp $
+// $Id: scene.cpp,v 1.7.2.3 2004/05/29 14:30:05 dadler Exp $
 
 
 #include "scene.h"
@@ -317,6 +317,12 @@ void Scene::render(RenderContext* renderContext)
     }
 
     //
+    // CALCULATE CENTER OF PROJECTION
+    //
+
+    renderContext->cop = viewpoint->getCOP(total_bsphere);
+
+    //
     // RENDER ALPHA SHADED
     //
     {
@@ -345,7 +351,7 @@ void Scene::render(RenderContext* renderContext)
         for (iter = distanceMap.begin() ; iter != distanceMap.end() ; ++ iter ) {
           int index = iter->second;
           Shape* shape = zsortShapes[index];
-          shape->render(renderContext);
+          shape->renderZSort(renderContext);
         }
       }
     }
