@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.3 2004/06/22 13:50:10 murdoch Exp $
+## $Id: scene.R,v 1.5.2.4 2004/06/22 15:53:45 murdoch Exp $
 ##
 
 ##
@@ -392,7 +392,7 @@ rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
 	idata,
 	as.double(points),
 	window=double(length(points)),
-	model=as.double(projection$proj),
+	model=as.double(projection$model),
 	proj=as.double(projection$proj),
 	view=as.integer(projection$view),
 	PACKAGE="rgl"

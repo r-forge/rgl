@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.5 2004/06/22 13:50:11 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.6 2004/06/22 15:53:45 murdoch Exp $
 
 #include "lib.h"
 
@@ -722,7 +722,7 @@ void rgl_projection(int* set, double* model, double* proj, int* view)
     Device* device = deviceManager->getCurrentDevice();
     RGLView* rglview = device->getRGLView();
 
-    if (set) {
+    if (*set) {
 	for (i=0; i<16; i++) {
 	    td = rglview->modelMatrix[i];
 	    rglview->modelMatrix[i] = model[i];
@@ -736,14 +736,6 @@ void rgl_projection(int* set, double* model, double* proj, int* view)
 	    rglview->viewport[i] = view[i];
 	    view[i] = ti;
 	}
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixd(rglview->modelMatrix);
-	glMatrixMode(GL_PROJECTION_MATRIX);
-	glLoadMatrixd(rglview->projMatrix);
-  	glViewport(rglview->viewport[0],
-  	           rglview->viewport[1],
-  	           rglview->viewport[2],
-  	           rglview->viewport[3]);
     } else {
 	for (i=0; i<16; i++) {
 	    model[i] = rglview->modelMatrix[i];
