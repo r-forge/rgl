@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: device.cpp,v 1.2.2.4 2004/06/12 16:11:32 dadler Exp $
+// $Id: device.cpp,v 1.2.2.5 2004/06/12 16:48:11 dadler Exp $
 
 #include "device.h"
 #include "rglview.h"
@@ -106,7 +106,7 @@ void Device::run()
 
 void Device::shutdown()
 {
-  delete this;
+  postQuit();
 }
 
 void Device::fireDeviceDisposed()

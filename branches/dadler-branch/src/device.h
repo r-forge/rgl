@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: device.h,v 1.2.2.2 2004/06/11 13:31:15 dadler Exp $
+// $Id: device.h,v 1.2.2.3 2004/06/12 16:48:11 dadler Exp $
 
 #include "types.h"
 #include "rglview.h"
@@ -105,7 +105,9 @@ public:
   Command(Device* me, CommandPtr f, void* userdata);
 };
 
-class Device : public Task, public IDevice, public IEventHandler, public DestroyHandler
+#include "player.hpp"
+
+class Device : public Player, public IDevice, public IEventHandler, public DestroyHandler
 {
 public: // -- all methods are blocking until action completed
 
