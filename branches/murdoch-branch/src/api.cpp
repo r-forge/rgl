@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.15 2004/08/19 16:44:25 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.16 2004/09/03 17:46:26 murdoch Exp $
 
 #include "lib.h"
 
@@ -71,7 +71,7 @@ EXPORT_SYMBOL void rgl_sprites  (int* successptr, int* idata, double* vertex, do
 EXPORT_SYMBOL void rgl_user2window(int* successptr, int* idata, double* point, double* pixel, double* model, double* proj, int* view);
 EXPORT_SYMBOL void rgl_window2user(int* successptr, int* idata, double* point, double* pixel, double* model, double* proj, int* view);
 EXPORT_SYMBOL void rgl_locator(int* successptr, double* locations);
-EXPORT_SYMBOL void rgl_mousemode(int* successptr, int* idata);
+EXPORT_SYMBOL void rgl_mouseMode(int* successptr, int* idata, int* ddata);
 EXPORT_SYMBOL void rgl_selectstate(int* successptr, int* selectstate, double* locations);
 EXPORT_SYMBOL void rgl_setselectstate(int* successptr, int *idata);
 EXPORT_SYMBOL void rgl_projection(int* successptr, double* model, double* proj, int* view);
@@ -654,16 +654,19 @@ void rgl_window2user(int* successptr, int* idata, double* point, double* pixel, 
   *successptr = (int) success;
 }
 
-void rgl_mousemode(int* successptr, int *idata)
+void rgl_mouseMode(int* successptr, int *idata, int* ddata)
 {
   bool success = false;
   Device* device = deviceManager->getCurrentDevice();
 
   if (device) {
-    	MouseModeID mouseMode = (MouseModeID) idata[0];
+	int button = ddata[0];
+
+	MouseModeID mouseMode = (MouseModeID) idata[0];
  	RGLView* rglview = device->getRGLView();
-    	(MouseModeID)(idata[0]) = rglview->getMouseMode();
-	rglview->setMouseMode(mouseMode);
+        (MouseModeID)(idata[0]) = rglview->getMouseMode(button);
+
+	rglview->setMouseMode(button, mouseMode);
 
     	success = true;
   }
