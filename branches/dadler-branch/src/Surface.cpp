@@ -107,3 +107,8 @@ void Surface::draw(RenderContext* renderContext)
 
   material.endUse(renderContext);
 }
+
+void Surface::renderZSort(RenderContext* renderContext)
+{
+  Shape::renderZSort(renderContext);
+}

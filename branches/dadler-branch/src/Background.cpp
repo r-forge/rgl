@@ -40,7 +40,7 @@ Background::Background(Material& in_material, bool in_sphere, int in_fogtype)
     material.colors.recycle(1);
 }
 
-GLbitfield Background::setupClear(RenderContext* renderContext)
+GLbitfield Background::getClearFlags(RenderContext* renderContext)
 {
   if (clearColorBuffer) {
     material.colors.getColor(0).useClearColor();
@@ -94,8 +94,8 @@ void Background::render(RenderContext* renderContext)
     float zfar  = znear + 1.0f;
     float hwidth, hheight;
 
-    float winwidth  = (float) renderContext->size.width;
-    float winheight = (float) renderContext->size.height;
+    float winwidth  = (float) renderContext->rect.width;
+    float winheight = (float) renderContext->rect.height;
 
     // aspect ratio
 

@@ -21,7 +21,7 @@ public:
   Background( Material& in_material = defaultMaterial, bool sphere=false, int fogtype=FOG_NONE);
   void render(RenderContext* renderContext);
   void draw(RenderContext* renderContext);
-  GLbitfield setupClear(RenderContext* renderContext);
+  GLbitfield getClearFlags(RenderContext* renderContext);
 protected:
   bool clearColorBuffer;
   bool sphere;

@@ -1,88 +1,140 @@
 #include "PrimitiveSet.hpp"
 
-#if 0
+// ===[ PRIMITIVE SET ]=======================================================
 
-void PrimitiveSet::renderZSort(RenderContext* renderContext)
+PrimitiveSet::PrimitiveSet (
+
+    Material& in_material, 
+    int in_nvertices, 
+    double* in_vertices, 
+    int in_type, 
+    int in_nverticesperelement
+
+)
+  :
+Shape(in_material)
 {
-  Vertex cop = renderContext->cop;
-  
-  std::multimap<float,int> distanceMap;
-  for (int index = 0 ; i < nelements ; ++index ) {
-    float distance = getCenter(index) - cop;
-    insert( std::pair<float,int>(distance,index)
-  }
+  type                = in_type;
+  nverticesperelement = in_nverticesperelement;
+  nvertices           = in_nvertices;
+  nprimitives         = in_nvertices / nverticesperelement;
 
-  drawBegin();
-  for ( std::multimap<float,int>::iterator iter = distanceMap.begin(); iter != distanceMap.end() ; ++ iter ) {
-    drawElement( iter->second );
-  }  
-  drawEnd();
-}
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// CLASS
-//   PrimitveSet
-//
-
-PrimitiveSet::PrimitiveSet(Material &in_material, GLenum in_type, int in_nvertex, double* vertex, int in_verticesPerElement)
-: Shape(in_material), nverticesPerElement(in_verticesPerElement)
-{
-  type = in_type;
-
-  nvertices = in_nvertex;
-  nelements = in_nvertex / N_VERTICES_PER_ELEMENT;
-
-  material.colorPerVertex(true, nelements);
+  material.colorPerVertex(true, nvertices);
 
   vertexArray.alloc(nvertices);
   for(int i=0;i<nvertices;i++) {
-    vertexArray[i].x = (float) vertex[i*3+0];
-    vertexArray[i].y = (float) vertex[i*3+1];
-    vertexArray[i].z = (float) vertex[i*3+2];
+    vertexArray[i].x = (float) in_vertices[i*3+0];
+    vertexArray[i].y = (float) in_vertices[i*3+1];
+    vertexArray[i].z = (float) in_vertices[i*3+2];
     boundingBox += vertexArray[i];
   }
 }
 
-void PrimitiveSet::drawBegin() {
+// ---------------------------------------------------------------------------
+
+void PrimitiveSet::drawBegin(RenderContext* renderContext)
+{
   material.beginUse(renderContext);
   vertexArray.beginUse();
 }
 
-void PrimitiveSet::drawEnd() {
+// ---------------------------------------------------------------------------
+
+void PrimitiveSet::drawAll(RenderContext* renderContext)
+{
+  glDrawArrays(type, 0, nverticesperelement*nprimitives );
+  // FIXME: refactor to vertexArray.draw( type, 0, nverticesperelement*nprimitives );
+}
+
+// ---------------------------------------------------------------------------
+
+void PrimitiveSet::drawElement(RenderContext* renderContext, int index)
+{
+  glDrawArrays(type, index*nverticesperelement, nverticesperelement);
+  // FIXME: refactor to vertexArray.draw( type, index*nverticesperelement, nverticesperelement );
+}
+
+// ---------------------------------------------------------------------------
+
+void PrimitiveSet::drawEnd(RenderContext* renderContext)
+{
   vertexArray.endUse();
   material.endUse(renderContext);
 }
 
-void PrimitiveSet::drawAll() {
-  glDrawArrays(GL_PRIMITIVE_TYPE, 0, nelements );
-}
+// ---------------------------------------------------------------------------
 
-void PrimitiveSet::drawElement(int index ) {
-  glDrawArrays(type, index*verticesPerIndex, 1);
-}
-
-void PrimitiveSet::draw(RenderContext* renderContext) {
-  drawBegin();
-  drawAll();
-  drawEnd();
-}
-
-void PrimitiveSet::drawZSort(RenderContext* renderContext) {
-  drawZSortBegin();
-  drawZSortAll();
-  drawZSortEnd();
-}
-
-
-Vertex PrimitiveSet::getCenter(int index)
+void PrimitiveSet::draw(RenderContext* renderContext)
 {
-  Vertex accu;
-  int begin = index*verticesPerIndex;
-  int end   = begin+verticesPerIndex;
-  for (int i = begin ; i < end ; ++i )
-    accu += vertexArray[i];
-  return accu * ( 1.0/verticesPerIndex );
+  drawBegin(renderContext);
+
+  drawAll(renderContext);
+
+  drawEnd(renderContext);
 }
 
-#endif 
+// ---------------------------------------------------------------------------
+
+void PrimitiveSet::renderZSort(RenderContext* renderContext)
+{
+  // sort by z-distance 
+
+  Vertex cop = renderContext->cop;
+
+  std::multimap<float,int> distanceMap;
+  for (int index = 0 ; index < nprimitives ; ++index ) {
+    float distance = ( getCenter(index) - cop ).getLength();
+    distanceMap.insert( std::pair<float,int>(-distance,index) );
+  }
+
+  // render ordered
+
+  drawBegin(renderContext);
+  
+  for ( std::multimap<float,int>::iterator iter = distanceMap.begin(); iter != distanceMap.end() ; ++ iter ) {
+    drawElement( renderContext, iter->second );
+  }  
+  
+  drawEnd(renderContext);
+}
+
+// ===[ FACE SET ]============================================================
+
+FaceSet::FaceSet(
+
+  Material& in_material, 
+  int in_nelements, 
+  double* in_vertex, 
+  int in_type, 
+  int in_nverticesperelement
+
+)
+: PrimitiveSet(in_material, in_nelements, in_vertex, in_type, in_nverticesperelement)
+{
+  if (material.lit) {
+    normalArray.alloc(nvertices);
+    for (int i=0;i<=nvertices-nverticesperelement;i+=nverticesperelement) {
+      normalArray[i+3] = normalArray[i+2] = normalArray[i+1] = normalArray[i] = vertexArray.getNormal(i,i+1,i+2);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+void FaceSet::drawBegin(RenderContext* renderContext)
+{  
+  PrimitiveSet::drawBegin(renderContext);
+
+  if (material.lit)
+    normalArray.beginUse();
+}
+
+// ---------------------------------------------------------------------------
+
+void FaceSet::drawEnd(RenderContext* renderContext)
+{  
+  if (material.lit)
+    normalArray.endUse();
+
+  PrimitiveSet::drawEnd(renderContext);
+}
