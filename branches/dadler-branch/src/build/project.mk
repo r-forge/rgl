@@ -40,7 +40,8 @@ rglview		\
 scene		\
 types		\
 win32gui	\
-win32lib
+win32lib	\
+x3d
 
 dump-mods:
 	@echo -n $(MODS)

@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "RGL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "RGL_EXPORTS" /D "HAVE_PNG_H" /FD /c
+# ADD CPP /nologo /MT /W3 /GR /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "RGL_EXPORTS" /D "HAVE_PNG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -111,6 +111,10 @@ PostBuild_Cmds=copy Debug\rgl.dll ..\..\..\rgl.dll
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\..\..\R\_internal.R
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\api.cpp
 # End Source File
 # Begin Source File
@@ -119,7 +123,15 @@ SOURCE=..\..\..\device.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\R\device.R
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\devicemanager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\R\enum.R
 # End Source File
 # Begin Source File
 
@@ -139,12 +151,20 @@ SOURCE=..\..\..\gui.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\R\material.R
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\math.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\pixmap.cpp
 # ADD CPP /I "../../../lpng" /I "../../../zlib"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\R\plugin.R
 # End Source File
 # Begin Source File
 
@@ -160,6 +180,10 @@ SOURCE=..\..\..\scene.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\R\scene.R
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\types.cpp
 # End Source File
 # Begin Source File
@@ -169,6 +193,18 @@ SOURCE=..\..\..\win32gui.cpp
 # Begin Source File
 
 SOURCE=..\..\..\win32lib.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\x3d.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\R\x3d.R
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\R\zzz.R
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -181,6 +217,10 @@ SOURCE=..\..\..\device.h
 # Begin Source File
 
 SOURCE=..\..\..\devicemanager.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\exec.hpp
 # End Source File
 # Begin Source File
 
@@ -233,6 +273,10 @@ SOURCE=..\..\..\types.h
 # Begin Source File
 
 SOURCE=..\..\..\win32gui.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\x3d.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -394,6 +438,10 @@ SOURCE=..\..\..\Viewpoint.cpp
 
 SOURCE=..\..\..\Viewpoint.hpp
 # End Source File
+# End Group
+# Begin Group "R"
+
+# PROP Default_Filter ".R"
 # End Group
 # Begin Source File
 
