@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.4.1 2004/05/29 10:43:33 dadler Exp $
+// $Id: rglview.h,v 1.1.1.1.4.2 2004/06/04 07:49:38 dadler Exp $
 
 
 #include "gui.h"
@@ -13,6 +13,7 @@
 #include "pixmap.h"
 
 using namespace gui;
+
 
 class RGLView : public View
 {
@@ -24,7 +25,6 @@ public:
   void show(void);
   void hide(void);
   void paint(void);
-  void resize(int width, int height);
   void buttonPress(int button, int mouseX, int mouseY);
   void buttonRelease(int button, int mouseX, int mouseY);
   void mouseMove(int mouseX, int mouseY);
