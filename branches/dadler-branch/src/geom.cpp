@@ -93,7 +93,7 @@ Sphere::Sphere(const Vertex& in_center, const float in_radius)
 //
 // 
 
-void Frustum::enclose(float sphere_radius, float fovangle, RectSize& winsize)
+void Frustum::enclose(float sphere_radius, float fovangle, int width, int height)
 {
   float fovradians = deg2radf(fovangle/2.0f);
 
@@ -117,23 +117,23 @@ void Frustum::enclose(float sphere_radius, float fovangle, RectSize& winsize)
 
     // inside bounding sphere: fit to max(winsize)
 
-    if (winsize.width >= winsize.height) {
+    if (width >= height) {
       hwidth  = hlen;
-      hheight = hlen * ( (float)winsize.height ) /  ( (float)winsize.width );
+      hheight = hlen * ( (float)height ) /  ( (float)width );
     } else {
-      hwidth  = hlen * ( (float)winsize.width  ) / ( (float) winsize.height );
+      hwidth  = hlen * ( (float)width  ) / ( (float)height );
       hheight = hlen;
     }
   } else {
 
     // outside(in front of) bounding sphere: fit to min(winsize)
 
-    if (winsize.width >= winsize.height) {
-      hwidth  = hlen * ( (float)winsize.width ) / ( (float)winsize.height );
+    if (width >= height) {
+      hwidth  = hlen * ( (float)width ) / ( (float)height );
       hheight = hlen;
     } else {
       hwidth  = hlen;
-      hheight = hlen * ( (float)winsize.height ) / ( (float)winsize.width );
+      hheight = hlen * ( (float)height ) / ( (float)width );
     }
 
   } 

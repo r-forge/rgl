@@ -50,7 +50,7 @@ public:
 
 class Frustum {
 public:
-  void enclose(float sphere_radius, float fovangle, RectSize& winsize);
+  void enclose(float sphere_radius, float fovangle, int win_width, int win_height);
   float left, right, bottom, top, znear, zfar, distance;
 };
 
