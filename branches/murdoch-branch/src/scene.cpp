@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: scene.cpp,v 1.6.2.2 2004/06/22 13:22:08 murdoch Exp $
+// $Id: scene.cpp,v 1.6.2.3 2004/06/22 13:50:11 murdoch Exp $
 
 #include "scene.h"
 #include "math.h"
@@ -954,6 +954,11 @@ void Viewpoint::setupTransformation(RenderContext* rctx, const Sphere& viewSpher
   glTranslatef( -viewSphere.center.x, -viewSphere.center.y, -viewSphere.center.z );
 }
 
+//Add by Ming Chen
+void Viewpoint::setInteractive(bool in_interactive)
+{
+	interactive = in_interactive;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1579,6 +1584,17 @@ LineSet::LineSet(Material& in_material, int in_nelements, double* in_vertex)
 {
   material.lit = false;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// CLASS
+//   LineStripSet
+//
+LineStripSet::LineStripSet(Material& in_material, int in_nelements, double* in_vertex)
+  : PrimitiveSet(in_material, GL_LINE_STRIP, in_nelements, in_vertex)
+{
+  material.lit = false;
+};
 
 //////////////////////////////////////////////////////////////////////////////
 //

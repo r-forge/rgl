@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: scene.h,v 1.3.2.2 2004/06/22 13:22:08 murdoch Exp $
+// $Id: scene.h,v 1.3.2.3 2004/06/22 13:50:12 murdoch Exp $
 
 
 #include "types.h"
@@ -174,6 +174,8 @@ public:
   void        setupTransformation(RenderContext* rctx, const Sphere& viewvolumeSphere);
   void        setupOrientation(RenderContext* rctx) const;
   bool        isInteractive() const;
+  //Add by Ming Chen
+  void		  setInteractive(bool in_interactive);
   Frustum     frustum;
 
 private:
@@ -439,6 +441,12 @@ class LineSet : public PrimitiveSet
 { 
 public:
   LineSet(Material& material, int in_nelements, double* in_vertex);
+};
+
+class LineStripSet : public PrimitiveSet
+{
+public:
+  LineStripSet(Material& material, int in_nelements, double* in_vertex);
 };
 
 //

@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.2 2004/06/22 13:22:04 murdoch Exp $
+## $Id: scene.R,v 1.5.2.3 2004/06/22 13:50:10 murdoch Exp $
 ##
 
 ##
@@ -249,6 +249,11 @@ rgl.quads <- function ( x, y, z, ... )
   rgl.primitive( "quadrangles", x, y, z, ... )
 }
 
+rgl.linestrips<- function ( x, y, z, ... )
+{
+  rgl.primitive( "linestrips", x, y, z, ... )
+}
+
 ##
 ## add surface
 ##
@@ -369,4 +374,211 @@ rgl.sprites <- function( x, y, z, radius=1.0, ... )
   if (! ret$success)
     print("rgl_sprites failed")
 
+}
+
+##
+## convert user coordinate to window coordinate
+## Ming Chen
+
+
+rgl.user2window <- function( x, y, z, projection = rgl.getprojection())
+{
+  
+  points <- rbind(x,y,z)
+  idata  <- as.integer(ncol(points))
+  
+  ret <- .C( symbol.C("rgl_user2window"),
+  	success=FALSE,
+	idata,
+	as.double(points),
+	window=double(length(points)),
+	model=as.double(projection$proj),
+	proj=as.double(projection$proj),
+	view=as.integer(projection$view),
+	PACKAGE="rgl"
+  )
+
+  if (! ret$success)
+    stop("rgl_user2window failed")
+  return(matrix(ret$window, ncol(points), 3, byrow = TRUE))
+}
+
+##
+## convert window coordiate to user coordiante
+## Ming Chen
+
+rgl.window2user <- function( x, y, z = 0, projection = rgl.getprojection())
+{
+  
+  window <- rbind(x,y,z)
+  idata  <- as.integer(ncol(window))
+  
+  ret <- .C( symbol.C("rgl_window2user"),
+  	success=FALSE,
+	idata,
+	point=double(length(window)),
+	window,
+	model=as.double(projection$model),
+	proj=as.double(projection$proj),
+	view=as.integer(projection$view),
+	PACKAGE="rgl"
+  )
+
+  if (! ret$success)
+    stop("rgl_window2user failed")
+  return(matrix(ret$point, ncol(window), 3, byrow = TRUE))
+}
+
+rgl.mousemode <- function(mode = "current")
+{
+	mode <- rgl.enum(mode, current = 0, normal = 1, selection = 2)
+	idata <- as.integer(mode)
+	
+	ret <- .C( symbol.C("rgl_mousemode"), 
+	    success=FALSE,
+	    mode=idata,
+	    PACKAGE="rgl"
+	)
+	
+	if (! ret$success)
+	    stop("rgl_mousemode")
+
+	c("normal", "selection")[ret$mode]
+}
+
+rgl.selectstate <- function()
+{
+	ret <- .C( symbol.C("rgl_selectstate"),
+    	success=FALSE,
+    	state = as.integer(0),
+    	mouseposition = double(4),
+    	PACKAGE="rgl"
+  	)
+
+  	if (! ret$success)
+    	stop("rgl_selectstate")
+    return(ret)
+}
+
+
+rgl.locator <- function()
+{
+	rgl.mousemode("selection")
+	
+	# number 3 means the mouse selection is done. ?? how to change 3 to done
+	while ((result <- rgl.selectstate())$state != 3)
+		Sys.sleep(0.1)
+	
+	rgl.setselectstate("none")
+	rgl.mousemode("normal")
+	return(result$mouseposition)
+}
+
+rgl.setselectstate <- function(state = "current")
+{
+	state = rgl.enum(state, current=0, none = 1, middle = 2, done = 3)
+	idata <- as.integer(c(state))
+	
+	  ret <- .C( symbol.C("rgl_setselectstate"), 
+	    success=FALSE,
+	    state = idata,
+	    PACKAGE="rgl"
+	  )
+	
+	  if (! ret$success)
+	    stop("rgl_setselectstate")
+
+	c("none", "middle", "done")[ret$state]
+}
+
+rgl.getprojection <- function()
+{
+    ret <- .C( symbol.C("rgl_projection"),
+    	set = as.integer(0),
+    	model = double(16),
+    	proj = double(16),
+    	view = integer(4),
+    	PACKAGE = "rgl"
+    )
+    list(model = matrix(ret$model, 4, 4),
+    	 proj = matrix(ret$proj, 4, 4),
+    	 view = ret$view)
+}
+
+rgl.setprojection <- function(projection)
+{
+    model <- as.double(projection$model)
+    stopifnot(length(model) == 16)
+    proj <- as.double(projection$proj)
+    stopifnot(length(proj) == 16)
+    view <- as.integer(projection$view)
+    stopifnot(length(view) == 4)
+    ret <- .C( symbol.C("rgl_projection"),
+    	set = as.integer(1),
+    	model = model,
+    	proj = proj,
+    	view = view,
+    	PACKAGE = "rgl"
+    )
+    list(model = matrix(ret$model, 4, 4),
+    	 proj = matrix(ret$proj, 4, 4),
+    	 view = ret$view)
+}   
+     
+locator3d <- function() {
+  rect <- rgl.locator()
+  llx <- rect[1]
+  lly <- rect[2]
+  urx <- rect[3]
+  ury <- rect[4]
+  
+  if ( llx > urx ){
+  	temp <- llx
+  	llx <- urx
+  	urx <- temp
+  }
+  if ( lly > ury ){
+  	temp <- lly
+  	lly <- ury
+  	ury <- temp
+  }
+  proj <- rgl.getprojection();
+  function(x,y,z) {
+    pixel <- rgl.user2window(x,y,z,proj=proj)
+    apply(pixel,1,function(p) (llx <= p[1]) && (p[1] <= urx)
+                           && (lly <= p[2]) && (p[2] <= ury)
+                           && (0 <= p[3])   && (p[3] <= 1))
+  }
+}
+
+
+points3d <- function ( x, y, z, ... )
+{
+  rgl.primitive( "points", x, y, z, ... )
+}
+
+lines3d <- function ( x, y, z, ... )
+{
+  rgl.primitive( "linestrips", x, y, z, ... )
+}
+
+segments3d <- function ( x, y, z, ... )
+{
+  rgl.primitive( "lines", x, y, z, ... )
+}
+
+triangles3d <- function ( x, y, z, ... )
+{
+  rgl.primitive( "triangles", x, y, z, ... )
+}
+
+
+quads3d <- function ( x, y, z, ... )
+{
+  rgl.primitive( "quadrangles", x, y, z, ... )
+}
+
+text3d <- function(x, y, z, text, justify="center", ... )
+{
+	rgl.texts(x, y, z, text, justify="center", ... )
 }
