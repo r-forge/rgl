@@ -4,7 +4,7 @@
 // C++ header file
 // This file is part of RGL
 //
-// $Id: rglview.h,v 1.1.1.1.2.3 2004/06/22 13:50:11 murdoch Exp $
+// $Id: rglview.h,v 1.1.1.1.2.4 2004/06/24 18:02:19 murdoch Exp $
 
 
 #include "gui.h"
@@ -50,7 +50,7 @@ protected:
 
 private:
 
-  
+
 //
 // DRAG USER-INPUT
 //
@@ -90,15 +90,15 @@ private:
 //
 // RENDER SYSTEM
 //
-  
+
 // o LAYERS
-  
+
   Scene*  scene;
   FPS     fps;
   SELECT  select;
 
 // o CONTEXT
-  
+
   RenderContext renderContext;
 
   bool autoUpdate;
@@ -109,7 +109,7 @@ private:
   };
 
   int  flags;
-  
+
 };
 
 #endif /* RGLVIEW_H */
