@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: api.cpp,v 1.4.2.14 2004/08/19 14:08:00 murdoch Exp $
+// $Id: api.cpp,v 1.4.2.15 2004/08/19 16:44:25 murdoch Exp $
 
 #include "lib.h"
 
@@ -359,7 +359,7 @@ void rgl_viewpoint(int* successptr, int* idata, double* ddata)
   if (device) {
 
     float fov         = (float) ddata[0];
-    float zoom        = (float) ddata[1];
+    float zoom        = ((float) ddata[1] - 1.0f)/((float)(VIEWPOINT_MAX_ZOOM-1));
 
     int   interactive =         idata[0];
 
@@ -380,6 +380,7 @@ void rgl_getZoom(int* successptr, double* zoom)
     Scene* scene = rglview->getScene();
     Viewpoint* viewpoint = scene->getViewpoint();
     *zoom = viewpoint->getZoom();
+    *zoom = 1.0f+(*zoom)* ((float)(VIEWPOINT_MAX_ZOOM-1)) ;
     success = true;
   }
   *successptr = success;
