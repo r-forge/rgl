@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: rglview.cpp,v 1.2.2.11 2004/08/19 14:08:00 murdoch Exp $
+// $Id: rglview.cpp,v 1.2.2.12 2004/08/19 16:44:26 murdoch Exp $
 
 #include "rglview.h"
 #include "opengl.h"
@@ -584,7 +584,6 @@ void RGLView::mouseSelectionEnd(int mouseX,int mouseY)
     windowImpl->releaseMouse();
 	mousePosition[2] = (float)mouseX/(float)width;
 	mousePosition[3] = (float)(height- mouseY)/(float)height;
-	mouseMode = mmNAVIGATING;
 	selectState = msDONE;
 	View::update();
 }

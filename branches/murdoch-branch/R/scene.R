@@ -2,7 +2,7 @@
 ## R source file
 ## This file is part of rgl
 ##
-## $Id: scene.R,v 1.5.2.13 2004/08/19 14:07:59 murdoch Exp $
+## $Id: scene.R,v 1.5.2.14 2004/08/19 16:44:25 murdoch Exp $
 ##
 
 ##
@@ -64,9 +64,9 @@ rgl.pop <- function( type = "shapes" )
 ##
 ##
 
-rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 0.0, interactive = TRUE, userMatrix )
+rgl.viewpoint <- function( theta = 0.0, phi = 15.0, fov = 60.0, zoom = 1.0, interactive = TRUE, userMatrix )
 {
-  zoom <- rgl.clamp(zoom,-0.1,1)
+  zoom <- rgl.clamp(zoom,0,Inf)
   phi  <- rgl.clamp(phi,-90,90)
   fov  <- rgl.clamp(fov,1,179)
 
@@ -128,7 +128,7 @@ rgl.fov <- function(fov)
     lastfov <- ret$fov
     
     if (! missing(fov))
-    	rgl.viewpoint(fov=fov, zoom = rgl.zoom(), userMatrix = getUserMatrix()) 
+    	rgl.viewpoint(fov=fov, zoom = rgl.zoom(), userMatrix = rgl.userMatrix()) 
     lastfov
     
 }	
@@ -490,7 +490,7 @@ rgl.mouseHandlers <- function(type = c('trackball','polar','selection'))
 		
 		if (! ret$success)
 		    stop("rgl_mouseHandlers")
-	c('trackball', 'polar', 'selection')[idata]
+	c('trackball', 'polar', 'selection')[ret$mode]
 }
 
 
@@ -512,7 +512,7 @@ rgl.selectstate <- function()
 rgl.select <- function()
 {
 	
-	rgl.mouseHandlers("selection")
+	oldhandlers <- rgl.mouseHandlers("selection")
 	
 	
 	# number 3 means the mouse selection is done. ?? how to change 3 to done
@@ -521,9 +521,8 @@ rgl.select <- function()
 	
 	rgl.setselectstate("none")
 	
-	rgl.mouseHandlers("trackball")
-	
-	
+	rgl.mouseHandlers(oldhandlers)
+
 	return(result$mouseposition)
 }
 
@@ -628,7 +627,7 @@ rgl.userMatrix <- function(userMatrix)
     	PACKAGE="rgl"
   	)
 
-  	if (! ret$success)
+  	if (! prev$success)
     	stop("getUserMatrix failed")
     	prev <- matrix(prev$userMatrix, 4, 4)
     	if (!missing(userMatrix)) {
