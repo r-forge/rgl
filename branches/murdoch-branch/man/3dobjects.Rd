@@ -15,7 +15,7 @@ segments3d(x, y, z, ...)
 triangles3d(x, y, z, ...)
 quads3d(x, y, z, ...)
 }
-\\arguments{
+\arguments{
   \item{x, y, z}{coordinates}
   \item{ ... }{Material properties. See \code{\link{rgl.material}} for details.}  
 }

@@ -13,7 +13,6 @@ rgl.texts(x, y, z, text, adj = 0.5, ...)
   \item{x, y, z}{point coordinates}
   \item{text}{text character vector to draw}
   \item{adj}{ one value specifying the horizontal adjustment }.
-  }
   \item{ ... }{Material properties. See \code{\link{rgl.material}} for details.}  
 }
 \details{
