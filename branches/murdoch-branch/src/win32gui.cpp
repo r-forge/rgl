@@ -1,7 +1,7 @@
 // C++ source
 // This file is part of RGL.
 //
-// $Id: win32gui.cpp,v 1.3 2003/11/21 15:13:07 dadler Exp $
+// $Id: win32gui.cpp,v 1.3.2.1 2004/05/12 14:08:57 murdoch Exp $
 
 #include "win32gui.h"
 
@@ -75,7 +75,19 @@ namespace gui {
         ShowWindow(windowHandle, SW_HIDE);
       }
     }
-  
+
+	//Added by Ming Chen begin
+	void bringToTop(void)
+    {
+
+      if (windowHandle) {
+		SetForegroundWindow(windowHandle); /* needed in Rterm */
+    	BringWindowToTop(windowHandle);    /* needed in Rgui --mdi */
+      } else
+        printMessage("window not bound");
+    }
+	//Added by Ming Chen end
+
     void update(void)
     {
       InvalidateRect(windowHandle, NULL, false);
