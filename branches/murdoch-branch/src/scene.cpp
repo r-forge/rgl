@@ -359,8 +359,7 @@ void Scene::render(RenderContext* renderContext)
       
         const AABox& aabox = shape->getBoundingBox();
 
-        Vertex4 center = aabox.getCenter();
-        center.w = 1.0f;   // FIXME:  this probably shouldn't be necessary
+        Vertex4 center = Vertex4(aabox.getCenter(), 1.0f);
 
         float distance = (Zrow*center) / (Wrow*center);
 
