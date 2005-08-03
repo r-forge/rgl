@@ -144,6 +144,7 @@ public:
   Vec3 operator*(Vec3 op2) const;
   Vec4 operator*(const Vec4& op2) const;
   Matrix4x4 operator*(const Matrix4x4& op2) const;
+  Vec4 getRow(int row);
   void setIdentity(void);
   void setRotate(int axis, float degree);
   void getData(double* dest);
