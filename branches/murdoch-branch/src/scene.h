@@ -70,6 +70,17 @@ public:
    * obtain bounded viewpoint
    **/
   Viewpoint* getViewpoint();
+  
+  /** 
+   * obtain model matrix
+   **/
+   
+  double* getModelMatrix();
+  double* getProjMatrix();
+  
+  void setupViewpoint(RenderContext* renderContext);
+  void setupTransformation(RenderContext* renderContext);
+  
 
 private:
 
@@ -129,6 +140,13 @@ private:
    * bounding box of overall scene
    **/
   AABox data_bbox;
+  
+  /**
+   * matrices and objects used in display
+   **/
+   
+  Sphere total_bsphere; 
+  GLdouble projMatrix[16], modelMatrix[16];  
 };
 
 

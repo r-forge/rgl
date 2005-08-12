@@ -731,9 +731,7 @@ void rgl_getModelMatrix(int* successptr, double* modelMatrix)
 	if (device){
 
 		RGLView* rglview = device->getRGLView();
-		for (int i=0; i<16; i++) {
-	    		modelMatrix[i] = rglview->modelMatrix[i];
-		}
+		rglview->getModelMatrix(modelMatrix);
     		success = RGL_SUCCESS;
   	}
 

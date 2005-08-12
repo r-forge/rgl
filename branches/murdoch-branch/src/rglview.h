@@ -45,8 +45,9 @@ public:
   double*     getMousePosition();
   void        getUserMatrix(double* dest);
   void        setUserMatrix(double* src);
-  // These are set after rendering the scene
-  GLdouble modelMatrix[16], projMatrix[16];
+  // These refresh the private members before the copy
+  void	      getModelMatrix(double* dest);
+  GLdouble projMatrix[16];
   GLint viewport[4];
 
 protected:
