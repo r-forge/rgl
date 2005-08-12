@@ -80,8 +80,8 @@ void RGLView::paint(void) {
   windowImpl->beginGL();
   scene->render(&renderContext);
 
-  glGetDoublev(GL_MODELVIEW_MATRIX,modelMatrix);
-  glGetDoublev(GL_PROJECTION_MATRIX,projMatrix);
+  glGetDoublev(GL_MODELVIEW_MATRIX,*getModelMatrix());
+  glGetDoublev(GL_PROJECTION_MATRIX,*getProjMatrix());
   glGetIntegerv(GL_VIEWPORT,viewport);
 
   if (selectState == msCHANGING)
@@ -518,6 +518,11 @@ void RGLView::setUserMatrix(double* src)
 	viewpoint->setUserMatrix(src);
 
 	View::update();
+}
+
+double* RGLView::getModelMatrix()
+{
+	return scene->getModelMatrix();
 }
 
 void RGLView::setDefaultMouseFunc()

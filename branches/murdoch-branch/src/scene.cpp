@@ -192,45 +192,8 @@ bool Scene::pop(TypeID type)
   return success;
 }
 
-void Scene::render(RenderContext* renderContext)
+void Scene::setupViewpoint(RenderContext* renderContext)
 {
-
-  renderContext->scene     = this;
-  renderContext->viewpoint = viewpoint;
-
-
-  //
-  // CLEAR BUFFERS
-  //
-
-  GLbitfield clearFlags = 0;
-
-  // Depth Buffer
-
-  glClearDepth(1.0);
-  glDepthFunc(GL_LESS);
-  glDepthMask(GL_TRUE);
-
-  // if ( unsortedShapes.size() )
-    clearFlags  |= GL_DEPTH_BUFFER_BIT;
-
-  // Color Buffer (optional - depends on background node)
-  
-  clearFlags |= background->getClearFlags(renderContext);
-
-  // clear
-  glClear(clearFlags);
-  // renderContext.clear(viewport);
-
-
-  //
-  // SETUP LIGHTING MODEL
-  //
-
-  setupLightModel(renderContext);
-
-
-  Sphere total_bsphere;
 
   if (data_bbox.isValid()) {
     
@@ -259,7 +222,70 @@ void Scene::render(RenderContext* renderContext)
   //
 
   viewpoint->setupFrustum( renderContext, total_bsphere );
+  
+  glGetDoublev(GL_PROJECTION_MATRIX, projMatrix);
+}  
 
+  //
+  // setupTransformation must be called *after* setupViewpoint
+  //
+  
+void Scene::setupTransformation(RenderContext* renderContext)
+{
+
+    viewpoint->setupTransformation( renderContext, total_bsphere );
+    
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelMatrix );    
+
+    Matrix4x4 M(modelMatrix);
+
+    Matrix4x4 P(projMatrix);
+    P = P*M;
+
+    renderContext->Zrow = P.getRow(2);
+    renderContext->Wrow = P.getRow(3);
+}
+
+
+void Scene::render(RenderContext* renderContext)
+{
+
+  renderContext->scene     = this;
+  renderContext->viewpoint = viewpoint;
+
+  //
+  // CLEAR BUFFERS
+  //
+
+  GLbitfield clearFlags = 0;
+
+  // Depth Buffer
+
+  glClearDepth(1.0);
+  glDepthFunc(GL_LESS);
+  glDepthMask(GL_TRUE);
+
+  // if ( unsortedShapes.size() )
+  
+  clearFlags  |= GL_DEPTH_BUFFER_BIT;
+
+  // Color Buffer (optional - depends on background node)
+  
+  clearFlags |= background->getClearFlags(renderContext);
+
+  // clear
+  glClear(clearFlags);
+  // renderContext.clear(viewport);
+
+
+  //
+  // SETUP LIGHTING MODEL
+  //
+
+  setupLightModel(renderContext);
+
+  setupViewpoint(renderContext);
+  
   //
   // RENDER BACKGROUND
   //
@@ -272,7 +298,6 @@ void Scene::render(RenderContext* renderContext)
 
   background->render(renderContext);
 
-  
   //
   // RENDER MODEL
   //
@@ -283,7 +308,7 @@ void Scene::render(RenderContext* renderContext)
     // SETUP VIEWPOINT TRANSFORMATION
     //
 
-    viewpoint->setupTransformation( renderContext, total_bsphere);
+    setupTransformation( renderContext );
 
     //
     // RENDER BBOX DECO
@@ -331,24 +356,6 @@ void Scene::render(RenderContext* renderContext)
 
     // ENABLE BLENDING
     glEnable(GL_BLEND);
-
-    //
-    // GET THE TRANSFORMATION
-    //
-
-    viewpoint->setupTransformation(renderContext, total_bsphere);
-    
-    double data[16];
-        
-    glGetDoublev(GL_MODELVIEW_MATRIX,data);
-    Matrix4x4 M(data);
-    
-    glGetDoublev(GL_PROJECTION_MATRIX,data);
-    Matrix4x4 P(data);
-    P = P*M;
-    
-    renderContext->Zrow = P.getRow(2);
-    renderContext->Wrow = P.getRow(3);
     
     {
       std::vector<Shape*>::iterator iter;
@@ -449,5 +456,13 @@ void Scene::calcDataBBox()
   }
 }
 
+double* Scene::getModelMatrix()
+{
+  return modelMatrix;
+}
 
+double* Scene::getProjMatrix()
+{
+  return projMatrix;
+}
 
