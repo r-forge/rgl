@@ -13,7 +13,7 @@ PrimitiveSet::PrimitiveSet (
 
 )
   :
-Shape(in_material, SHAPE, in_ignoreExtent)
+Shape(in_material, in_ignoreExtent, SHAPE)
 {
   type                = in_type;
   nverticesperelement = in_nverticesperelement;

@@ -30,40 +30,40 @@ axis3d <- function (edge, at = NULL, labels = TRUE, tick = TRUE, line = 0,
                 else labels <- NA
         }
 
-        if (is.null(pos)) {
-                pos <- matrix(NA,3,length(at))
-                if (edge[1] == '+') pos[1,] <- ranges$x[2]
-                else pos[1,] <- ranges$x[1]
-                if (edge[2] == '+') pos[2,] <- ranges$y[2]
-                else pos[2,] <- ranges$y[1]
-                if (edge[3] == '+') pos[3,] <- ranges$z[2]
-                else pos[3,] <- ranges$z[1]
-        }
-        else pos <- matrix(pos,3,length(at))
-        pos[coord,] <- at
-        ticksize <- 0.05*(pos[,1]-c(mean(ranges$x),mean(ranges$y),mean(ranges$z)))
+	mpos <- matrix(NA,3,length(at))
+	if (edge[1] == '+') mpos[1,] <- ranges$x[2]
+	else mpos[1,] <- ranges$x[1]
+	if (edge[2] == '+') mpos[2,] <- ranges$y[2]
+	else mpos[2,] <- ranges$y[1]
+	if (edge[3] == '+') mpos[3,] <- ranges$z[2]
+	else mpos[3,] <- ranges$z[1]
+                
+        ticksize <- 0.05*(mpos[,1]-c(mean(ranges$x),mean(ranges$y),mean(ranges$z)))
         ticksize[coord] <- 0
+               
+        if (!is.null(pos)) mpos <- matrix(pos,3,length(at))
+        mpos[coord,] <- at
 
-        x <- c(pos[1,1],pos[1,length(at)])
-        y <- c(pos[2,1],pos[2,length(at)])
-        z <- c(pos[3,1],pos[3,length(at)])
+        x <- c(mpos[1,1],mpos[1,length(at)])
+        y <- c(mpos[2,1],mpos[2,length(at)])
+        z <- c(mpos[3,1],mpos[3,length(at)])
         if (tick) {
-                x <- c(x,as.double(rbind(pos[1,],pos[1,]+ticksize[1])))
-                y <- c(y,as.double(rbind(pos[2,],pos[2,]+ticksize[2])))
-                z <- c(z,as.double(rbind(pos[3,],pos[3,]+ticksize[3])))
+                x <- c(x,as.double(rbind(mpos[1,],mpos[1,]+ticksize[1])))
+                y <- c(y,as.double(rbind(mpos[2,],mpos[2,]+ticksize[2])))
+                z <- c(z,as.double(rbind(mpos[3,],mpos[3,]+ticksize[3])))
         }
         segments3d(x,y,z)
         if (!all(is.na(labels)))
-                text3d(pos[1,]+3*ticksize[1],
-                       pos[2,]+3*ticksize[2],
-                       pos[3,]+3*ticksize[3],
+                text3d(mpos[1,]+3*ticksize[1],
+                       mpos[2,]+3*ticksize[2],
+                       mpos[3,]+3*ticksize[3],
                        labels)
 }
 
 axes3d <- function(edges=c('x','y','z'),labels=TRUE,
                    tick=TRUE, ...)
 {
-    save <- par3d(skipredraw = TRUE, ignoreExtent = TRUE, ...)
+    save <- par3d(skipRedraw = TRUE, ignoreExtent = TRUE, ...)
     on.exit(par3d(save))
     for (e in edges)
         axis3d(e,labels=labels,tick=tick)
@@ -71,7 +71,7 @@ axes3d <- function(edges=c('x','y','z'),labels=TRUE,
 
 box3d <- function(...)
 {
-        save <- par3d(ignoreextent = TRUE, ...)
+        save <- par3d(ignoreExtent = TRUE, ...)
         on.exit(par3d(save))
         ranges <- par3d('bbox')
         ranges <- list(xlim=ranges[1:2], ylim=ranges[3:4], zlim=ranges[5:6])
@@ -87,22 +87,24 @@ box3d <- function(...)
         segments3d(x,y,z)
 }
 
-mtext3d <- function(text, edge, line = 0, at = NULL, pos = NA, handle = ThreeDHandle, ...)
+mtext3d <- function(text, edge, line = 0, at = NULL, pos = NA, ...)
 {
-        save <- par3d(ignoreExtent = TRUE, "cex", ..., handle=handle)
-        on.exit(par3d(save, handle = handle))
-		cex <- list(...)$cex
-		if (is.null(cex)) cex <- save$cex
+        save <- par3d(ignoreExtent = TRUE, ...)
+        on.exit(par3d(save))
 
-        ranges <- par3d('xlim','ylim','zlim',handle=handle)
+        ranges <- par3d('bbox')
+        ranges <- list(xlim=ranges[1:2], ylim=ranges[3:4], zlim=ranges[5:6])
 
         ranges$x <- (ranges$xlim - mean(ranges$xlim))*1.03 + mean(ranges$xlim)
         ranges$y <- (ranges$ylim - mean(ranges$ylim))*1.03 + mean(ranges$ylim)
         ranges$z <- (ranges$zlim - mean(ranges$zlim))*1.03 + mean(ranges$zlim)
 
-        if      (length(grep('[xX]',edge)) == 0) coord <- 1
-        else if (length(grep('[yY]',edge)) == 0) coord <- 2
-        else coord <- 3
+	edge <- c(strsplit(edge, '')[[1]], '-', '-')[1:3]
+	coord <- match(toupper(edge[1]), c('X', 'Y', 'Z')) 
+	
+	# Put the sign in the appropriate entry of edge
+	if (coord == 2) edge[1] <- edge[2]
+	else if (coord == 3) edge[1:2] <- edge[2:3]
 
         range <- ranges[[coord]]
 
@@ -115,50 +117,48 @@ mtext3d <- function(text, edge, line = 0, at = NULL, pos = NA, handle = ThreeDHa
 
         if (all(is.na(pos))) {
                 pos <- matrix(NA,3,length(at))
-                if (length(grep('X',edge)) == 1) pos[1,] <- ranges$x[2]
+                if (edge[1] == '+') pos[1,] <- ranges$x[2]
                 else pos[1,] <- ranges$x[1]
-                if (length(grep('Y',edge)) == 1) pos[2,] <- ranges$y[2]
+                if (edge[2] == '+') pos[2,] <- ranges$y[2]
                 else pos[2,] <- ranges$y[1]
-                if (length(grep('Z',edge)) == 1) pos[3,] <- ranges$z[2]
+                if (edge[3] == '+') pos[3,] <- ranges$z[2]
                 else pos[3,] <- ranges$z[1]
         }
         else pos <- matrix(pos,3,length(at))
         pos[coord,] <- at
-        ticksize <- 0.05*cex*(pos[,1]-c(mean(ranges$x),mean(ranges$y),mean(ranges$z)))
+        ticksize <- 0.05*(pos[,1]-c(mean(ranges$x),mean(ranges$y),mean(ranges$z)))
         ticksize[coord] <- 0
 
         invisible(text3d(pos[1,]+3*ticksize[1]*line,
                pos[2,]+3*ticksize[2]*line,
                pos[3,]+3*ticksize[3]*line,
-               text,handle=handle))
+               text))
 }   
 
 title3d <- function (main = NULL, sub = NULL, xlab = NULL, ylab = NULL, 
-    zlab = NULL, line = NA, handle = ThreeDHandle, ...) 
+    zlab = NULL, line = NA, ...) 
 {
-        save <- par3d(skipredraw = TRUE, ignoreExtent = TRUE, ...)
-        on.exit(par3d(save, handle = handle))
-        g <- integer(0)
+        save <- par3d(skipRedraw = TRUE, ignoreExtent = TRUE, ...)
+        on.exit(par3d(save))
         if (!is.null(main)) {
             aline <- ifelse(is.na(line), 2, line)
-            g <- c(g, mtext3d(main, 'YZ', line = aline, handle = handle))
+            mtext3d(main, 'x++', line = aline)
         }
         if (!is.null(sub)) {
             aline <- ifelse(is.na(line), 3, line)
-            g <- c(g, mtext3d(sub, 'yz', line = aline, handle = handle))
+            mtext3d(sub, 'x', line = aline)
         }
         if (!is.null(xlab)) {
             aline <- ifelse(is.na(line), 2, line)
-            g <- c(g, mtext3d(xlab, 'yz', line = aline, handle = handle))
+            mtext3d(xlab, 'x', line = aline)
         }
         if (!is.null(ylab)) {
             aline <- ifelse(is.na(line), 2, line)
-            g <- c(g, mtext3d(ylab, 'xz', line = aline, handle = handle))
+            mtext3d(ylab, 'y', line = aline)
         }
         if (!is.null(zlab)) {
             aline <- ifelse(is.na(line), 2, line)
-            g <- c(g, mtext3d(zlab, 'xy', line = aline, handle = handle))
+            mtext3d(zlab, 'z', line = aline)
         }                  
-        class(g) <- 'obj3d'
-        invisible(g)
+
 }
