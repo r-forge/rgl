@@ -2,7 +2,7 @@ plot3d <- function(x, ...) UseMethod("plot3d")
 
 plot3d.default <- function(x, y = NULL, z = NULL, 
         xlim = ranges$xlim, ylim = ranges$ylim, zlim = ranges$zlim, 
-	xlab = NULL, ylab = NULL, zlab = NULL, type = 'p', col = 'white', 
+	xlab = NULL, ylab = NULL, zlab = NULL, type = 'p', col = rgl.getmaterial()$color[1], 
 	box = TRUE, axes = TRUE, add = FALSE, main = NULL, sub = NULL,
 	top = TRUE, ...)
 {
@@ -35,7 +35,7 @@ plot3d.default <- function(x, y = NULL, z = NULL,
                                  rep(range(y), c(2,2)),
                                  rep(range(z), c(2,2)))
 	)
-
+    
     ranges <- par3d('bbox')
     if (!missing(xlim)) ranges[1:2] <- xlim
     if (!missing(ylim)) ranges[3:4] <- ylim
