@@ -17,23 +17,75 @@ pop3d       <- function(...) {.check3d(); rgl.pop(...)}
 
 # Environment
 
-bg3d        <- function(color, ...) {.check3d(); rgl.bg(color=color, ...)}
-light3d     <- function(theta=0,phi=15,...) {.check3d(); rgl.light(theta=theta,phi=phi,...)}
-view3d      <- function(theta=0,phi=15,...) {.check3d(); rgl.viewpoint(theta=theta,phi=phi,...)}
-bbox3d	    <- function(...) {.check3d(); rgl.bbox(...)}
+bg3d        <- function(color, ...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.bg(color=color, ...)
+}
+
+material3d  <- rgl.material
+
+light3d     <- function(theta=0,phi=15,...) {
+    .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+    rgl.light(theta=theta,phi=phi,...)
+}
+
+view3d      <- function(theta=0,phi=15,...) {
+  .check3d()
+  rgl.viewpoint(theta=theta,phi=phi,...)
+}
+
+bbox3d	    <- function(...) {  
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.bbox(...)
+}
 
 # Shapes
 
-points3d    <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.points(x=x,y=y,z=z,...)}
-lines3d     <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.linestrips(x=x,y=y,z=z,...)}
-segments3d  <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.lines(x=x,y=y,z=z,...)}
-triangles3d <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.triangles(x=x,y=y,z=z,...)}
-quads3d     <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.quads(x=x,y=y,z=z,...)}
-text3d      <- function(x,y=NULL,z=NULL,texts,adj=0.5,justify,...) {.check3d(); rgl.texts(x=x,y=y,z=z,text=texts,adj,justify,...)}
+points3d    <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save)) 
+  rgl.points(x=x,y=y,z=z,...)
+}
+
+lines3d     <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.linestrips(x=x,y=y,z=z,...)
+}
+
+segments3d  <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.lines(x=x,y=y,z=z,...)
+}
+
+triangles3d <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.triangles(x=x,y=y,z=z,...)
+}
+
+quads3d     <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.quads(x=x,y=y,z=z,...)
+}
+
+text3d      <- function(x,y=NULL,z=NULL,texts,adj=0.5,justify,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.texts(x=x,y=y,z=z,text=texts,adj,justify,...)
+}
 texts3d	    <- text3d
-spheres3d   <- function(x,y=NULL,z=NULL,radius=1,...) {.check3d(); rgl.spheres(x=x,y=y,z=z,radius=radius,...)}
-sprites3d   <- function(x,y=NULL,z=NULL,radius=1,...) {.check3d(); rgl.sprites(x=x,y=y,z=z,radius=radius,...)}
-terrain3d   <- function(x,y=NULL,z=NULL,...) {.check3d(); rgl.surface(x=x,y=z,z=y,coords=c(1,3,2),...)}
+
+spheres3d   <- function(x,y=NULL,z=NULL,radius=1,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.spheres(x=x,y=y,z=z,radius=radius,...)
+}
+
+sprites3d   <- function(x,y=NULL,z=NULL,radius=1,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.sprites(x=x,y=y,z=z,radius=radius,...)
+}
+
+terrain3d   <- function(x,y=NULL,z=NULL,...) {
+  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
+  rgl.surface(x=x,y=z,z=y,coords=c(1,3,2),...)
+}
 surface3d   <- terrain3d
 
 # Interaction
@@ -70,12 +122,22 @@ particles3d <- function(x,y=NULL,z=NULL,radius=1,...) sprites3d(
 
 r3dDefaults <- list(userMatrix = rotationMatrix(5, 1, 0, 0),
 		  mouseMode = c("trackball", "zoom", "fov"),
-		  FOV = 30)
+		  FOV = 30,
+		  bg = list(color="white"),
+		  material = list(color="black", fog=FALSE))
 
 open3d <- function(..., params = get("r3dDefaults", envir=.GlobalEnv))
 {
     rgl.open()
     params[names(list(...))] <- list(...)
+    if (!is.null(params$bg)) {
+      do.call("bg3d", params$bg)
+      params$bg <- NULL
+    }
+    if (!is.null(params$material)) {
+      do.call("material3d", params$material)
+      params$material <- NULL
+    }
     do.call("par3d", params)   
     return(rgl.cur())
 }

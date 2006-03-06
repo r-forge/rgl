@@ -20,8 +20,13 @@ rgl.open <- function() {
   ret <- .C( symbol.C("rgl_dev_open"), success=FALSE, PACKAGE="rgl" )
 
   if (! ret$success)
-    stop("failed")
-
+    stop("rgl.open failed")
+  
+  rgl.material(color="white", alpha=1.0, lit=TRUE, ambient="black",
+               specular="white", emission="black", shininess=50.0,
+               smooth=TRUE, texture=NULL, textype="rgb", texmipmap=FALSE,
+               texminfilter="linear", texmagfilter="linear", texenvmap=FALSE,
+               front="fill", back="fill", size=1.0, fog=TRUE)
 }
 
 
@@ -31,11 +36,11 @@ rgl.open <- function() {
 ##
 
 rgl.close <- function() {
+  
+    ret <- .C( symbol.C("rgl_dev_close"), success=FALSE, PACKAGE="rgl" )
 
-  ret <- .C( symbol.C("rgl_dev_close"), success=FALSE, PACKAGE="rgl" )
-
-  if (! ret$success)
-    stop("no device opened.")
+    if (! ret$success)
+      stop("no device opened.")
 
 }
 

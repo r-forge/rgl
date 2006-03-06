@@ -8,8 +8,8 @@ Draws a 3D scatterplot.
 \usage{
 plot3d(x, ...)
 \method{plot3d}{default}(x, y, z, xlim, ylim, zlim, 
-	xlab = NULL, ylab = NULL, zlab = NULL, type = 'p', col = 'white',  
-	box = TRUE, axes = TRUE, add = FALSE, main = NULL, sub = NULL, 
+	xlab, ylab, zlab, type = 'p', col,  
+	box, axes = TRUE, add = FALSE, main, sub, 
 	top = TRUE, ...)
 }
 \arguments{
@@ -22,7 +22,7 @@ plot3d(x, ...)
   Supported types are: 'p' for points, 'l' for lines, 'h' for line segments
   from \code{z=0}, and 'n' for nothing.}
   \item{main, sub}{main title and subtitle.}
-  \item{col}{the colour to be used for plotted items.}
+  \item{col}{the colour to be used for plotted items.  Defaults to}
   \item{box, axes}{whether to draw a box and axes.}
   \item{add}{whether to add the points to an existing plot.}
   \item{top}{whether to bring the window to the top when done.}
