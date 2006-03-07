@@ -54,10 +54,10 @@ Missing values in the data are not currently supported.
 }
 \examples{
   open3d()
-  x <- rnorm(1000)
+  x <- sort(rnorm(1000))
   y <- rnorm(1000)
   z <- rnorm(1000) + atan2(x,y)
-  plot3d(x, y, z)
+  plot3d(x, y, z, col=rainbow(1000), size=2)
 }
 \keyword{dynamic}
 

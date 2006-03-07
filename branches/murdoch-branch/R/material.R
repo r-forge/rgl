@@ -10,86 +10,81 @@
 ##
 
 rgl.material <- function (
-  color        = prev$color,
-  alpha        = prev$alpha,
-  lit          = prev$lit, 
-  ambient      = prev$ambient,
-  specular     = prev$specular, 
-  emission     = prev$emission, 
-  shininess    = prev$shininess, 
-  smooth       = prev$smooth,
+  color        = c("white"),
+  alpha        = c(1.0),
+  lit          = TRUE, 
+  ambient      = "black",
+  specular     = "white", 
+  emission     = "black", 
+  shininess    = 50.0, 
+  smooth       = TRUE,
   texture      = NULL, 
   textype      = "rgb", 
   texmipmap    = FALSE, 
   texminfilter = "linear", 
   texmagfilter = "linear",
   texenvmap    = FALSE,
-  front        = prev$front, 
-  back         = prev$back,
-  size         = prev$size, 
-  fog          = prev$fog
+  front        = "fill", 
+  back         = "fill",
+  size         = 1.0, 
+  fog          = TRUE
 ) {
-  if (!missing(color) && is.list(color)) do.call("rgl.material", color)
-  else {
-    prev      <- rgl.getmaterial()
+  # solid or diffuse component
 
-    # solid or diffuse component
+  color     <- rgl.mcolor(color)
 
-    color     <- rgl.mcolor(color)
+  # light properties
 
-    # light properties
+  ambient   <- rgl.color(ambient)
+  specular  <- rgl.color(specular)
+  emission  <- rgl.color(emission)
 
-    ambient   <- rgl.color(ambient)
-    specular  <- rgl.color(specular)
-    emission  <- rgl.color(emission)
+  # others
 
-    # others
+  rgl.bool(lit)
+  rgl.bool(fog)
+  rgl.bool(smooth)
+  rgl.clamp(shininess,0,128)
+  rgl.numeric(size)
+  
+  # side-dependant rendering
 
-    rgl.bool(lit)
-    rgl.bool(fog)
-    rgl.bool(smooth)
-    rgl.clamp(shininess,0,128)
-    rgl.numeric(size)
+  front <- rgl.enum.polymode(front)
+  back  <- rgl.enum.polymode(back)
 
-    # side-dependant rendering
+  # texture mapping
 
-    front <- rgl.enum.polymode(front)
-    back  <- rgl.enum.polymode(back)
+  rgl.bool(texmipmap)
 
-    # texture mapping
+  if (length(texture) > 1)
+    stop("texture should be a single character string or NULL")
 
-    rgl.bool(texmipmap)
+  if (is.null(texture))
+    texture <- ""
 
-    if (length(texture) > 1)
-	stop("texture should be a single character string or NULL")
+  textype <- rgl.enum.textype( textype )
+  texminfilter <- rgl.enum.texminfilter( texminfilter )
+  texmagfilter <- rgl.enum.texmagfilter( texmagfilter )
+  rgl.bool(texenvmap)
 
-    if (is.null(texture))
-	texture <- ""
+  # vector length
 
-    textype <- rgl.enum.textype( textype )
-    texminfilter <- rgl.enum.texminfilter( texminfilter )
-    texmagfilter <- rgl.enum.texmagfilter( texmagfilter )
-    rgl.bool(texenvmap)
+  ncolor <- dim(color)[2]
+  nalpha <- length(alpha)
 
-    # vector length
+  # pack data
 
-    ncolor <- dim(color)[2]
-    nalpha <- length(alpha)
+  idata <- as.integer( c( ncolor, lit, smooth, front, back, fog, textype, texmipmap, texminfilter, texmagfilter, nalpha, ambient, specular, emission, texenvmap, color ) )
+  cdata <- as.character(c( texture ))
+  ddata <- as.numeric(c( shininess, size, alpha ))
 
-    # pack data
-
-    idata <- as.integer( c( ncolor, lit, smooth, front, back, fog, textype, texmipmap, texminfilter, texmagfilter, nalpha, ambient, specular, emission, texenvmap, color ) )
-    cdata <- as.character(c( texture ))
-    ddata <- as.numeric(c( shininess, size, alpha ))
-
-    ret <- .C( symbol.C("rgl_material"),
-	success = FALSE,
-	idata,
-	cdata,
-	ddata,
-	PACKAGE="rgl"
-    )
-  }
+  ret <- .C( symbol.C("rgl_material"),
+    success = FALSE,
+    idata,
+    cdata,
+    ddata,
+    PACKAGE="rgl"
+  )
 }
 
 rgl.getcolorcount <- function() .C( "rgl_getcolorcount", count=integer(1) )$count
@@ -98,7 +93,7 @@ rgl.getmaterial <- function(ncolors = rgl.getcolorcount()) {
 
   idata <- rep(0, 21+3*ncolors)
   idata[1] <- ncolors
-  idata[10] <- ncolors
+  idata[11] <- ncolors
   
   cdata <- character(0)
   ddata <- rep(0, 2+ncolors)
@@ -119,7 +114,7 @@ rgl.getmaterial <- function(ncolors = rgl.getcolorcount()) {
   ddata <- ret$ddata
   
   list(color = rgb(idata[19 + 3*(1:idata[1])], idata[20 + 3*(1:idata[1])], idata[21 + 3*(1:idata[1])], maxColorValue = 255),
-       alpha = ddata[seq(from=3, length=idata[10])],
+       alpha = ddata[seq(from=3, length=idata[11])],
        lit = idata[2] > 0,
        ambient = rgb(idata[12], idata[13], idata[14], maxColorValue = 255),
        specular = rgb(idata[15], idata[16], idata[17], maxColorValue = 255),
