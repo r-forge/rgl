@@ -17,16 +17,52 @@ pop3d       <- function(...) {.check3d(); rgl.pop(...)}
 
 # Environment
 
-bg3d        <- function(color, ...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.bg(color=color, ...)
+bg3d        <- function(...) {
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[c("sphere", "fogtype", "color", "back")] <- 
+     list(sphere = FALSE, fogtype = "none", color = c("black", "white"), back = "lines")
+  new[names(list(...))] <- list(...)
+  do.call("rgl.bg", new)
 }
 
-material3d  <- rgl.material
+.material3d <- c("color", "alpha", "lit", "ambient", "specular",
+    "emission", "shininess", "smooth", "front", "back", "size", "fog")
+    
+.material3d.writeOnly <- c("texture", "textype", "texmipmap",
+    "texminfilter", "texmagfilter", "texenvmap")
+
+material3d  <- function (...)
+{
+    args <- list(...)
+    argnames <- names(args)
+    
+    if (!length(args))
+	argnames <- .material3d
+    else {
+	if (is.null(names(args)) && all(unlist(lapply(args, is.character)))) {
+	    argnames <- unlist(args)
+	    args <- NULL
+	}
+	
+	if (length(args) == 1) {
+	    if (is.list(args[[1]]) | is.null(args[[1]])) {
+		args <- args[[1]]
+		argnames <- names(args)
+	    }
+	}
+    }
+    value <- rgl.getmaterial()[argnames]
+    if (length(args)) {
+        do.call("rgl.material", args)
+        return(invisible(value))
+    } else if (length(argnames) == 1) return(value[[1]])
+    else return(value)
+}
+
 
 light3d     <- function(theta=0,phi=15,...) {
-    .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-    rgl.light(theta=theta,phi=phi,...)
+  .check3d()
+  rgl.light(theta=theta,phi=phi,...)
 }
 
 view3d      <- function(theta=0,phi=15,...) {
@@ -35,56 +71,67 @@ view3d      <- function(theta=0,phi=15,...) {
 }
 
 bbox3d	    <- function(...) {  
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.bbox(...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.bbox", new)
 }
 
 # Shapes
 
 points3d    <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save)) 
-  rgl.points(x=x,y=y,z=z,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.points", c(list(x=x,y=y,z=z),new))
 }
 
 lines3d     <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.linestrips(x=x,y=y,z=z,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.linestrips", c(list(x=x,y=y,z=z),new))
 }
 
 segments3d  <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.lines(x=x,y=y,z=z,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.lines", c(list(x=x,y=y,z=z),new))
 }
 
 triangles3d <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.triangles(x=x,y=y,z=z,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.triangles", c(list(x=x,y=y,z=z),new))
 }
 
 quads3d     <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.quads(x=x,y=y,z=z,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.quads", c(list(x=x,y=y,z=z),new))
 }
 
 text3d      <- function(x,y=NULL,z=NULL,texts,adj=0.5,justify,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.texts(x=x,y=y,z=z,text=texts,adj,justify,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  if (!missing(justify)) new <- c(list(justify=justify), new)
+  do.call("rgl.texts", c(list(x=x,y=y,z=z,text=texts,adj),new))
 }
 texts3d	    <- text3d
 
 spheres3d   <- function(x,y=NULL,z=NULL,radius=1,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.spheres(x=x,y=y,z=z,radius=radius,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.spheres", c(list(x=x,y=y,z=z,radius=radius),new))
 }
 
 sprites3d   <- function(x,y=NULL,z=NULL,radius=1,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.sprites(x=x,y=y,z=z,radius=radius,...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.sprites", c(list(x=x,y=y,z=z,radius=radius),new))
 }
 
 terrain3d   <- function(x,y=NULL,z=NULL,...) {
-  .check3d(); save <- rgl.getmaterial(); on.exit(rgl.material(save))
-  rgl.surface(x=x,y=z,z=y,coords=c(1,3,2),...)
+  .check3d(); new <- save <- material3d(); on.exit(material3d(save))
+  new[names(list(...))] <- list(...)
+  do.call("rgl.surface", c(list(x=x,y=z,z=y,coords=c(1,3,2)),new))
 }
 surface3d   <- terrain3d
 
