@@ -70,8 +70,8 @@ shift <- matrix(c(-3,3,0), 12, 3, byrow=TRUE)
 points3d(M, size=2)
 lines3d(M + shift)
 segments3d(M + 2*shift)
-triangles3d(M + 3*shift, color='red')
-quads3d(M + 4*shift, color='green')  
+triangles3d(M + 3*shift, col='red')
+quads3d(M + 4*shift, col='green')  
 text3d(M + 5*shift, texts=1:12)
 
 # Add labels

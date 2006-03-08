@@ -583,7 +583,7 @@ void rgl_getmaterial(int *successptr, int* idata, char** cdata, double* ddata)
   idata[18] = (int) mat.emission.getGreenub();
   idata[19] = (int) mat.emission.getBlueub();
   idata[20] = 0; /* mat.texture.envmap ? 1 : 0; */
-  for (i=0, j=21; (i < mat.colors.getLength()) && (i < idata[0]); i++) {
+  for (i=0, j=21; (i < mat.colors.getLength()) && (i < (unsigned int)idata[0]); i++) {
     idata[j++] = (int) mat.colors.getColor(i).getRedub();
     idata[j++] = (int) mat.colors.getColor(i).getGreenub();
     idata[j++] = (int) mat.colors.getColor(i).getBlueub();
@@ -594,7 +594,7 @@ void rgl_getmaterial(int *successptr, int* idata, char** cdata, double* ddata)
   ddata[1] = (double) mat.size;
   
   if (mat.colors.hasAlpha()) {
-    for (i=0, j=2; (i < mat.colors.getLength()) && (i < idata[10]); i++) 
+    for (i=0, j=2; (i < mat.colors.getLength()) && (i < (unsigned int)idata[10]); i++) 
       ddata[j++] = (double) mat.colors.getColor(i).getAlphaf();
     idata[10] = i;
   } else 
