@@ -1,0 +1,72 @@
+\documentclass[12pt]{article}
+\title{Things to do in RGL}
+\begin{document}
+\maketitle
+\section{Write a paper for JSS}
+
+The paper should come after some of the things below are done; which ones?
+
+\section{Separate window/viewport handling}
+
+We should have a way to control the window size and location.  This will be device-specific. 
+We could also handle captions, etc. on the window.
+
+Should it specify locations in a device-independent way (e.g. coordinates running from 0 to 1 on the user screen),
+or by pixels?  How are multiple screen systems handled?
+
+Within a window, we should have a way to specify the viewport location, and we should have the
+possibility of multiple rgl viewports in the same window.
+
+How are mouse actions handled?  It would be nice to have some flexibility, e.g.
+to allow several viewports to be controlled simultaneously, but designing this is tricky. 
+
+\section{A scene graph or tree}
+
+We should maintain a scene as a tree, which can have transformations applied to branches. We should
+be able to work with the graph in R, e.g. moving points or changing colours or visibility
+of elements without rebuilding the entire graph.
+
+\section{Layers}
+
+We should be able to control the visibility of different elements of a scene.
+
+\section{Navigation versus manipulation}
+
+We don't currently let the viewer move around, we just move the model.  We should allow either
+one.
+
+\section{Better transparency}
+
+Could we put all transparent polygons into one big structure so that it could be rendered in back-to-front
+order?
+
+\section{Mesh objects}
+
+Mesh objects should allow triangles as well as quads.
+
+\section{Textures and normals }
+
+It should be easier to add texture coordinates and normals to surfaces.
+
+\section{User interaction}
+
+We need a better model for handling user interaction events, e.g. a way to say that the
+action of the left mouse button depends on whether the Shift key is down or not.
+
+\section{Minor things}
+
+\begin{enumerate}
+\item Automatically include svn revision number in DESCRIPTION file.
+\item Handle device failures better, e.g. on a Mac, try X, on Unix, die gracefully.
+\item Shiny transparent objects aren't rendered properly.  E.g. white highlights make
+a red sheet clear.  
+\item Could we put a viewport in an MDI window?
+
+\end{enumerate}
+
+\end{document}
+
+
+
+
+
