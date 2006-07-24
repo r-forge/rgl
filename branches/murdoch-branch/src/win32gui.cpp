@@ -10,6 +10,11 @@
 #include "lib.hpp"
 #include "glgui.hpp"
 
+static char debugmsg[100];
+static int msgnum=0;
+
+#define Debug(msg) {msgnum++; sprintf(debugmsg,"%d: %s",msgnum,(msg));OutputDebugString(debugmsg);}
+
 #include <winuser.h>
 // ---------------------------------------------------------------------------
 namespace gui {
@@ -44,7 +49,7 @@ class Win32WindowImpl : public WindowImpl
 {
 public:
 static ATOM classAtom;
-
+int debugclosed;
 void setTitle(const char* title)
 {
   SetWindowText(windowHandle, title);
@@ -107,6 +112,11 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
 
     void destroy(void)
     {
+      Debug("destroy");
+      destroyGLFont();
+      shutdownGL();    
+      if (window)
+        window->notifyDestroy();      
       DestroyWindow(windowHandle);
     }
 
@@ -152,6 +162,8 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
 
       updateMode = false;
       autoUpdate = false;
+      
+      debugclosed = 0;
     }
 
     //
@@ -301,6 +313,9 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           break;
 
         case WM_PAINT:
+          if (debugclosed) {
+            Debug("paint after close");
+          }
 	  if (!window->skipRedraw) {
             window->paint();
             swap();
@@ -325,6 +340,8 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           break;
 
         case WM_CLOSE:
+          Debug("WM_CLOSE");
+          debugclosed = 1;
           window->on_close();
           break;
 
@@ -383,11 +400,8 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           break;
 
         case WM_DESTROY:
-          destroyGLFont();
-          shutdownGL();
+          Debug("WM_DESTROY");
           SetWindowLong(hwnd, GWL_USERDATA, (LONG) NULL );
-          if (window)
-            window->notifyDestroy();
           delete this;
           break;
 
