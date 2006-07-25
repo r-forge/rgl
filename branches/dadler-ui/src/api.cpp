@@ -39,10 +39,18 @@ inline bool as_bool(int idata) { return (idata) ? true : false; }
 //   rgl_init
 //
 
-void rgl_init(int* successptr)
+namespace gui {
+
+int gMDIHandle;
+
+}
+
+void rgl_init(int* successptr, int* ioptions)
 {
   int success = RGL_FAIL;
-
+  
+  gMDIHandle = ioptions[0];
+  
   if ( lib::init() ) {
     deviceManager = new DeviceManager();
     success = RGL_SUCCESS;
