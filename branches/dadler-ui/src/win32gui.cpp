@@ -392,7 +392,9 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           break;
 
         default:
-          returnValue = DefWindowProc(hwnd,message,wParam,lParam);
+          returnValue = 
+          // DefWindowProc
+          DefMDIChildProc(hwnd,message,wParam,lParam);
       }
       return returnValue;
     }
@@ -421,7 +423,9 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
       if (windowImpl)
         return windowImpl->processMessage(hwnd, message, wParam, lParam);
       else
-        return DefWindowProc(hwnd,message,wParam,lParam);
+        return 
+          // DefWindowProc
+          DefMDIChildProc(hwnd,message,wParam,lParam);
 
     }
 
@@ -466,6 +470,9 @@ Win32GUIFactory::~Win32GUIFactory() {
   Win32WindowImpl::unregisterClass();
 }
 // ---------------------------------------------------------------------------
+
+extern int gMDIHandle;
+
 WindowImpl* Win32GUIFactory::createWindowImpl(Window* in_window)
 {
   WindowImpl* impl = new Win32WindowImpl(in_window);
@@ -481,6 +488,17 @@ WindowImpl* Win32GUIFactory::createWindowImpl(Window* in_window)
 
   AdjustWindowRect(&size, WS_CAPTION|WS_SYSMENU|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX, false);
 
+  HWND success = CreateMDIWindow(
+    // MAKEINTATOM(Win32WindowImpl::classAtom)
+    "MDIClient"
+    , in_window->title,
+    MDIS_ALLCHILDSTYLES|WS_OVERLAPPEDWINDOW,
+    CW_USEDEFAULT, 0,
+    size.right- size.left+1, size.bottom - size.top+1,
+    (HWND) gMDIHandle, GetModuleHandle(NULL), 
+    (LPARAM) impl
+  );
+/*  
   HWND success = CreateWindow(
     MAKEINTATOM(Win32WindowImpl::classAtom), in_window->title,
     WS_OVERLAPPEDWINDOW,
@@ -489,6 +507,7 @@ WindowImpl* Win32GUIFactory::createWindowImpl(Window* in_window)
     NULL, NULL,
     NULL, (LPVOID) impl
   );
+*/  
   assert(success);
   return impl;
 }
