@@ -1,7 +1,0 @@
-This is just a file to test subversions auto-property behaviour.
-
-The goal is , not to set the svn:eol-style property at all.
-The rule is: use LF encoding in your favorite editor on your
-favorite OS (especially win32).
-
-
