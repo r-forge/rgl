@@ -13,6 +13,12 @@
 #include <winuser.h>
 // ---------------------------------------------------------------------------
 namespace gui {
+
+extern int gMDIHandle;
+static WNDPROC gDefWindowProc;
+static HWND    gMDIClientHandle = 0;
+static HWND    gMDIFrameHandle  = 0;
+
 // ---------------------------------------------------------------------------
 //
 // translate keycode
@@ -63,7 +69,15 @@ void setSize(int width, int height)
 void show(void)
 {
   if (windowHandle) {
+    // ShowWindow is required in SDI to show the window once 
+    // (otherwise to update takes place)
     ShowWindow(windowHandle, SW_SHOW);
+    SetWindowPos(
+      windowHandle
+     ,HWND_TOP
+     ,0,0,0,0
+     ,SWP_SHOWWINDOW|SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOSIZE
+    );
     UpdateWindow(windowHandle);
   } else
     lib::printMessage("window not bound");
@@ -287,6 +301,9 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           windowHandle = hwnd;
           initGL();
           initGLBitmapFont(GL_BITMAP_FONT_FIRST_GLYPH, GL_BITMAP_FONT_LAST_GLYPH);
+          if (gMDIHandle) {
+            DrawMenuBar(gMDIFrameHandle);
+          }
           break;
 
         case WM_SHOWWINDOW:
@@ -392,41 +409,31 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
           break;
 
         default:
-          returnValue = 
-          // DefWindowProc
-          DefMDIChildProc(hwnd,message,wParam,lParam);
+          return gDefWindowProc(hwnd,message,wParam,lParam);
       }
       return returnValue;
     }
+    
+    static LRESULT CALLBACK delegateWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+      Win32WindowImpl* windowImpl = (Win32WindowImpl*) GetWindowLong(hwnd, GWL_USERDATA);
+      return windowImpl->processMessage(hwnd, message, wParam, lParam);
+    }
 
     static LRESULT CALLBACK windowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-
-      Win32WindowImpl* windowImpl;
-
       if (message == WM_CREATE) {
-
-        // save instance pointer in userdata field on init
-
-        windowImpl = (Win32WindowImpl*) ((LPCREATESTRUCT)lParam)->lpCreateParams;
-        SetWindowLong(hwnd, GWL_USERDATA, (long)windowImpl );
-
-      } else {
-
-        // get instance pointer from userdata field
-
-        windowImpl = (Win32WindowImpl*) GetWindowLong(hwnd, GWL_USERDATA);
-
-      }
-
-      // delegate to class method
-
-      if (windowImpl)
+        Win32WindowImpl* windowImpl;
+        LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);        
+        if ( gMDIHandle) {          
+          LPMDICREATESTRUCT pMDICreateStruct = reinterpret_cast<LPMDICREATESTRUCT>(pCreateStruct->lpCreateParams);
+          windowImpl = reinterpret_cast<Win32WindowImpl*>( pMDICreateStruct->lParam );
+        } else {
+          windowImpl = reinterpret_cast<Win32WindowImpl*>( pCreateStruct->lpCreateParams );
+        }
+        SetWindowLong(hwnd, GWL_USERDATA, (long) windowImpl );
+        SetWindowLong(hwnd, GWL_WNDPROC, (long) delegateWindowProc );
         return windowImpl->processMessage(hwnd, message, wParam, lParam);
-      else
-        return 
-          // DefWindowProc
-          DefMDIChildProc(hwnd,message,wParam,lParam);
-
+      } 
+      return gDefWindowProc(hwnd, message, wParam, lParam); 
     }
 
   protected:
@@ -454,14 +461,25 @@ else SetWindowPos(windowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
   };
 
 ATOM Win32WindowImpl::classAtom = (ATOM) NULL;
+
 // ---------------------------------------------------------------------------
 //
 // Win32GUIFactory class
 //
 // ---------------------------------------------------------------------------
+
+
 Win32GUIFactory::Win32GUIFactory()
 {
-
+  if (gMDIHandle) {
+    // the handle is given for the console window, so that 
+    // client and frame windows can be derived
+    HWND consoleHandle = reinterpret_cast<HWND>(gMDIHandle);
+    gMDIClientHandle = GetParent(consoleHandle);
+    gMDIFrameHandle  = GetParent(gMDIClientHandle);
+    gDefWindowProc   = &DefMDIChildProc;
+  } else
+    gDefWindowProc   = &DefWindowProc;
   if ( !Win32WindowImpl::registerClass() )
     lib::printMessage("error: window class registration failed");
 }
@@ -470,8 +488,6 @@ Win32GUIFactory::~Win32GUIFactory() {
   Win32WindowImpl::unregisterClass();
 }
 // ---------------------------------------------------------------------------
-
-extern int gMDIHandle;
 
 WindowImpl* Win32GUIFactory::createWindowImpl(Window* in_window)
 {
@@ -484,30 +500,35 @@ WindowImpl* Win32GUIFactory::createWindowImpl(Window* in_window)
   size.top  = 0;
   size.bottom = in_window->height-1;
 
-  // no menu
-
-  AdjustWindowRect(&size, WS_CAPTION|WS_SYSMENU|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX, false);
-
-  HWND success = CreateMDIWindow(
-    // MAKEINTATOM(Win32WindowImpl::classAtom)
-    "MDIClient"
-    , in_window->title,
-    MDIS_ALLCHILDSTYLES|WS_OVERLAPPEDWINDOW,
-    CW_USEDEFAULT, 0,
-    size.right- size.left+1, size.bottom - size.top+1,
-    (HWND) gMDIHandle, GetModuleHandle(NULL), 
-    (LPARAM) impl
+  AdjustWindowRect(
+    &size
+  , WS_OVERLAPPEDWINDOW // WS_CAPTION|WS_SYSMENU|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX
+  , false // no menu
   );
-/*  
-  HWND success = CreateWindow(
-    MAKEINTATOM(Win32WindowImpl::classAtom), in_window->title,
-    WS_OVERLAPPEDWINDOW,
-    CW_USEDEFAULT, 0,
-    size.right- size.left+1, size.bottom - size.top+1,
-    NULL, NULL,
-    NULL, (LPVOID) impl
-  );
-*/  
+
+  HWND success = 0;
+  
+  if (gMDIHandle) {
+    success = CreateMDIWindow(
+      MAKEINTATOM(Win32WindowImpl::classAtom)
+    , in_window->title
+    , MDIS_ALLCHILDSTYLES|WS_OVERLAPPEDWINDOW
+    , CW_USEDEFAULT, 0
+    , size.right- size.left+1, size.bottom - size.top+1
+    , gMDIClientHandle, NULL // GetModuleHandle(NULL)
+    , reinterpret_cast<LPARAM>(impl)
+    );
+  } else {
+    success = CreateWindow(
+      MAKEINTATOM(Win32WindowImpl::classAtom)
+    , in_window->title
+    , WS_OVERLAPPEDWINDOW
+    , CW_USEDEFAULT, 0
+    , size.right- size.left+1, size.bottom - size.top+1
+    , NULL, NULL, NULL
+    , reinterpret_cast<LPVOID>(impl)
+    );
+  }
   assert(success);
   return impl;
 }

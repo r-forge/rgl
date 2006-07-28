@@ -30,8 +30,8 @@
   mdiHandle <- 0
   
   if ( .Platform$OS.type == "windows" ) {
-    mdiHandle <- getWindowsHandle("Frame")
-  }
+    if ( getWindowsHandle("Frame") ) mdiHandle <- getWindowsHandle("Console")
+  } 
   
   	
   ret <- .C( "rgl_init", 
