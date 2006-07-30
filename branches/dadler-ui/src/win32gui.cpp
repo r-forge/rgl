@@ -182,7 +182,8 @@ void Win32WindowImpl::update()
 
 void Win32WindowImpl::destroy()
 {
-  DestroyWindow(windowHandle);
+  if (gMDIHandle) SendMessage(gMDIClientHandle, WM_MDIDESTROY, (WPARAM) windowHandle, 0);
+  else DestroyWindow(windowHandle);
 }
 
 void Win32WindowImpl::beginGL()
