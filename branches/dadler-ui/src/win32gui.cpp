@@ -72,6 +72,7 @@ private:
   View* captureView;
   bool  updateMode;             // window is currently updated
   bool  autoUpdate;             // update/refresh automatically
+  bool  refreshMenu;		// need to tell Windows to update the menu
   friend class Win32GUIFactory;
 
 public:
@@ -100,6 +101,7 @@ Win32WindowImpl::Win32WindowImpl(Window* in_window)
 
   updateMode = false;
   autoUpdate = false;
+  refreshMenu = false;
 }
 
 void Win32WindowImpl::setTitle(const char* title)
@@ -300,7 +302,7 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       initGL();
       initGLBitmapFont(GL_BITMAP_FONT_FIRST_GLYPH, GL_BITMAP_FONT_LAST_GLYPH);
       if (gMDIHandle) {
-        DrawMenuBar(gMDIFrameHandle);
+        refreshMenu = true;
       }
       break;
     case WM_SHOWWINDOW:
@@ -314,6 +316,11 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       }
       break;
     case WM_PAINT:
+      if (refreshMenu) {
+        SendMessage(gMDIClientHandle, WM_MDIREFRESHMENU, 0, 0);    
+        DrawMenuBar(gMDIFrameHandle);
+        refreshMenu = false;
+      }        
       if (!window->skipRedraw) {
         window->paint();
         swap();
@@ -322,7 +329,10 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       break;
     case WM_SIZE:
       window->resize(LOWORD(lParam), HIWORD(lParam));
-      break;
+      if (gMDIHandle)
+        return gDefWindowProc(hwnd,message,wParam,lParam);
+      else
+        break;
     case WM_CLOSE:
       window->on_close();
       break;
@@ -374,6 +384,10 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       destroyGLFont();
       shutdownGL();
       SetWindowLong(hwnd, GWL_USERDATA, (LONG) NULL );
+      if (gMDIClientHandle && gMDIFrameHandle) {
+        SendMessage(gMDIClientHandle, WM_MDIREFRESHMENU, 0, 0);    
+        DrawMenuBar(gMDIFrameHandle);  
+      }       
       if (window)
         window->notifyDestroy();
       delete this;
