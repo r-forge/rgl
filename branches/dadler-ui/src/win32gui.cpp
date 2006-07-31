@@ -385,10 +385,6 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       destroyGLFont();
       shutdownGL();
       SetWindowLong(hwnd, GWL_USERDATA, (LONG) NULL );
-      if (gMDIClientHandle && gMDIFrameHandle) {
-        SendMessage(gMDIClientHandle, WM_MDIREFRESHMENU, 0, 0);    
-        DrawMenuBar(gMDIFrameHandle);  
-      }       
       if (window)
         window->notifyDestroy();
       delete this;
