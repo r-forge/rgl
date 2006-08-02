@@ -27,7 +27,9 @@ DeviceManager* deviceManager = NULL;
 //
 #define RGL_FAIL     0
 #define RGL_SUCCESS  1
-inline int as_success(bool b) { return (b) ? RGL_SUCCESS : RGL_FAIL; }
+inline int as_success(int b) { return (b) ; }
+
+
 
 //
 // data type conversion utilities:
@@ -214,6 +216,7 @@ void rgl_clear(int* successptr, int *idata)
 // PARAMETERS
 //   idata
 //     [0]  stack TypeID
+//     [1]  id SceneNode identifier
 //
 //
 
@@ -226,8 +229,9 @@ void rgl_pop(int* successptr, int* idata)
   if (deviceManager && (device = deviceManager->getCurrentDevice())) {
 
     TypeID stackTypeID = (TypeID) idata[0];
+    int id = idata[1];
  
-    success = as_success( device->pop( stackTypeID ) );
+    success = as_success( device->pop( stackTypeID, id ) );
 
   }
 
