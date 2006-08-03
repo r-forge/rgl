@@ -25,7 +25,7 @@ enum TypeID {
 #define BACKGROUND 5
 
 typedef unsigned int TypeID;
-typedef unsigned int ObjID;
+typedef int ObjID;
 
 #define BBOXID 1
 static ObjID nextID = BBOXID + 1;
