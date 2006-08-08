@@ -192,6 +192,7 @@ bool Scene::pop(TypeID type, int id)
     switch(type) {
     case SHAPE:  
       ishape = shapes.end() - 1;
+      id = (*ishape)->getObjID(); /* for zsort or unsort */
       break;
     case LIGHT:
       ilight = lights.end() - 1;
