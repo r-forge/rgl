@@ -32,7 +32,7 @@ RGL holds two stacks. One is for shapes and the other is for lights.
 the defaults for the bounding box (not visible) or viewpoint.  By default
 with \code{id=0} \code{rgl.pop} removes 
 the top-most (last added) node on the shape stack.  The \code{id} argument
-may be used to specify which item(s) to remove from the specified stack.
+may be used to specify arbitrary item(s) to remove from the specified stack.
 
 For convenience, \code{type="shapes"} and 
 \code{id=1} signifies the bounding box.
