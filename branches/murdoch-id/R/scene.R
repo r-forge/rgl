@@ -58,6 +58,17 @@ rgl.pop <- function( type = "shapes", id = 0)
   }
 }
 
+rgl.ids <- function( type = "shapes" )
+{
+  type <- rgl.enum.nodetype(type)
+  
+  count <- .C( "rgl_id_count", as.integer(type), count = integer(1),
+                               PACKAGE="rgl")$count
+  
+  as.data.frame( .C( "rgl_ids", as.integer(type), id=integer(count), 
+                                type=rep("",count), PACKAGE="rgl" )[2:3] )
+}
+
 ##
 ## ===[ SECTION: environment ]================================================
 ##

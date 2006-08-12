@@ -163,4 +163,5 @@ v0.67-3
   - removed use of List and ListIterator internally
   - changed rgl.viewpoint default to be compatible with r3dDefaults
   - added id return values to primitives and higher level functions, 
-    and to rgl.pop()
+    and to rgl.pop(); added rgl.ids() to report on them.
+    

@@ -238,7 +238,39 @@ void rgl_pop(int* successptr, int* idata)
   *successptr = success;
 }
 
+//
+// FUNCTION
+//   rgl_id_count
+//
 
+void rgl_id_count(int* type, int* count)
+{
+  Device* device;
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    RGLView* rglview = device->getRGLView();
+    Scene* scene = rglview->getScene();
+    
+    *count = scene->get_id_count((TypeID) *type);
+  } else {
+    *count = 0;
+  }
+}  
+
+//
+// FUNCTION
+//   rgl_ids
+//
+
+void rgl_ids(int* type, int* ids, char** types)
+{
+  Device* device;
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    RGLView* rglview = device->getRGLView();
+    Scene* scene = rglview->getScene();
+    
+    scene->get_ids((TypeID) *type, ids, types);
+  }
+} 
 //
 // FUNCTION
 //   rgl_bg   ( successPtr, idata )
