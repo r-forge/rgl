@@ -4,13 +4,13 @@
 // $Id$
 
 
-#include "R.h"
 #include "scene.h"
 #include "math.h"
 #include "render.h"
 #include "geom.hpp"
 #include <map>
 #include <algorithm>
+#include "R.h"
 
 //////////////////////////////////////////////////////////////////////////////
 //
