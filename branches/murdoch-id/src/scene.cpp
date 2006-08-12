@@ -4,6 +4,7 @@
 // $Id$
 
 
+#include "R.h"
 #include "scene.h"
 #include "math.h"
 #include "render.h"
@@ -257,6 +258,41 @@ bool Scene::pop(TypeID type, int id)
 
   return success;
 }
+
+int Scene::get_id_count(TypeID type)
+{
+  switch(type) {
+  case SHAPE:  return shapes.size();
+  case LIGHT:  return lights.size();
+  default:     return 0;
+  }
+}
+
+void Scene::get_ids(TypeID type, int* ids, char** types)
+{
+  char buffer[20];
+  switch(type) {
+  case SHAPE: 
+    for (std::vector<Shape*>::iterator i = shapes.begin(); i != shapes.end() ; ++ i ) {
+      *ids++ = (*i)->getObjID();
+      buffer[19] = 0;
+      (*i)->getShapeName(buffer, 20);
+      *types = R_alloc(strlen(buffer), 1);
+      strcpy(*types, buffer);
+      types++;
+    }
+    return;
+  case LIGHT: 
+    for (std::vector<Light*>::iterator i = lights.begin(); i != lights.end() ; ++ i ) {
+      *ids++ = (*i)->getObjID();
+      *types = R_alloc(strlen("light"), 1);
+      strcpy(*types, "light");
+      types++;
+    }
+    return;
+  default:	return;
+  }
+}  
 
 void Scene::render(RenderContext* renderContext)
 {
