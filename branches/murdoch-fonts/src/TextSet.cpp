@@ -35,7 +35,7 @@ TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *
 
     boundingBox += vertexArray[i];
   }
-  fonts = FontArray(in_fonts);
+  fonts = in_fonts;
   Rprintf("fonts initialized with %d fonts\n", fonts.size());
   if (fonts.size() > 0)
     Rprintf("first font is %p\n", fonts[0]);
