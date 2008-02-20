@@ -130,11 +130,11 @@ quads3d     <- function(x,y=NULL,z=NULL,...) {
   do.call("rgl.quads", c(list(x=x,y=y,z=z), .fixMaterialArgs(..., Params = save)))
 }
 
-text3d      <- function(x,y=NULL,z=NULL,texts,adj=0.5,justify,...) {
+text3d      <- function(x,y=NULL,z=NULL,texts,adj=0.5,justify,family="sans", font=1, cex=1,...) {
   .check3d(); save <- material3d(); on.exit(material3d(save))
   new <- .fixMaterialArgs(..., Params = save)
   if (!missing(justify)) new <- c(list(justify=justify), new)
-  do.call("rgl.texts", c(list(x=x,y=y,z=z,text=texts,adj),new))
+  do.call("rgl.texts", c(list(x=x,y=y,z=z,text=texts,adj=adj,family=family,font=font,cex=cex),new))
 }
 texts3d	    <- text3d
 

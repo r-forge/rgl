@@ -256,7 +256,6 @@ void BBoxDeco::render(RenderContext* renderContext)
     // setup material
 
     material.beginUse(renderContext);
-    renderContext->font->enable();
 
     // edge adjacent matrix
 

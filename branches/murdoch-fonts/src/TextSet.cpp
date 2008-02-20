@@ -1,7 +1,7 @@
 #include "TextSet.hpp"
 
 #include "glgui.hpp"
-
+#include <R.h>
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
@@ -13,7 +13,7 @@
 //
 
 TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, double in_adj,
-                 int in_ignoreExtent)
+                 int in_ignoreExtent, FontArray& in_fonts)
  : Shape(in_material, in_ignoreExtent), textArray(in_ntexts, in_texts)
 {
   int i;
@@ -35,7 +35,10 @@ TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *
 
     boundingBox += vertexArray[i];
   }
-
+  fonts = FontArray(in_fonts);
+  Rprintf("fonts initialized with %d fonts\n", fonts.size());
+  if (fonts.size() > 0)
+    Rprintf("first font is %p\n", fonts[0]);
 }
 
 TextSet::~TextSet()
@@ -45,10 +48,9 @@ TextSet::~TextSet()
 void TextSet::draw(RenderContext* renderContext) {
 
   int cnt;
+  GLBitmapFont* font;
 
   material.beginUse(renderContext);
-
-  renderContext->font->enable();
 
   StringArrayIterator iter(&textArray);
 
@@ -57,7 +59,11 @@ void TextSet::draw(RenderContext* renderContext) {
       material.useColor(cnt);
       glRasterPos3f( vertexArray[cnt].x, vertexArray[cnt].y, vertexArray[cnt].z );
       String text = iter.getCurrent();
-      renderContext->font->draw( text.text, text.length, adj, renderContext->gl2psActive );
+      font = fonts[cnt % fonts.size()];
+      if (font) {
+      Rprintf("Drawing font %s\n", font->family);
+      font->draw( text.text, text.length, adj, renderContext->gl2psActive );
+      }
     }
   }
 

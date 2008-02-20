@@ -15,7 +15,7 @@ extern "C" {
 #include "rglview.h"
 
 #include "lib.hpp"
-
+#include <R.h>
 //
 // API Success is encoded as integer type:
 //
@@ -657,7 +657,8 @@ void rgl_getmaterial(int *successptr, int* idata, char** cdata, double* ddata)
   *successptr = RGL_SUCCESS;
 }
 
-void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* vertex)
+void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* vertex,
+               int* nfonts, char** family, int* style, double* cex)
 {
   int success = RGL_FAIL;
 
@@ -666,9 +667,13 @@ void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* ve
   if (deviceManager && (device = deviceManager->getAnyDevice())) {
 
     int ntext   = idata[0];
-
+    
+    FontArray* fonts = device->getFonts(*nfonts, family, style, cex);
+    Rprintf("fonts created with %d fonts\n", fonts->size());
+    if (fonts->size()) 
+      Rprintf("first font is %p\n", (*fonts)[0]);
     success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj,
-    						   device->getIgnoreExtent()) ) );
+    						   device->getIgnoreExtent(), *fonts) ) );
   }
 
   *successptr = success;

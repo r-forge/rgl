@@ -59,6 +59,7 @@ public:
   : window(in_window)
   { 
   }
+  ~WindowImpl();
   inline  void unbind() { window = 0; }
   virtual void setTitle(const char* title) = 0;
   virtual void setWindowRect(int left, int top, int right, int bottom) = 0;
@@ -76,8 +77,11 @@ public:
   virtual void swap(void) = 0;
   virtual void captureMouse(View* captureView) = 0;
   virtual void releaseMouse(void) = 0;
+  virtual GLBitmapFont* getFont(const char* family, int style, double cex) = 0;
+  FontArray* getFonts(int nfonts, char** family, int* style, double* cex);
+
   // OpenGL support (FIXME: remove)
-  GLBitmapFont font;
+  FontArray fonts;
 protected:
   Window*      window;
 };
@@ -197,6 +201,7 @@ public:
   void bringToTop(int stay);
   void setWindowRect(int left, int top, int right, int bottom);
   void getWindowRect(int *left, int *top, int *right, int *bottom);
+  FontArray* getFonts(int nfonts, char** family, int* style, double* cex);
 
 // data:
   View* child;

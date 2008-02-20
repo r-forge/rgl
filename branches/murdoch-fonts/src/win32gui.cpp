@@ -63,6 +63,8 @@ public:
   void destroy();
   void captureMouse(View* pView);
   void releaseMouse();
+  GLBitmapFont* getFont(const char* family, int style, double cex);
+
 private:
   LRESULT processMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
   static bool registerClass();
@@ -84,8 +86,8 @@ public:
 private:
   bool initGL();
   void shutdownGL();
-  void initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
-  void destroyGLFont();
+//  void initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
+  void destroyGLFonts();
   HDC   dcHandle;               // temporary variable setup by lock
   HGLRC glrcHandle;
 };
@@ -304,6 +306,67 @@ void Win32WindowImpl::shutdownGL()
   wglDeleteContext(glrcHandle);
 }
 
+GLBitmapFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
+{
+  for (unsigned int i=0; i < fonts.size(); i++) {
+    if (fonts[i]->cex == cex && fonts[i]->style == style && !strcmp(fonts[i]->family, family))
+      return fonts[i];
+  }
+  // Not found, so create it.  This is based on code from graphapp gdraw.c
+  if (beginGL()) {  
+    GLBitmapFont* font = new GLBitmapFont(family, style, cex);
+    HFONT hf;
+    LOGFONT lf;
+
+    double size = 10*cex + 0.5;
+  
+    lf.lfHeight = -MulDiv(size, GetDeviceCaps(dcHandle, LOGPIXELSY), 72);
+
+    lf.lfWidth = 0 ;
+    lf.lfEscapement = lf.lfOrientation = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfItalic = lf.lfUnderline = lf.lfStrikeOut = 0;
+    if ((! strcmp(family, "Symbol")) || (! strcmp(family, "Wingdings")))
+	lf.lfCharSet = SYMBOL_CHARSET;
+    else
+        lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+    if ((strlen(family) > 1) && (family[0] == 'T') && (family[1] == 'T')) {
+        const char *pf;
+        lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+        for (pf = &family[2]; isspace(*pf) ; pf++);
+        strncpy(lf.lfFaceName, pf, LF_FACESIZE-1);
+    }
+    else {
+        lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+        strncpy(lf.lfFaceName, family, LF_FACESIZE-1);
+    }
+    if (style == 2 || style == 4) lf.lfWeight = FW_BOLD;
+    if (style == 3 || style == 4) lf.lfItalic = 1;
+    
+    if ((hf = CreateFontIndirect(&lf)) == 0)
+	return fonts[1];
+
+    SelectObject (dcHandle, hf );
+    font->nglyph     = GL_BITMAP_FONT_COUNT;
+    font->widths     = new unsigned int [font->nglyph];
+    GLuint listBase = glGenLists(font->nglyph);
+    font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
+    font->listBase   = listBase - font->firstGlyph;
+    GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
+    wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
+    DeleteObject( hf );
+    endGL();  
+    fonts.push_back(font);
+    return font;
+  }
+
+  return fonts[1];
+}
+
+#if 0
 void Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph) 
 {
   if (beginGL()) {
@@ -318,12 +381,13 @@ void Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph)
     endGL();
   }
 }
+#endif 
 
-void Win32WindowImpl::destroyGLFont() 
+void Win32WindowImpl::destroyGLFonts() 
 {
   if (beginGL()) {
-    glDeleteLists( font.listBase + font.firstGlyph, font.nglyph);
-    delete [] font.widths;
+    for (unsigned int i=0; i < fonts.size(); i++) 
+      glDeleteLists( fonts[i]->listBase + fonts[i]->firstGlyph, fonts[i]->nglyph);
     endGL();
   }
 }
@@ -334,7 +398,7 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
     case WM_CREATE:
       windowHandle = hwnd;
       initGL();
-      initGLBitmapFont(GL_BITMAP_FONT_FIRST_GLYPH, GL_BITMAP_FONT_LAST_GLYPH);
+      getFont("Microsoft Sans Serif", 1, 1);
       if (gHandle) {
         refreshMenu = true;
       }
@@ -415,7 +479,6 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
       }
       break;
     case WM_DESTROY:
-      delete [] font.widths; // Can't call destroyGLFont because we don't have a valid DC now
       shutdownGL();
       SetWindowLong(hwnd, GWL_USERDATA, (LONG) NULL );
       if (window)

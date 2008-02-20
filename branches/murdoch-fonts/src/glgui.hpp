@@ -7,6 +7,7 @@
 // $Id$
 
 #include "opengl.hpp"
+#include <vector>
 
 //
 // CLASS
@@ -16,10 +17,16 @@
 class GLBitmapFont
 {
 public:
-  GLBitmapFont() {};
-
-  void enable() {
-    glListBase(listBase);
+  GLBitmapFont(const char* in_family, int in_style, double in_cex) {
+    family = new char[strlen(in_family) + 1];
+    strcpy(family, in_family);
+    style = in_style;
+    cex = in_cex;
+  };
+  
+  ~GLBitmapFont() {
+    delete [] widths;
+    delete [] family;
   };
 
   void draw(char* text, int length, double adj, int gl2psActive);
@@ -29,7 +36,15 @@ public:
   GLuint nglyph;
   unsigned int* widths;
 
+  char* family;
+  int style;
+  double cex;
 };
+
+/**
+ * FontArray
+ **/
+typedef std::vector<GLBitmapFont*> FontArray;
 
 #define GL_BITMAP_FONT_FIRST_GLYPH  32
 #define GL_BITMAP_FONT_LAST_GLYPH   127
