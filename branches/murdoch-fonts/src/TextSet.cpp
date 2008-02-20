@@ -61,7 +61,7 @@ void TextSet::draw(RenderContext* renderContext) {
       String text = iter.getCurrent();
       font = fonts[cnt % fonts.size()];
       if (font) {
-      Rprintf("Drawing font %s\n", font->family);
+      Rprintf("Drawing font %s size %f\n", font->family, font->cex);
       font->draw( text.text, text.length, adj, renderContext->gl2psActive );
       }
     }

@@ -64,7 +64,7 @@ void RGLView::hide()
 
 void RGLView::setWindowImpl(WindowImpl* impl) {
   View::setWindowImpl(impl);
-  renderContext.font = impl->fonts[1];
+  renderContext.font = impl->fonts[0];
 }
 
 Scene* RGLView::getScene() {
