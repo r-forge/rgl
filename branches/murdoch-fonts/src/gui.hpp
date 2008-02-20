@@ -78,7 +78,7 @@ public:
   virtual void captureMouse(View* captureView) = 0;
   virtual void releaseMouse(void) = 0;
   virtual GLBitmapFont* getFont(const char* family, int style, double cex) = 0;
-  FontArray* getFonts(int nfonts, char** family, int* style, double* cex);
+  void getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex);
 
   // OpenGL support (FIXME: remove)
   FontArray fonts;
@@ -201,7 +201,7 @@ public:
   void bringToTop(int stay);
   void setWindowRect(int left, int top, int right, int bottom);
   void getWindowRect(int *left, int *top, int *right, int *bottom);
-  FontArray* getFonts(int nfonts, char** family, int* style, double* cex);
+  void getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex);
 
 // data:
   View* child;

@@ -8,6 +8,7 @@
 #include "glgui.hpp"
 
 #include <cstdio>
+#include <R.h>
 
 void FPS::init(double time)
 {
@@ -34,6 +35,9 @@ void FPS::render(double t, RenderContext* ctx)
   glColor3f(1.0f,1.0f,1.0f);
   glRasterPos2f( 1.0f, -0.9f);
 
-  ctx->font->draw(buffer, strlen(buffer), -1, 0);
+  if (ctx->font)
+    ctx->font->draw(buffer, strlen(buffer), -1, 0);
+  else
+    Rprintf("Nil font in fps\n");
   framecnt++;
 }

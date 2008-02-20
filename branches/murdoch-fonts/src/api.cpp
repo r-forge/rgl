@@ -668,12 +668,13 @@ void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* ve
 
     int ntext   = idata[0];
     
-    FontArray* fonts = device->getFonts(*nfonts, family, style, cex);
-    Rprintf("fonts created with %d fonts\n", fonts->size());
-    if (fonts->size()) 
-      Rprintf("first font is %p\n", (*fonts)[0]);
+    FontArray fonts;
+    device->getFonts(fonts, *nfonts, family, style, cex);
+    Rprintf("fonts created with %d fonts\n", fonts.size());
+    if (fonts.size()) 
+      Rprintf("first font is %p\n", fonts[0]);
     success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj,
-    						   device->getIgnoreExtent(), *fonts) ) );
+    						   device->getIgnoreExtent(), fonts) ) );
   }
 
   *successptr = success;

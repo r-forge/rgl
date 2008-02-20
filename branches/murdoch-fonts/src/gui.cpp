@@ -18,16 +18,15 @@ WindowImpl::~WindowImpl()
   }
 }
 // ---------------------------------------------------------------------------
-FontArray* WindowImpl::getFonts(int nfonts, char** family, int* style, double* cex)
+void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
 {
   GLBitmapFont* font;
-  FontArray* result = new FontArray();
+  outfonts.resize(nfonts);
   for (int i = 0; i < nfonts; i++) {
     font = getFont(*(family++), *(style++), *(cex++));
-    Rprintf("getFont %p put in location %d\n", font, result->size());
-    result->push_back(font);
+    Rprintf("getFont %p put in location %d\n", font, i);
+    outfonts[i] = font;
   }  
-  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -288,9 +287,9 @@ void Window::on_close()
   windowImpl->destroy();
 }
 // ---------------------------------------------------------------------------
-FontArray* Window::getFonts(int nfonts, char** family, int* style, double* cex)
+void Window::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
 {
-  return windowImpl->getFonts(nfonts, family, style, cex);
+  windowImpl->getFonts(outfonts, nfonts, family, style, cex);
 }
 // ---------------------------------------------------------------------------
 } // namespace gui

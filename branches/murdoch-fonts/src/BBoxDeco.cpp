@@ -4,6 +4,7 @@
 #include "scene.h"
 #include <cstdio>
 #include <cmath>
+#include <R.h>
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -109,7 +110,10 @@ void AxisInfo::draw(RenderContext* renderContext, Vertex4& v, Vertex4& dir, Matr
     if (eyedir.x < 0) adj = 1.0 - adj;
   }
   
-  renderContext->font->draw(string.text, string.length, adj, renderContext->gl2psActive);
+  if (renderContext->font)
+    renderContext->font->draw(string.text, string.length, adj, renderContext->gl2psActive);
+  else
+    Rprintf("nil font in bbox\n");
 
 }
 
