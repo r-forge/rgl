@@ -445,7 +445,7 @@ rgl.spheres <- function( x, y=NULL, z=NULL, radius=1.0,...)
 ## add texts
 ##
 
-rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, ... )
+rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family="sans", font=1, cex=1, ... )
 {
   rgl.material( ... )
 
@@ -460,6 +460,21 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, ... )
   text    <- rep(text, length.out=nvertex)
   
   idata <- as.integer(nvertex)
+  
+  nfonts <- max(length(family), length(font), length(cex)) 
+  family <- rep(family, len=nfonts)
+  font <- rep(font, len=nfonts)
+  cex <- rep(cex, len=nfonts)  
+  
+  if (.Platform$OS.type == "windows") 
+     family <- unlist(windowsFonts(family))
+  else if (.Platform$GUI == "AQUA") {
+     family <- quartzFonts(family)
+     family <- sapply(1:nfonts, function(i) family[[i]][i])
+  }
+  else {
+    family <- unlist(X11Fonts(family))
+  }
 
   ret <- .C( rgl_texts,
     success = as.integer(FALSE),
@@ -467,6 +482,10 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, ... )
     as.double(adj),
     as.character(text),
     as.numeric(vertex),
+    as.integer(nfonts),
+    as.character(family), 
+    as.integer(font),
+    as.numeric(cex),
     NAOK=TRUE
   )
   

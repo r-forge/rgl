@@ -5,8 +5,31 @@
 // ---------------------------------------------------------------------------
 #include "gui.hpp"
 #include "lib.hpp"
+#include <R.h>
 // ---------------------------------------------------------------------------
 namespace gui {
+// ---------------------------------------------------------------------------
+// WindowImpl common code
+// ---------------------------------------------------------------------------
+WindowImpl::~WindowImpl()
+{
+  for (unsigned int i=0; i < fonts.size(); i++) {
+    delete fonts[i];
+  }
+}
+// ---------------------------------------------------------------------------
+FontArray* WindowImpl::getFonts(int nfonts, char** family, int* style, double* cex)
+{
+  GLBitmapFont* font;
+  FontArray* result = new FontArray();
+  for (int i = 0; i < nfonts; i++) {
+    font = getFont(*(family++), *(style++), *(cex++));
+    Rprintf("getFont %p put in location %d\n", font, result->size());
+    result->push_back(font);
+  }  
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // View Implementation
 // ---------------------------------------------------------------------------
@@ -263,6 +286,11 @@ void Window::wheelRotate(int dir)
 void Window::on_close()
 {
   windowImpl->destroy();
+}
+// ---------------------------------------------------------------------------
+FontArray* Window::getFonts(int nfonts, char** family, int* style, double* cex)
+{
+  return windowImpl->getFonts(nfonts, family, style, cex);
 }
 // ---------------------------------------------------------------------------
 } // namespace gui

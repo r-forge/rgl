@@ -127,4 +127,8 @@ bool Device::postscript(int format, const char* filename, bool drawText)
 {
   return rglview->postscript( format, filename, drawText);
 }
-
+// ---------------------------------------------------------------------------
+FontArray* Device::getFonts(int nfonts, char** family, int* style, double* cex)
+{
+  return window->getFonts(nfonts, family, style, cex);
+}

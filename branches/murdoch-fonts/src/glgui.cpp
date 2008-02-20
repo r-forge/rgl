@@ -39,8 +39,9 @@ void GLBitmapFont::draw(char* text, int length, double adj, int gl2psActive) {
       glBitmap(0,0, 0.0f,0.0f, (float)(scaling * textWidth * (base - adj)), 0.0f, NULL);
     }
   }
-  if (gl2psActive == GL2PS_NONE)
+  if (gl2psActive == GL2PS_NONE) {
+    glListBase(listBase);
     glCallLists(length, GL_UNSIGNED_BYTE, text);
-  else
+  } else
     gl2psTextOpt(text, GL2PS_FONT, GL2PS_FONTSIZE, centering, 0.0);
 }
