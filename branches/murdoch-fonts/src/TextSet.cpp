@@ -61,13 +61,15 @@ void TextSet::draw(RenderContext* renderContext) {
       String text = iter.getCurrent();
       font = fonts[cnt % fonts.size()];
       if (font) {
-      Rprintf("Drawing font %s size %f\n", font->family, font->cex);
-      font->draw( text.text, text.length, adj, renderContext->gl2psActive );
+      Rprintf("Drawing font %s size %f at (%f,%f,%f)\n", font->family, font->cex, vertexArray[cnt].x,
+      vertexArray[cnt].y,vertexArray[cnt].z);
+//      font->draw( text.text, text.length, adj, renderContext->gl2psActive );
       }
     }
   }
 
   material.endUse(renderContext);
+  doUpdate = true;
 }
 
 
