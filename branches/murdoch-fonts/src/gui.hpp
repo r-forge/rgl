@@ -58,6 +58,7 @@ public:
   inline WindowImpl(Window* in_window)
   : window(in_window)
   { 
+    fonts.resize(1);
   }
   ~WindowImpl();
   inline  void unbind() { window = 0; }

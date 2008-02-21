@@ -445,7 +445,8 @@ rgl.spheres <- function( x, y=NULL, z=NULL, radius=1.0,...)
 ## add texts
 ##
 
-rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family="sans", font=1, cex=1, ... )
+rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family="", 
+                      font=1, cex=1, ... )
 {
   rgl.material( ... )
 
@@ -466,16 +467,20 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family="sans"
   font <- rep(font, len=nfonts)
   cex <- rep(cex, len=nfonts)  
   
-  if (.Platform$OS.type == "windows") 
-     family <- unlist(windowsFonts(family))
+  family[font == 5] <- "symbol"
+  font <- ifelse( font < 0 | font > 4, 1, font)  
+  
+  if (.Platform$OS.type == "windows")
+    family <- windowsFonts(family)
   else if (.Platform$GUI == "AQUA") {
-     family <- quartzFonts(family)
-     family <- sapply(1:nfonts, function(i) family[[i]][i])
-  }
-  else {
-    family <- unlist(X11Fonts(family))
-  }
-
+    family <- quartzFonts(family)
+    family <- lapply(1:nfonts, function(i) family[[i]][font[i]])
+  } else 
+    family <- X11Fonts(family)
+    
+  family[is.na(names(family))] <- NA_character_
+  family <- unlist(family)
+     
   ret <- .C( rgl_texts,
     success = as.integer(FALSE),
     idata,
