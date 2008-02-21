@@ -8,9 +8,9 @@
   A bitmap font which is always oriented towards the camera is used.
 }
 \usage{
-rgl.texts(x, y = NULL, z = NULL, text, adj = 0.5, justify, ...)
-text3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, ...) 
-texts3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, ...) 
+rgl.texts(x, y = NULL, z = NULL, text, adj = 0.5, justify, family = "", font = 1, cex = 1, ...)
+text3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, family = "sans", font = 1, cex = 1, ...) 
+texts3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, family = "sans", font = 1, cex = 1, ...) 
 }
 \arguments{
   \item{x, y, z}{point coordinates.  Any reasonable way of defining the
@@ -23,6 +23,9 @@ texts3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, ...)
 specifying the horizontal adjustment; options are \code{"left"}, \code{"right"},
     \code{"center"}.
   }
+  \item{ family }{A device-independent font family name, or "" }
+  \item{ font }{A numeric font number from 1 to 5 }
+  \item{ cex }{A numeric character expansion value }
   \item{ ... }{Material properties. See \code{\link{rgl.material}} for details.}  
 }
 \details{
@@ -38,6 +41,17 @@ plural to be consistent with all the other graphics primitives.  Take
 your choice!
 
 If any coordinate or text is \code{NA}, that text is not plotted.
+
+The \code{family} specification is the same as for standard graphics, i.e.
+families \code{c("serif", "sans", "mono", "symbol")} are normally available, 
+but users may add additional families.  \code{font} numbers are restricted
+to the range 1 to 4 for standard, bold, italic and bold italic respectively;
+with font 5 recoded as family \code{"symbol"} font 1.  
+
+Using a blank or unrecognized value for \code{"family"} will result in
+the system standard font as used in rgl up to version 0.76.  That font
+is not resizable and \code{font} values are ignored.
+
 }
 \value{
   The object ID of the text object is returned invisibly.

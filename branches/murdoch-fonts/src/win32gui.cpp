@@ -86,7 +86,7 @@ public:
 private:
   bool initGL();
   void shutdownGL();
-//  void initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
+  GLBitmapFont* initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
   void destroyGLFonts();
   HDC   dcHandle;               // temporary variable setup by lock
   HGLRC glrcHandle;
@@ -313,7 +313,7 @@ GLBitmapFont* Win32WindowImpl::getFont(const char* family, int style, double cex
       return fonts[i];
   }
   // Not found, so create it.  This is based on code from graphapp gdraw.c
-  if (beginGL()) {  
+  if (strcmp(family, "NA") && beginGL()) {  // User passes NA_character_ for default, looks like "NA" here
     GLBitmapFont* font = new GLBitmapFont(family, style, cex);
     HFONT hf;
     LOGFONT lf;
@@ -327,61 +327,63 @@ GLBitmapFont* Win32WindowImpl::getFont(const char* family, int style, double cex
     lf.lfWeight = FW_NORMAL;
     lf.lfItalic = lf.lfUnderline = lf.lfStrikeOut = 0;
     if ((! strcmp(family, "Symbol")) || (! strcmp(family, "Wingdings")))
-	lf.lfCharSet = SYMBOL_CHARSET;
+      lf.lfCharSet = SYMBOL_CHARSET;
     else
-        lf.lfCharSet = DEFAULT_CHARSET;
+      lf.lfCharSet = DEFAULT_CHARSET;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     if ((strlen(family) > 1) && (family[0] == 'T') && (family[1] == 'T')) {
-        const char *pf;
-        lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-        for (pf = &family[2]; isspace(*pf) ; pf++);
-        strncpy(lf.lfFaceName, pf, LF_FACESIZE-1);
+      const char *pf;
+      lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+      for (pf = &family[2]; isspace(*pf) ; pf++);
+      strncpy(lf.lfFaceName, pf, LF_FACESIZE-1);
     }
     else {
-        lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-        strncpy(lf.lfFaceName, family, LF_FACESIZE-1);
+      lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+      strncpy(lf.lfFaceName, family, LF_FACESIZE-1);
     }
     if (style == 2 || style == 4) lf.lfWeight = FW_BOLD;
     if (style == 3 || style == 4) lf.lfItalic = 1;
     
-    if ((hf = CreateFontIndirect(&lf)) == 0)
-	return fonts[1];
-
-    SelectObject (dcHandle, hf );
-    font->nglyph     = GL_BITMAP_FONT_LAST_GLYPH - GL_BITMAP_FONT_FIRST_GLYPH + 1;
-    font->widths     = new unsigned int [font->nglyph];
-    GLuint listBase = glGenLists(font->nglyph);
-    font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
-    font->listBase   = listBase - font->firstGlyph;
-    GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
-    wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
-    DeleteObject( hf );
-    endGL();  
-    fonts.push_back(font);
-    return font;
-  }
-
-  return fonts[1];
-}
-
-#if 0
-void Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph) 
-{
-  if (beginGL()) {
-    SelectObject (dcHandle, GetStockObject (SYSTEM_FONT) );
-    font.nglyph     = lastGlyph-firstGlyph+1;
-    font.widths     = new unsigned int [font.nglyph];
-    GLuint listBase = glGenLists(font.nglyph);
-    font.firstGlyph = firstGlyph;
-    font.listBase   = listBase - firstGlyph;
-    GetCharWidth32( dcHandle, font.firstGlyph, lastGlyph,  (LPINT) font.widths );
-    wglUseFontBitmaps(dcHandle, font.firstGlyph, font.nglyph, listBase);
+    if ((hf = CreateFontIndirect(&lf))) {
+      SelectObject (dcHandle, hf );
+      font->nglyph     = GL_BITMAP_FONT_LAST_GLYPH - GL_BITMAP_FONT_FIRST_GLYPH + 1;
+      font->widths     = new unsigned int [font->nglyph];
+      GLuint listBase = glGenLists(font->nglyph);
+      font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
+      font->listBase   = listBase - font->firstGlyph;
+      GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
+      wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
+      DeleteObject( hf );
+      endGL();  
+      fonts.push_back(font);
+      return font;
+    } 
+    delete font;
     endGL();
   }
+
+  return fonts[0];
 }
-#endif 
+
+GLBitmapFont* Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph) 
+{
+  GLBitmapFont* font = NULL; 
+  if (beginGL()) {
+    font = new GLBitmapFont("NA", 1, 1);
+    SelectObject (dcHandle, GetStockObject (SYSTEM_FONT) );
+    font->nglyph     = lastGlyph-firstGlyph+1;
+    font->widths     = new unsigned int [font->nglyph];
+    GLuint listBase = glGenLists(font->nglyph);
+    font->firstGlyph = firstGlyph;
+    font->listBase   = listBase - firstGlyph;
+    GetCharWidth32( dcHandle, font->firstGlyph, lastGlyph,  (LPINT) font->widths );
+    wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
+    endGL();
+  }
+  return font;
+}
 
 void Win32WindowImpl::destroyGLFonts() 
 {
@@ -398,7 +400,7 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
     case WM_CREATE:
       windowHandle = hwnd;
       initGL();
-      getFont("Microsoft Sans Serif", 1, 1);
+      fonts[0] = initGLBitmapFont(GL_BITMAP_FONT_FIRST_GLYPH, GL_BITMAP_FONT_LAST_GLYPH);
       if (gHandle) {
         refreshMenu = true;
       }
