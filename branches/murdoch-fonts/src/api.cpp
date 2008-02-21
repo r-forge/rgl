@@ -15,7 +15,7 @@ extern "C" {
 #include "rglview.h"
 
 #include "lib.hpp"
-#include <R.h>
+
 //
 // API Success is encoded as integer type:
 //
@@ -670,9 +670,6 @@ void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* ve
     
     FontArray fonts;
     device->getFonts(fonts, *nfonts, family, style, cex);
-    Rprintf("fonts created with %d fonts\n", fonts.size());
-    if (fonts.size()) 
-      Rprintf("first font is %p\n", fonts[0]);
     success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj,
     						   device->getIgnoreExtent(), fonts) ) );
   }
