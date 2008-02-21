@@ -1019,6 +1019,7 @@ void rgl_getWindowRect(int* successptr, int* rect)
      device->getWindowRect(rect, rect+1, rect+2, rect+3);
      success = RGL_SUCCESS;
   }
+  *successptr = success;
 }
 
 void rgl_setWindowRect(int* successptr, int* rect)
@@ -1031,6 +1032,7 @@ void rgl_setWindowRect(int* successptr, int* rect)
     device->setWindowRect(rect[0], rect[1], rect[2], rect[3]);
     success = RGL_SUCCESS;
   }
+  *successptr = success;
 }
 
 void rgl_postscript(int* successptr, int* idata, char** cdata)
