@@ -74,7 +74,7 @@ private:
   static ATOM classAtom;
   HWND  windowHandle;
   View* captureView;
-  bool  updateMode;             // window is currently updated
+  bool  painting;               // window is currently busy painting
   bool  autoUpdate;             // update/refresh automatically
   bool  refreshMenu;		// need to tell Windows to update the menu
   friend class Win32GUIFactory;
@@ -103,7 +103,7 @@ Win32WindowImpl::Win32WindowImpl(Window* in_window)
   dcHandle = NULL;
   glrcHandle = NULL;
 
-  updateMode = false;
+  painting = false;
   autoUpdate = false;
   refreshMenu = false;
 }
@@ -350,7 +350,7 @@ GLBitmapFont* Win32WindowImpl::getFont(const char* family, int style, double cex
 	return fonts[1];
 
     SelectObject (dcHandle, hf );
-    font->nglyph     = GL_BITMAP_FONT_COUNT;
+    font->nglyph     = GL_BITMAP_FONT_LAST_GLYPH - GL_BITMAP_FONT_FIRST_GLYPH + 1;
     font->widths     = new unsigned int [font->nglyph];
     GLuint listBase = glGenLists(font->nglyph);
     font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
@@ -413,17 +413,21 @@ LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, 
         autoUpdate = false;
       }
       break;
-    case WM_PAINT:
-      if (refreshMenu) {
-        SendMessage(gMDIClientHandle, WM_MDIREFRESHMENU, 0, 0);    
-        DrawMenuBar(gMDIFrameHandle);
-        refreshMenu = false;
-      }        
-      if (!window->skipRedraw) {
-        window->paint();
-        swap();
-      }  
-      ValidateRect(hwnd, NULL);
+    case WM_PAINT: // Warning:  don't put Rprintf calls in paint/render/draw methods, or you get a permanent loop!
+      if (!painting) {
+        painting = true;
+        if (refreshMenu) {
+          SendMessage(gMDIClientHandle, WM_MDIREFRESHMENU, 0, 0);    
+          DrawMenuBar(gMDIFrameHandle);
+          refreshMenu = false;
+        }        
+        if (!window->skipRedraw) {
+          window->paint();
+          swap();
+        }  
+        ValidateRect(hwnd, NULL);
+        painting = false;
+      }
       break;
     case WM_SIZE:
       window->resize(LOWORD(lParam), HIWORD(lParam));

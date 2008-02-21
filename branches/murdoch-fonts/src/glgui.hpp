@@ -17,11 +17,11 @@
 class GLBitmapFont
 {
 public:
-  GLBitmapFont(const char* in_family, int in_style, double in_cex) {
+  GLBitmapFont(const char* in_family, int in_style, double in_cex):
+  style(in_style), cex(in_cex) 
+  {
     family = new char[strlen(in_family) + 1];
-    strcpy(family, in_family);
-    style = in_style;
-    cex = in_cex;
+    memcpy(family, in_family, strlen(in_family) + 1);
   };
   
   ~GLBitmapFont() {

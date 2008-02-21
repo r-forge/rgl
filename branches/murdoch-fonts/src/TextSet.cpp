@@ -1,7 +1,6 @@
 #include "TextSet.hpp"
 
 #include "glgui.hpp"
-#include <R.h>
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
@@ -36,9 +35,6 @@ TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *
     boundingBox += vertexArray[i];
   }
   fonts = in_fonts;
-  Rprintf("fonts initialized with %d fonts\n", fonts.size());
-  if (fonts.size() > 0)
-    Rprintf("first font is %p\n", fonts[0]);
 }
 
 TextSet::~TextSet()
@@ -60,16 +56,12 @@ void TextSet::draw(RenderContext* renderContext) {
       glRasterPos3f( vertexArray[cnt].x, vertexArray[cnt].y, vertexArray[cnt].z );
       String text = iter.getCurrent();
       font = fonts[cnt % fonts.size()];
-      if (font) {
-      Rprintf("Drawing font %s size %f at (%f,%f,%f)\n", font->family, font->cex, vertexArray[cnt].x,
-      vertexArray[cnt].y,vertexArray[cnt].z);
-//      font->draw( text.text, text.length, adj, renderContext->gl2psActive );
-      }
+      if (font) 
+        font->draw( text.text, text.length, adj, renderContext->gl2psActive );
     }
   }
 
   material.endUse(renderContext);
-  doUpdate = true;
 }
 
 

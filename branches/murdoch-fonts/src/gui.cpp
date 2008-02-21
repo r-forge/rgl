@@ -5,7 +5,6 @@
 // ---------------------------------------------------------------------------
 #include "gui.hpp"
 #include "lib.hpp"
-#include <R.h>
 // ---------------------------------------------------------------------------
 namespace gui {
 // ---------------------------------------------------------------------------
@@ -24,7 +23,6 @@ void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* s
   outfonts.resize(nfonts);
   for (int i = 0; i < nfonts; i++) {
     font = getFont(*(family++), *(style++), *(cex++));
-    Rprintf("getFont %p put in location %d\n", font, i);
     outfonts[i] = font;
   }  
 }
