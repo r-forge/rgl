@@ -273,7 +273,7 @@ void Scene::get_ids(TypeID type, int* ids, char** types)
       *ids++ = (*i)->getObjID();
       buffer[19] = 0;
       (*i)->getShapeName(buffer, 20);
-      *types = R_alloc(strlen(buffer), 1);
+      *types = R_alloc(strlen(buffer)+1, 1);
       strcpy(*types, buffer);
       types++;
     }
@@ -281,7 +281,7 @@ void Scene::get_ids(TypeID type, int* ids, char** types)
   case LIGHT: 
     for (std::vector<Light*>::iterator i = lights.begin(); i != lights.end() ; ++ i ) {
       *ids++ = (*i)->getObjID();
-      *types = R_alloc(strlen("light"), 1);
+      *types = R_alloc(strlen("light")+1, 1);
       strcpy(*types, "light");
       types++;
     }
