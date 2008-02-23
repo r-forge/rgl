@@ -60,7 +60,6 @@ public:
   { 
     fonts.resize(1);
   }
-  ~WindowImpl();
   inline  void unbind() { window = 0; }
   virtual void setTitle(const char* title) = 0;
   virtual void setWindowRect(int left, int top, int right, int bottom) = 0;

@@ -52,6 +52,7 @@ class Win32WindowImpl : public WindowImpl
 { 
 public:
   Win32WindowImpl(Window* in_window);
+  ~Win32WindowImpl();
   void setTitle(const char* title);
   void setWindowRect(int left, int top, int right, int bottom);
   void getWindowRect(int *left, int *top, int *right, int *bottom);
@@ -87,7 +88,6 @@ private:
   bool initGL();
   void shutdownGL();
   GLBitmapFont* initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
-  void destroyGLFonts();
   HDC   dcHandle;               // temporary variable setup by lock
   HGLRC glrcHandle;
 };
@@ -106,6 +106,15 @@ Win32WindowImpl::Win32WindowImpl(Window* in_window)
   painting = false;
   autoUpdate = false;
   refreshMenu = false;
+}
+
+Win32WindowImpl::~Win32WindowImpl()
+{
+  beginGL();
+  for (unsigned int i=0; i < fonts.size(); i++) {
+    delete fonts[i];
+  }
+  endGL();
 }
 
 void Win32WindowImpl::setTitle(const char* title)
@@ -383,15 +392,6 @@ GLBitmapFont* Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph)
     endGL();
   }
   return font;
-}
-
-void Win32WindowImpl::destroyGLFonts() 
-{
-  if (beginGL()) {
-    for (unsigned int i=0; i < fonts.size(); i++) 
-      glDeleteLists( fonts[i]->listBase + fonts[i]->firstGlyph, fonts[i]->nglyph);
-    endGL();
-  }
 }
 
 LRESULT Win32WindowImpl::processMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
