@@ -12,6 +12,12 @@
 //   GLBitmapFont
 //
 
+GLBitmapFont::~GLBitmapFont() {
+    delete [] widths;
+    delete [] family;
+    if (nglyph) glDeleteLists(listBase+GL_BITMAP_FONT_FIRST_GLYPH, nglyph);
+};
+  
 void GLBitmapFont::draw(char* text, int length, double adj, int gl2psActive) {
   
   int centering = GL2PS_TEXT_BL;

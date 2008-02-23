@@ -10,13 +10,6 @@ namespace gui {
 // ---------------------------------------------------------------------------
 // WindowImpl common code
 // ---------------------------------------------------------------------------
-WindowImpl::~WindowImpl()
-{
-  for (unsigned int i=0; i < fonts.size(); i++) {
-    delete fonts[i];
-  }
-}
-// ---------------------------------------------------------------------------
 void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
 {
   GLBitmapFont* font;

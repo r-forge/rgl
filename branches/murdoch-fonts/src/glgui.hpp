@@ -24,10 +24,7 @@ public:
     memcpy(family, in_family, strlen(in_family) + 1);
   };
   
-  ~GLBitmapFont() {
-    delete [] widths;
-    delete [] family;
-  };
+  ~GLBitmapFont();
 
   void draw(char* text, int length, double adj, int gl2psActive);
   
