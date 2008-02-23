@@ -646,6 +646,41 @@ void RGLView::setScale(double* src)
 	View::update();
 }
 
+void RGLView::setDefaultFont(const char* family, int style, double cex)
+{
+  renderContext.font = View::windowImpl->getFont(family, style, cex);
+}
+  
+const char* RGLView::getFontFamily() const 
+{
+  return renderContext.font->family;
+}
+
+void RGLView::setFontFamily(const char *family)
+{
+  setDefaultFont(family, getFontStyle(), getFontCex());
+}
+
+int RGLView::getFontStyle() const 
+{
+  return renderContext.font->style;
+}
+
+void RGLView::setFontStyle(int style)
+{
+  setDefaultFont(getFontFamily(), style, getFontCex());
+}
+
+double RGLView::getFontCex() const 
+{
+  return renderContext.font->cex;
+}
+
+void RGLView::setFontCex(double cex)
+{
+  setDefaultFont(getFontFamily(), getFontStyle(), cex);
+}
+
 void RGLView::getPosition(double* dest)
 {    
     Viewpoint* viewpoint = scene->getViewpoint();

@@ -445,8 +445,8 @@ rgl.spheres <- function( x, y=NULL, z=NULL, radius=1.0,...)
 ## add texts
 ##
 
-rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family="", 
-                      font=1, cex=1, ... )
+rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family=par3d("family"), 
+                      font=par3d("font"), cex=par3d("cex"), ... )
 {
   rgl.material( ... )
 

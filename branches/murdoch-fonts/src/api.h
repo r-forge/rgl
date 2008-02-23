@@ -102,6 +102,15 @@ EXPORT_SYMBOL void rgl_setWindowRect(int* successptr, int* rect);
 EXPORT_SYMBOL void rgl_setPosition(double* position);
 EXPORT_SYMBOL void rgl_getPosition(double* position);
 
+/* These functions are related to the API, but only accessed internally */
+
+char*   getFamily();
+bool    setFamily(const char *family);
+int     getFont();
+bool    setFont(int font);
+double  getCex();
+bool    setCex(double cex);
+
 #ifdef __cplusplus
 }
 #endif

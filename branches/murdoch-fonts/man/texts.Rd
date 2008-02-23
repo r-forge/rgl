@@ -8,9 +8,9 @@
   A bitmap font which is always oriented towards the camera is used.
 }
 \usage{
-rgl.texts(x, y = NULL, z = NULL, text, adj = 0.5, justify, family = "", font = 1, cex = 1, ...)
-text3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, family = "sans", font = 1, cex = 1, ...) 
-texts3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, family = "sans", font = 1, cex = 1, ...) 
+rgl.texts(x, y = NULL, z = NULL, text, adj = 0.5, justify, family = par3d("family"), font = par3d("font"), cex = par3d("cex"), ...)
+text3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, ...) 
+texts3d(x, y = NULL, z = NULL, texts, adj = 0.5, justify, ...) 
 }
 \arguments{
   \item{x, y, z}{point coordinates.  Any reasonable way of defining the
@@ -26,7 +26,8 @@ specifying the horizontal adjustment; options are \code{"left"}, \code{"right"},
   \item{ family }{A device-independent font family name, or "" }
   \item{ font }{A numeric font number from 1 to 5 }
   \item{ cex }{A numeric character expansion value }
-  \item{ ... }{Material properties. See \code{\link{rgl.material}} for details.}  
+  \item{ ... }{In \code{rgl.texts}, material properties; see \code{\link{rgl.material}} for details.
+                 In the other functions, additional parameters to pass to \code{rgl.texts}.}  
 }
 \details{
 The \code{adj} parameter determines the position of the text relative to the 
@@ -58,8 +59,12 @@ is not resizable and \code{font} values are ignored.
 }
 \examples{
 open3d()
-text3d(rnorm(10)*100,rnorm(10)*100,rnorm(10)*100,text=1:10,adj = 0.5, 
-       color=heat.colors(10))
+famnum <- rep(1:4, 8)
+family <- c("serif", "sans", "mono", "symbol")[famnum]
+font <- rep(rep(1:4, each=4), 2)
+cex <- rep(1:2, each=16)
+text3d(font, cex, famnum, text=paste(family, font),adj = 0.5, 
+       color="blue", family=family, font=font, cex=cex)
 }
 \seealso{
   \code{\link{r3d}}

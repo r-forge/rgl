@@ -15,6 +15,7 @@ extern "C" {
 #include "rglview.h"
 
 #include "lib.hpp"
+#include "R.h"
 
 //
 // API Success is encoded as integer type:
@@ -1072,3 +1073,71 @@ void rgl_getBoundingbox(int* successptr, double* bboxvec)
 	*successptr = success;
 }
 
+/* font access functions.  These are only used from par3d */
+
+char* getFamily()
+{
+  Device* device;
+  const char* f;
+  char* result = NULL;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    f = device->getRGLView()->getFontFamily();
+    result = R_alloc(strlen(f)+1, 1);
+    strcpy(result, f);
+  } 
+  return result;
+}
+
+bool setFamily(const char *family)
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    device->getRGLView()->setFontFamily(family);
+    return true;
+  } else
+    return false;
+}
+
+int getFont()
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    return device->getRGLView()->getFontStyle();
+  } else
+    return -1;
+}
+
+bool setFont(int font)
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    device->getRGLView()->setFontStyle(font);
+    return true;
+  } else
+    return false;
+}
+
+double getCex()
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    return  device->getRGLView()->getFontCex();
+  } else
+    return -1;
+}
+
+bool setCex(double cex)
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    device->getRGLView()->setFontCex(cex);
+    return true;
+  } else
+    return false;
+}
