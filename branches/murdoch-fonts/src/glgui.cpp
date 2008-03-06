@@ -50,3 +50,63 @@ void GLBitmapFont::draw(const char* text, int length, double adj, int gl2psActiv
   } else
     gl2psTextOpt(text, GL2PS_FONT, GL2PS_FONTSIZE, centering, 0.0);
 }
+
+void GLBitmapFont::draw(const wchar_t* text, int length, double adj, int gl2psActive) {
+  
+  if (adj > 0) {
+    unsigned int textWidth = 0;
+    double base = 0.0;
+    double scaling = 1.0;
+
+    if (adj != base) {
+      for(int i=0;i<length;i++)
+        textWidth += widths[(text[i]-firstGlyph)];
+
+      glBitmap(0,0, 0.0f,0.0f, (float)(scaling * textWidth * (base - adj)), 0.0f, NULL);
+    }
+  }
+  if (gl2psActive == GL2PS_NONE) {
+    glListBase(listBase);
+    glCallLists(length, GL_UNSIGNED_SHORT, text);
+  }
+  // gl2ps doesn't support wchar_t?  Should convert?
+}
+
+#ifdef HAVE_FREETYPE
+
+GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex) 
+: GLFont(in_family, in_style, in_cex)
+{
+  font=new FTGLPixmapFont("rgl/inst/fonts/FreeSerif.ttf");
+  if (font->Error()) { 
+    error("Cannot create font, error code: %i.", 
+	  font->Error());
+  }
+  double size = 10*cex + 0.5;
+  if (size<1) { size=1; }
+  if (!font->FaceSize(size)) {
+    error("Cannot create font of size %f.", size);
+  }
+  font->CharMap(ft_encoding_unicode);
+  if (font->Error()) {
+    error("Cannot set unicode encoding.");
+  }
+
+}
+
+
+void GLFTFont::draw(const char* text, int length, double adj, int gl2psActive) {
+
+  // This ignores the adj
+  
+  font->Render(text);
+}
+
+void GLFTFont::draw(const wchar_t* text, int length, double adj, int gl2psActive) {
+
+  // This ignores the adj
+  
+  font->Render(text);
+}
+      
+#endif

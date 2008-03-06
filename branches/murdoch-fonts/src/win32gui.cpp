@@ -377,7 +377,7 @@ GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
 #else  // HAVE_FREETYPE
   GLFTFont* font=new GLFTFont(family, style, cex);
   fonts.push_back(font);
-  return font
+  return font;
 #endif  
 }
 
