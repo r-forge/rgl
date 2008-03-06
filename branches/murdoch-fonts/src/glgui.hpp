@@ -28,7 +28,8 @@ public:
     delete [] family;
   }
   
-  virtual void draw(char* text, int length, double adj, int gl2psActive) = 0;
+  virtual void draw(const char* text, int length, double adj, int gl2psActive) = 0;
+  virtual void draw(const wchar_t* text, int length, double adj, int gl2psActive) = 0;
 
   char* family;
   int style;
@@ -60,7 +61,7 @@ public:
     GLFont(in_family, in_style, in_cex) {};
   ~GLBitmapFont();
 
-  void draw(char* text, int length, double adj, int gl2psActive);
+  void draw(const char* text, int length, double adj, int gl2psActive);
   
   GLuint listBase;
   GLuint firstGlyph;
@@ -69,6 +70,8 @@ public:
 };
 
 #ifdef HAVE_FREETYPE
+#include "FTFont.h"
+
 //
 // CLASS
 //   GLFTFont
@@ -81,7 +84,7 @@ public:
   
   ~GLFTFont();
 
-  void draw(char* text, int length, double adj, int gl2psActive);
+  void draw(const wchar_t* text, int length, double adj, int gl2psActive);
   
   FTFont *font;
 };
