@@ -62,6 +62,7 @@ public:
   ~GLBitmapFont();
 
   void draw(const char* text, int length, double adj, int gl2psActive);
+  void draw(const wchar_t* text, int length, double adj, int gl2psActive);  
   
   GLuint listBase;
   GLuint firstGlyph;
@@ -84,6 +85,7 @@ public:
   
   ~GLFTFont();
 
+  void draw(const char* text, int length, double adj, int gl2psActive);
   void draw(const wchar_t* text, int length, double adj, int gl2psActive);
   
   FTFont *font;
