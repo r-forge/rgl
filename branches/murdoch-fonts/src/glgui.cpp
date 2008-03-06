@@ -14,7 +14,6 @@
 
 GLBitmapFont::~GLBitmapFont() {
     delete [] widths;
-    delete [] family;
     if (nglyph) glDeleteLists(listBase+GL_BITMAP_FONT_FIRST_GLYPH, nglyph);
 };
   

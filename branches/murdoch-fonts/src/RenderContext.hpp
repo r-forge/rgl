@@ -3,7 +3,7 @@
 
 class Scene;
 class Viewpoint;
-class GLBitmapFont;
+class GLFont;
 
 #include "math.h"
 
@@ -26,7 +26,7 @@ public:
   Rect   rect;
   // RectSize size;
   Viewpoint* viewpoint;
-  GLBitmapFont* font;
+  GLFont* font;
   double time;
   double lastTime;
   double deltaTime;
