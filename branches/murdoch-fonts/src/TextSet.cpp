@@ -1,6 +1,11 @@
 #include "TextSet.hpp"
 
 #include "glgui.hpp"
+#ifdef HAVE_FREETYPE
+#include "Viewpoint.hpp"
+#include <R.h>
+#include <map>
+#endif
 //////////////////////////////////////////////////////////////////////////////
 //
 // CLASS
@@ -44,7 +49,7 @@ TextSet::~TextSet()
 void TextSet::draw(RenderContext* renderContext) {
 
   int cnt;
-  GLBitmapFont* font;
+  GLFont* font;
 
   material.beginUse(renderContext);
 

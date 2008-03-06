@@ -64,7 +64,7 @@ public:
   void destroy();
   void captureMouse(View* pView);
   void releaseMouse();
-  GLBitmapFont* getFont(const char* family, int style, double cex);
+  GLFont* getFont(const char* family, int style, double cex);
 
 private:
   LRESULT processMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -315,7 +315,7 @@ void Win32WindowImpl::shutdownGL()
   wglDeleteContext(glrcHandle);
 }
 
-GLBitmapFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
+GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
 {
   for (unsigned int i=0; i < fonts.size(); i++) {
     if (fonts[i]->cex == cex && fonts[i]->style == style && !strcmp(fonts[i]->family, family))

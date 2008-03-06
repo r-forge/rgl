@@ -10,6 +10,14 @@
 #include "render.h"
 #include "String.hpp"
 #include "glgui.hpp"
+#ifdef HAVE_FREETYPE
+#include "FTGLOutlineFont.h"
+#include "FTGLPolygonFont.h"
+#include "FTGLBitmapFont.h"
+#include "FTGLTextureFont.h"
+#include "FTGLPixmapFont.h"
+#include "DString.hpp"
+#endif
 
 class TextSet : public Shape {
 public:
@@ -22,10 +30,21 @@ public:
 private:
 
   VertexArray vertexArray;
+#ifdef HAVE_FREETYPE
+  DStringArray textArray;
+#else
   StringArray textArray;
+#endif
   FontArray fonts;
 
   double adj;
+
+#ifdef HAVE_FREETYPE
+public:
+  void renderZSort(RenderContext* renderContext);
+  void drawElement(RenderContext* renderContext, int i);
+#endif
+
 };
 
 #endif // TEXTSET_HPP

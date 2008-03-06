@@ -35,6 +35,34 @@ if [ "${havezlib}" = "yes" ]; then
   else
     echo "no"
   fi
+else
+  echo "  libpng requires zlib, so not installed."
+fi
+
+# --- freetype and ftgl ------------------------------------------------------
+
+echo -n "  checking for iconv..."
+if [ -e "${R_HOME}/src/gnuwin32/unicode/iconv.dll" ]; then
+  LIBS="$LIBS -L${R_HOME}/src/gnuwin32/unicode -liconv"
+  haveiconv=yes
+else
+  haveiconv=no
+fi
+echo ${haveiconv}
+
+if [ "${havezlib}" = "yes" ] && [ "${haveiconv}" = "yes" ]; then
+  echo -n "  checking for freetype..."
+  if [ -n "$LIB_FREETYPE" ]; then
+    echo "yes"
+    CPPFLAGS="${CPPFLAGS} -Iext/ftgl -I${LIB_FREETYPE}/include -I${LIB_FREETYPE}/include/freetype2 -DHAVE_FREETYPE"
+    LIBS="$LIBS -L${LIB_FREETYPE}/bin -L${LIB_FREETYPE}/../lib -lfreetype6 "
+    mkdir $DPKG/libs
+    cp $LIB_FREETYPE/bin/freetype6.dll $DPKG/libs
+  else
+    echo "no"
+  fi
+else
+  echo "  freetype requires zlib and iconv, so not installed."
 fi
 
 # --- dump configuration -----------------------------------------------------

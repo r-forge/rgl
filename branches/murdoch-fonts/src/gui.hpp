@@ -77,7 +77,7 @@ public:
   virtual void swap(void) = 0;
   virtual void captureMouse(View* captureView) = 0;
   virtual void releaseMouse(void) = 0;
-  virtual GLBitmapFont* getFont(const char* family, int style, double cex) = 0;
+  virtual GLFont* getFont(const char* family, int style, double cex) = 0;
   void getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex);
 
   // OpenGL support (FIXME: remove)

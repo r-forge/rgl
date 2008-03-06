@@ -12,7 +12,7 @@ namespace gui {
 // ---------------------------------------------------------------------------
 void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
 {
-  GLBitmapFont* font;
+  GLFont* font;
   outfonts.resize(nfonts);
   for (int i = 0; i < nfonts; i++) {
     font = getFont(*(family++), *(style++), *(cex++));
