@@ -3,7 +3,7 @@
 #include "glgui.hpp"
 #ifdef HAVE_FREETYPE
 #include "Viewpoint.hpp"
-#include <R.h>
+#include "R.h"
 #include <map>
 #endif
 //////////////////////////////////////////////////////////////////////////////
@@ -53,20 +53,27 @@ void TextSet::draw(RenderContext* renderContext) {
 
   material.beginUse(renderContext);
 
+#ifdef HAVE_FREETYPE
+  int len=textArray.length();
+  for( cnt = 0; cnt<len ; cnt++ ) {
+#else
   StringArrayIterator iter(&textArray);
-
   for( cnt = 0, iter.first(); !iter.isDone(); iter.next(), cnt++ ) {
+#endif
     if (!vertexArray[cnt].missing()) {
       material.useColor(cnt);
       glRasterPos3f( vertexArray[cnt].x, vertexArray[cnt].y, vertexArray[cnt].z );
-      String text = iter.getCurrent();
       font = fonts[cnt % fonts.size()];
-      if (font) 
+      if (font) {
+#ifdef HAVE_FREETYPE
+        font->draw( textArray.wget(cnt), 0, adj, renderContext->gl2psActive );
+#else
+        String text = iter.getCurrent();
         font->draw( text.text, text.length, adj, renderContext->gl2psActive );
+#endif
+       }
     }
   }
-
   material.endUse(renderContext);
 }
-
 

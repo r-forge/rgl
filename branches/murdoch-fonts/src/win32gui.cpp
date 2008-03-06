@@ -321,6 +321,7 @@ GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
     if (fonts[i]->cex == cex && fonts[i]->style == style && !strcmp(fonts[i]->family, family))
       return fonts[i];
   }
+#ifndef HAVE_FREETYPE
   // Not found, so create it.  This is based on code from graphapp gdraw.c
   if (strcmp(family, "NA") && beginGL()) {  // User passes NA_character_ for default, looks like "NA" here
     GLBitmapFont* font = new GLBitmapFont(family, style, cex);
@@ -371,9 +372,13 @@ GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
     } 
     delete font;
     endGL();
-  }
-
+  }  
   return fonts[0];
+#else  // HAVE_FREETYPE
+  GLFTFont* font=new GLFTFont(family, style, cex);
+  fonts.push_back(font);
+  return font
+#endif  
 }
 
 GLBitmapFont* Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph) 
