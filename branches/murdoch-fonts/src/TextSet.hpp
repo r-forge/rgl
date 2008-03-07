@@ -39,12 +39,6 @@ private:
 
   double adj;
 
-#ifdef HAVE_FREETYPE
-public:
-  void renderZSort(RenderContext* renderContext);
-  void drawElement(RenderContext* renderContext, int i);
-#endif
-
 };
 
 #endif // TEXTSET_HPP
