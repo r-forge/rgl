@@ -4,7 +4,7 @@
 #include "types.h"
 #include "R.h"
 #include <cerrno>
-#include <iconv.h>
+#include <R_ext/Riconv.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -12,8 +12,8 @@ DStringArray::DStringArray(int in_ntexts, char **in_texts) {
   
   int i;
   const char *from="UTF-8";
-  const char *to="UCS-4LE";
-  iconv_t cd=iconv_open(to, from);
+  const char *to="UTF-16LE";
+  void* cd=Riconv_open(to, from);
   size_t l1, l2;
   char *ibptr;
   char *obptr;
@@ -22,12 +22,7 @@ DStringArray::DStringArray(int in_ntexts, char **in_texts) {
 
   ntexts=in_ntexts;
 
-  fprintf(stderr, "Info:\n"
-	  "  sizeof(wchar_t): %i\n"
-	  "  MB_LEN_MAX: %i\n"
-	  "  MB_LEN_CUR: %i\n", sizeof(wchar_t), MB_LEN_MAX, MB_CUR_MAX);
-  
-  if (cd == (iconv_t) -1) {
+  if (!cd) {
     error("Cannot initialize iconv conversion from %s to %s.", from, to);
   }
   
@@ -58,7 +53,8 @@ DStringArray::DStringArray(int in_ntexts, char **in_texts) {
     // wchar_t* now, iconv conversion from UTF8
     wptr[i]=(wchar_t*) obptr;
     ibptr=(char*)in_texts[i];
-    ret=iconv(cd, (const char**)&ibptr, &l1, (char**)&obptr, &l2);
+    Rprintf("l1=%d l2=%d\n", l1, l2);
+    ret=Riconv(cd, (const char**)&ibptr, &l1, (char**)&obptr, &l2);
     if (ret == (size_t)-1) {
       switch (errno) {
       case EILSEQ:
@@ -80,18 +76,7 @@ DStringArray::DStringArray(int in_ntexts, char **in_texts) {
     obptr += sizeof(wchar_t);
     l2 -= sizeof(wchar_t);
   }
-  iconv_close(cd);
-
-  fprintf(stderr, "Input: ");
-  for (char *p=textbuffer; p<textbuffer+buflen; p++) {
-    fprintf(stderr, "%x ", *p);
-  }
-  fprintf(stderr, "\nOutput: ");
-  for (char *p=(char*)wtextbuffer; 
-       p<(char*)wtextbuffer+buflen*sizeof(wchar_t); p++) {
-    fprintf(stderr, "%x ", *p);
-  }
-  fprintf(stderr, "\n");
+  Riconv_close(cd);
 }
 
 DStringArray::~DStringArray()

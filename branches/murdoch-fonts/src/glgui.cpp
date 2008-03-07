@@ -74,6 +74,14 @@ void GLBitmapFont::draw(const wchar_t* text, int length, double adj, int gl2psAc
 
 #ifdef HAVE_FREETYPE
 
+#include "FTGLOutlineFont.h"
+#include "FTGLPolygonFont.h"
+#include "FTGLBitmapFont.h"
+#include "FTGLTextureFont.h"
+#include "FTGLPixmapFont.h"
+#include "DString.hpp"
+#include "R.h"
+
 GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex) 
 : GLFont(in_family, in_style, in_cex)
 {
