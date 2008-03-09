@@ -64,7 +64,11 @@ void RGLView::hide()
 
 void RGLView::setWindowImpl(WindowImpl* impl) {
   View::setWindowImpl(impl);
+#ifdef HAVE_FREETYPE
+  renderContext.font = impl->getFont("sans", 1, 1, true);
+#else
   renderContext.font = impl->fonts[0];
+#endif
 }
 
 Scene* RGLView::getScene() {
@@ -646,9 +650,9 @@ void RGLView::setScale(double* src)
 	View::update();
 }
 
-void RGLView::setDefaultFont(const char* family, int style, double cex)
+void RGLView::setDefaultFont(const char* family, int style, double cex, bool useFreeType)
 {
-  renderContext.font = View::windowImpl->getFont(family, style, cex);
+  renderContext.font = View::windowImpl->getFont(family, style, cex, useFreeType);
 }
   
 const char* RGLView::getFontFamily() const 
@@ -658,7 +662,7 @@ const char* RGLView::getFontFamily() const
 
 void RGLView::setFontFamily(const char *family)
 {
-  setDefaultFont(family, getFontStyle(), getFontCex());
+  setDefaultFont(family, getFontStyle(), getFontCex(), getFontUseFreeType());
 }
 
 int RGLView::getFontStyle() const 
@@ -668,7 +672,7 @@ int RGLView::getFontStyle() const
 
 void RGLView::setFontStyle(int style)
 {
-  setDefaultFont(getFontFamily(), style, getFontCex());
+  setDefaultFont(getFontFamily(), style, getFontCex(), getFontUseFreeType());
 }
 
 double RGLView::getFontCex() const 
@@ -678,7 +682,22 @@ double RGLView::getFontCex() const
 
 void RGLView::setFontCex(double cex)
 {
-  setDefaultFont(getFontFamily(), getFontStyle(), cex);
+  setDefaultFont(getFontFamily(), getFontStyle(), cex, getFontUseFreeType());
+}
+
+const char* RGLView::getFontname() const 
+{
+  return renderContext.font->fontname;
+}
+
+bool RGLView::getFontUseFreeType() const
+{
+  return renderContext.font->useFreeType;
+}
+
+void RGLView::setFontUseFreeType(bool useFreeType)
+{
+  setDefaultFont(getFontFamily(), getFontStyle(), getFontCex(), useFreeType);
 }
 
 void RGLView::getPosition(double* dest)

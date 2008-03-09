@@ -10,12 +10,13 @@ namespace gui {
 // ---------------------------------------------------------------------------
 // WindowImpl common code
 // ---------------------------------------------------------------------------
-void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
+void WindowImpl::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, 
+                          double* cex, bool useFreeType)
 {
   GLFont* font;
   outfonts.resize(nfonts);
   for (int i = 0; i < nfonts; i++) {
-    font = getFont(*(family++), *(style++), *(cex++));
+    font = getFont(*(family++), *(style++), *(cex++), useFreeType);
     outfonts[i] = font;
   }  
 }
@@ -278,9 +279,10 @@ void Window::on_close()
   windowImpl->destroy();
 }
 // ---------------------------------------------------------------------------
-void Window::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex)
+void Window::getFonts(FontArray& outfonts, int nfonts, char** family, int* style, 
+                      double* cex, bool useFreeType)
 {
-  windowImpl->getFonts(outfonts, nfonts, family, style, cex);
+  windowImpl->getFonts(outfonts, nfonts, family, style, cex, useFreeType);
 }
 // ---------------------------------------------------------------------------
 } // namespace gui

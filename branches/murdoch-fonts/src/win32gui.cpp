@@ -11,7 +11,11 @@
 #include "glgui.hpp"
 
 #include <winuser.h>
+#include <shlobj.h>
 #include "assert.hpp"
+#include "R.h"
+#include <Rinternals.h>
+
 // ---------------------------------------------------------------------------
 namespace gui {
 
@@ -64,7 +68,8 @@ public:
   void destroy();
   void captureMouse(View* pView);
   void releaseMouse();
-  GLFont* getFont(const char* family, int style, double cex);
+  GLFont* getFont(const char* family, int style, double cex, 
+                  bool useFreeType);
 
 private:
   LRESULT processMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -315,77 +320,114 @@ void Win32WindowImpl::shutdownGL()
   wglDeleteContext(glrcHandle);
 }
 
-GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex)
+GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex, 
+                                 bool useFreeType)
 {
   for (unsigned int i=0; i < fonts.size(); i++) {
-    if (fonts[i]->cex == cex && fonts[i]->style == style && !strcmp(fonts[i]->family, family))
+    if (fonts[i]->cex == cex && fonts[i]->style == style && !strcmp(fonts[i]->family, family)
+     && fonts[i]->useFreeType == useFreeType)
       return fonts[i];
   }
-#ifndef HAVE_FREETYPE
-  // Not found, so create it.  This is based on code from graphapp gdraw.c
-  if (strcmp(family, "NA") && beginGL()) {  // User passes NA_character_ for default, looks like "NA" here
-    GLBitmapFont* font = new GLBitmapFont(family, style, cex);
-    HFONT hf;
-    LOGFONT lf;
-
-    double size = 10*cex + 0.5;
   
-    lf.lfHeight = -MulDiv(size, GetDeviceCaps(dcHandle, LOGPIXELSY), 72);
-
-    lf.lfWidth = 0 ;
-    lf.lfEscapement = lf.lfOrientation = 0;
-    lf.lfWeight = FW_NORMAL;
-    lf.lfItalic = lf.lfUnderline = lf.lfStrikeOut = 0;
-    if ((! strcmp(family, "Symbol")) || (! strcmp(family, "Wingdings")))
-      lf.lfCharSet = SYMBOL_CHARSET;
-    else
-      lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    if ((strlen(family) > 1) && (family[0] == 'T') && (family[1] == 'T')) {
-      const char *pf;
-      lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-      for (pf = &family[2]; isspace(*pf) ; pf++);
-      strncpy(lf.lfFaceName, pf, LF_FACESIZE-1);
-    }
-    else {
-      lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-      strncpy(lf.lfFaceName, family, LF_FACESIZE-1);
-    }
-    if (style == 2 || style == 4) lf.lfWeight = FW_BOLD;
-    if (style == 3 || style == 4) lf.lfItalic = 1;
+  if (!useFreeType) {
+    // Not found, so create it.  This is based on code from graphapp gdraw.c
+    if (strcmp(family, "NA") && beginGL()) {  // User passes NA_character_ for default, looks like "NA" here
+      
+      SEXP Rfontname = VECTOR_ELT(PROTECT(eval(lang2(install("windowsFonts"), 
+                                          ScalarString(mkChar(family))), R_GlobalEnv)),
+                                          0);
+      if (isString(Rfontname)) {
+        const char* fontname = CHAR(STRING_ELT(Rfontname, 0)); 
+        GLBitmapFont* font = new GLBitmapFont(family, style, cex, fontname);
+        HFONT hf;
+        LOGFONT lf;
     
-    if ((hf = CreateFontIndirect(&lf))) {
-      SelectObject (dcHandle, hf );
-      font->nglyph     = GL_BITMAP_FONT_LAST_GLYPH - GL_BITMAP_FONT_FIRST_GLYPH + 1;
-      font->widths     = new unsigned int [font->nglyph];
-      GLuint listBase = glGenLists(font->nglyph);
-      font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
-      font->listBase   = listBase - font->firstGlyph;
-      GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
-      wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
-      DeleteObject( hf );
-      endGL();  
+        double size = 12*cex + 0.5;
+    
+        lf.lfHeight = -MulDiv(size, GetDeviceCaps(dcHandle, LOGPIXELSY), 72);
+  
+        lf.lfWidth = 0 ;
+        lf.lfEscapement = lf.lfOrientation = 0;
+        lf.lfWeight = FW_NORMAL;
+        lf.lfItalic = lf.lfUnderline = lf.lfStrikeOut = 0;
+        if ((! strcmp(fontname, "Symbol")) || (! strcmp(fontname, "Wingdings")))
+          lf.lfCharSet = SYMBOL_CHARSET;
+        else
+          lf.lfCharSet = DEFAULT_CHARSET;
+        lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+        lf.lfQuality = DEFAULT_QUALITY;
+        lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+        if ((strlen(fontname) > 1) && (fontname[0] == 'T') && (fontname[1] == 'T')) {
+          const char *pf;
+          lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+          for (pf = &fontname[2]; isspace(*pf) ; pf++);
+          strncpy(lf.lfFaceName, pf, LF_FACESIZE-1);
+        }
+        else {
+          lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+          strncpy(lf.lfFaceName, fontname, LF_FACESIZE-1);
+        }
+        if (style == 2 || style == 4) lf.lfWeight = FW_BOLD;
+        if (style == 3 || style == 4) lf.lfItalic = 1;
+      
+        if ((hf = CreateFontIndirect(&lf))) {
+          SelectObject (dcHandle, hf );
+          font->nglyph     = GL_BITMAP_FONT_LAST_GLYPH - GL_BITMAP_FONT_FIRST_GLYPH + 1;
+          font->widths     = new unsigned int [font->nglyph];
+          GLuint listBase = glGenLists(font->nglyph);
+          font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
+          font->listBase   = listBase - font->firstGlyph;
+          GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
+          wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
+          DeleteObject( hf );
+          endGL();  
+          fonts.push_back(font);
+          UNPROTECT(1);
+          return font;
+        } 
+        delete font;
+        endGL();
+      }
+      UNPROTECT(1);
+    }  
+    return fonts[0];
+  } else { // useFreeType
+#ifdef HAVE_FREETYPE
+    char fontname_absolute[MAX_PATH+1] = "";
+    int len=0;
+    SEXP Rfontname = VECTOR_ELT(PROTECT(eval(lang2(install("rglFonts"), 
+                                          ScalarString(mkChar(family))), R_GlobalEnv)),
+                                          0);
+    if (isString(Rfontname) && length(Rfontname) >= style) {
+      const char* fontname = CHAR(STRING_ELT(Rfontname, style-1)); 
+      if (!IS_ABSOLUTE_PATH(fontname)) {
+        LPITEMIDLIST pidlFonts;
+        assert(SUCCEEDED(SHGetSpecialFolderLocation(0, CSIDL_FONTS, &pidlFonts))
+            && SUCCEEDED(SHGetPathFromIDList(pidlFonts, fontname_absolute)) );
+        len = strlen(fontname_absolute);
+        if (len && fontname_absolute[len-1] != '\\') {
+          strcat(fontname_absolute, "\\");
+          len++;
+        }
+      }
+      assert(len + strlen(fontname) <= MAX_PATH);
+      strcat(fontname_absolute, fontname);  
+      GLFTFont* font=new GLFTFont(family, style, cex, fontname_absolute);
       fonts.push_back(font);
+      UNPROTECT(1);
       return font;
-    } 
-    delete font;
-    endGL();
-  }  
-  return fonts[0];
-#else  // HAVE_FREETYPE
-  GLFTFont* font=new GLFTFont(family, style, cex);
-  fonts.push_back(font);
-  return font;
-#endif  
+    }
+    UNPROTECT(1);
+#endif
+    return fonts[0];  
+  }
 }
 
 GLBitmapFont* Win32WindowImpl::initGLBitmapFont(u8 firstGlyph, u8 lastGlyph) 
 {
   GLBitmapFont* font = NULL; 
   if (beginGL()) {
-    font = new GLBitmapFont("NA", 1, 1);
+    font = new GLBitmapFont("bitmap", 1, 1, "System");
     SelectObject (dcHandle, GetStockObject (SYSTEM_FONT) );
     font->nglyph     = lastGlyph-firstGlyph+1;
     font->widths     = new unsigned int [font->nglyph];

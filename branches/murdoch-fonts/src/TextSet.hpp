@@ -16,7 +16,6 @@
 #include "FTGLBitmapFont.h"
 #include "FTGLTextureFont.h"
 #include "FTGLPixmapFont.h"
-#include "DString.hpp"
 #endif
 
 class TextSet : public Shape {
@@ -30,11 +29,7 @@ public:
 private:
 
   VertexArray vertexArray;
-#ifdef HAVE_FREETYPE
-  DStringArray textArray;
-#else
   StringArray textArray;
-#endif
   FontArray fonts;
 
   double adj;

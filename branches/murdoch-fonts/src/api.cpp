@@ -659,18 +659,23 @@ void rgl_getmaterial(int *successptr, int* idata, char** cdata, double* ddata)
 }
 
 void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* vertex,
-               int* nfonts, char** family, int* style, double* cex)
+               int* nfonts, char** family, int* style, double* cex, 
+               int* useFreeType)
 {
   int success = RGL_FAIL;
 
   Device* device;
+  
+#ifndef HAVE_FREETYPE
+  if (*useFreeType) error("FreeType not supported in this build");
+#endif
 
   if (deviceManager && (device = deviceManager->getAnyDevice())) {
 
     int ntext   = idata[0];
     
     FontArray fonts;
-    device->getFonts(fonts, *nfonts, family, style, cex);
+    device->getFonts(fonts, *nfonts, family, style, cex, (bool) *useFreeType);
     success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj,
     						   device->getIgnoreExtent(), fonts) ) );
   }
@@ -1140,4 +1145,39 @@ bool setCex(double cex)
     return true;
   } else
     return false;
+}
+
+int getUseFreeType()
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    return  (int) device->getRGLView()->getFontUseFreeType();
+  } else
+    return -1;
+}
+
+bool setUseFreeType(bool useFreeType)
+{
+  Device* device;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    device->getRGLView()->setFontUseFreeType(useFreeType);
+    return true;
+  } else
+    return false;
+}
+
+char* getFontname()
+{
+  Device* device;
+  const char* f;
+  char* result = NULL;
+  
+  if (deviceManager && (device = deviceManager->getCurrentDevice())) {
+    f = device->getRGLView()->getFontname();
+    result = R_alloc(strlen(f)+1, 1);
+    strcpy(result, f);
+  } 
+  return result;
 }

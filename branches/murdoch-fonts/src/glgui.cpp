@@ -79,26 +79,25 @@ void GLBitmapFont::draw(const wchar_t* text, int length, double adj, int gl2psAc
 #include "FTGLBitmapFont.h"
 #include "FTGLTextureFont.h"
 #include "FTGLPixmapFont.h"
-#include "DString.hpp"
 #include "R.h"
 
-GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex) 
-: GLFont(in_family, in_style, in_cex)
+GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex, const char* in_fontname) 
+: GLFont(in_family, in_style, in_cex, in_fontname, true)
 {
-  font=new FTGLPixmapFont("rgl/inst/fonts/FreeSerif.ttf");
+  font=new FTGLPixmapFont(fontname);
   if (font->Error()) { 
     error("Cannot create font, error code: %i.", 
 	  font->Error());
   }
-  double size = 10*cex + 0.5;
+  double size = 16*cex + 0.5;
   if (size<1) { size=1; }
   if (!font->FaceSize(size)) {
     error("Cannot create font of size %f.", size);
   }
-  font->CharMap(ft_encoding_unicode);
+/*  font->CharMap(ft_encoding_unicode);
   if (font->Error()) {
-    error("Cannot set unicode encoding.");
-  }
+    error("Cannot set unicode encoding."); 
+  }*/
 
 }
 
