@@ -446,7 +446,7 @@ rgl.spheres <- function( x, y=NULL, z=NULL, radius=1.0,...)
 ##
 
 rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family=par3d("family"), 
-                      font=par3d("font"), cex=par3d("cex"), ... )
+                      font=par3d("font"), cex=par3d("cex"), useFreeType=par3d("useFreeType"), ... )
 {
   rgl.material( ... )
 
@@ -470,17 +470,6 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family=par3d(
   family[font == 5] <- "symbol"
   font <- ifelse( font < 0 | font > 4, 1, font)  
   
-  if (.Platform$OS.type == "windows")
-    family <- windowsFonts(family)
-  else if (.Platform$GUI == "AQUA") {
-    family <- quartzFonts(family)
-    family <- lapply(1:nfonts, function(i) family[[i]][font[i]])
-  } else 
-    family <- X11Fonts(family)
-    
-  family[is.na(names(family))] <- NA_character_
-  family <- unlist(family)
-     
   ret <- .C( rgl_texts,
     success = as.integer(FALSE),
     idata,
@@ -491,6 +480,7 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family=par3d(
     as.character(family), 
     as.integer(font),
     as.numeric(cex),
+    as.integer(useFreeType),
     NAOK=TRUE
   )
   

@@ -202,6 +202,11 @@ static void Specify(const char *what, SEXP value)
       if (REAL(x)[0] <= 0) { par_error(what); }
       if (setCex(REAL(x)[0])) success = 1;
     }
+    else if (streql(what, "useFreeType")) {
+      lengthCheck(what, value, 1);
+      x=coerceVector(value, LGLSXP);
+      if (setUseFreeType(LOGICAL(x)[0])) success = 1;
+    }
     
      else warning(_("parameter \"%s\" cannot be set"), what);
  
@@ -305,8 +310,25 @@ static SEXP Query(const char *what)
       REAL(value)[0] = getCex();
       success = REAL(value)[0] >= 0;
     }    
+    else if (streql(what, "useFreeType")) {
+      int useFreeType = getUseFreeType();
+      value = allocVector(LGLSXP, 1);
+      if (useFreeType < 0) {
+        LOGICAL(value)[0] = false;
+        success = 0;
+      } else {
+        LOGICAL(value)[0] = (bool)useFreeType;
+        success = 1;
+      }
+    }    
+    else if (streql(what, "fontname")) {
+      buf = getFontname();
+      if (buf) {
+        value = mkString(buf);
+        success = 1;
+      } 
+    }    
   	
-    	
     if (! success) error(_("unknown error getting rgl parameter \"%s\""),  what);
 
     return value;

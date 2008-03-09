@@ -16,16 +16,20 @@
 class GLFont
 {
 public:
-  GLFont(const char* in_family, int in_style, double in_cex):
-  style(in_style), cex(in_cex) 
+  GLFont(const char* in_family, int in_style, double in_cex, 
+         const char* in_fontname, bool in_useFreeType):
+  style(in_style), cex(in_cex), useFreeType(in_useFreeType) 
   {
     family = new char[strlen(in_family) + 1];
     memcpy(family, in_family, strlen(in_family) + 1);
+    fontname = new char[strlen(in_fontname) + 1];
+    memcpy(fontname, in_fontname, strlen(in_fontname) + 1);    
   };
   
   ~GLFont()
   {
     delete [] family;
+    delete [] fontname;
   }
   
   virtual void draw(const char* text, int length, double adj, int gl2psActive) = 0;
@@ -34,6 +38,8 @@ public:
   char* family;
   int style;
   double cex;
+  char* fontname;
+  bool useFreeType;
 };
 
 #define GL_BITMAP_FONT_FIRST_GLYPH  32
@@ -57,8 +63,8 @@ class GLBitmapFont : public GLFont
 {
 public:
   // Most initialization of this object is done by the system-specific driver
-  GLBitmapFont(const char* in_family, int in_style, double in_cex): 
-    GLFont(in_family, in_style, in_cex) {};
+  GLBitmapFont(const char* in_family, int in_style, double in_cex, const char* in_fontname): 
+    GLFont(in_family, in_style, in_cex, in_fontname, false) {};
   ~GLBitmapFont();
 
   void draw(const char* text, int length, double adj, int gl2psActive);
@@ -72,6 +78,7 @@ public:
 
 #ifdef HAVE_FREETYPE
 #include "FTFont.h"
+#endif
 
 //
 // CLASS
@@ -81,22 +88,44 @@ public:
 class GLFTFont : public GLFont
 {
 public:
-  GLFTFont(const char* in_family, int in_style, double in_cex);
+  GLFTFont(const char* in_family, int in_style, double in_cex, const char* in_fontname);
   
   ~GLFTFont();
-
+#ifdef HAVE_FREETYPE
   void draw(const char* text, int length, double adj, int gl2psActive);
   void draw(const wchar_t* text, int length, double adj, int gl2psActive);
   
   FTFont *font;
-};
 #endif
+};
 
 /**
  * FontArray
  **/
 typedef std::vector<GLFont*> FontArray;
 
+/* The macros below are taken from the R internationalization code, which
+   is marked
+
+   Copyright (C) 1995-1999, 2000-2007 Free Software Foundation, Inc.
+*/   
+/* Pathname support.
+   ISSLASH(C)           tests whether C is a directory separator character.
+   IS_ABSOLUTE_PATH(P)  tests whether P is an absolute path.  If it is not,
+                        it may be concatenated to a directory pathname.
+ */
+#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __EMX__ || defined __DJGPP__
+  /* Win32, Cygwin, OS/2, DOS */
+# define ISSLASH(C) ((C) == '/' || (C) == '\\')
+# define HAS_DEVICE(P) \
+    ((((P)[0] >= 'A' && (P)[0] <= 'Z') || ((P)[0] >= 'a' && (P)[0] <= 'z')) \
+     && (P)[1] == ':')
+# define IS_ABSOLUTE_PATH(P) (ISSLASH ((P)[0]) || HAS_DEVICE (P))
+#else
+  /* Unix */
+# define ISSLASH(C) ((C) == '/')
+# define IS_ABSOLUTE_PATH(P) ISSLASH ((P)[0])
+#endif
 
 #endif /* GL_GUI_H */
 
