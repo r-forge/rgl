@@ -233,4 +233,7 @@ v0.76
   - rgl.texts() and text3d() can now handle font and size specifications
     on Windows.  Other platforms in the works...
   - select3d() and rgl.select() produced a very inefficient test function.
+  
+ v0.77.650
+  - fix miscalculation of mouseMatrix that caused disappearing views.
     
