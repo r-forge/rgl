@@ -205,6 +205,10 @@ static void Specify(const char *what, SEXP value)
     else if (streql(what, "useFreeType")) {
       lengthCheck(what, value, 1);
       x=coerceVector(value, LGLSXP);
+#ifndef HAVE_FREETYPE
+      if (LOGICAL(x)[0])
+          warning("FreeType not supported in this build");
+#endif
       if (setUseFreeType(LOGICAL(x)[0])) success = 1;
     }
     
