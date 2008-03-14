@@ -173,7 +173,7 @@ AC_ARG_ENABLE([ftgl],
 if test "x$enable_ftgl" != "xno"; then
   AC_CHECK_PROG([HAVE_FREETYPE_CONFIG],[freetype-config],[yes],[no])
   if test "x$HAVE_FREETYPE_CONFIG" = "xyes"; then
-    CPPFLAGS="${CPPFLAGS} -DHAVE_FREETYPE -Iftgl `freetype-config --cflags`"
+    CPPFLAGS="${CPPFLAGS} -DHAVE_FREETYPE -Iext/ftgl `freetype-config --cflags`"
     LIBS="${LIBS} `freetype-config --libs`"
     AC_MSG_NOTICE([using Freetype and FTGL])
   fi
