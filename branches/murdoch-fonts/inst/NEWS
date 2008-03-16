@@ -235,5 +235,6 @@ v0.76
  v0.77.653
   - fix miscalculation of mouseMatrix that caused disappearing views.
   - rgl.texts() and text3d() can now handle font and size specifications
-    on Windows and X11.  OSX in the works...
+    using the FreeType library.  All platforms are included, but
+    OSX doesn't render properly yet.
     
