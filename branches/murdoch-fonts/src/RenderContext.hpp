@@ -6,6 +6,7 @@ class Viewpoint;
 class GLFont;
 
 #include "math.h"
+#include "opengl.hpp"
 
 class RenderContext
 {
@@ -30,7 +31,10 @@ public:
   double time;
   double lastTime;
   double deltaTime;
-  float getDistance(const Vertex& v);
+  float getDistance(const Vertex& v) const;
+  GLdouble modelview[16];
+  GLdouble projection[16];
+  GLint viewport[4];
   Vec4 Zrow;
   Vec4 Wrow;
   int gl2psActive;

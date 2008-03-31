@@ -23,6 +23,8 @@ public:
   TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, double in_adj,
           int in_ignoreExtent, FontArray& in_fonts);
   ~TextSet();
+  /* Can't use display lists */
+  void render(RenderContext* renderContext);
   void draw(RenderContext* renderContext);
   virtual void getShapeName(char* buffer, int buflen) { strncpy(buffer, "text", buflen); };
 

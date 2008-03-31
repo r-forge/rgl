@@ -6,6 +6,8 @@
 #include "types.h"
 #include "glgui.hpp"
 #include "gl2ps.h"
+#include "opengl.hpp"
+#include "RenderContext.hpp"
 
 //
 // CLASS
@@ -17,7 +19,7 @@ GLBitmapFont::~GLBitmapFont() {
     if (nglyph) glDeleteLists(listBase+GL_BITMAP_FONT_FIRST_GLYPH, nglyph);
 };
   
-void GLBitmapFont::draw(const char* text, int length, double adj, int gl2psActive) {
+void GLBitmapFont::draw(const char* text, int length, double adj, const RenderContext& rc) {
   
   int centering = GL2PS_TEXT_BL;
   
@@ -26,9 +28,9 @@ void GLBitmapFont::draw(const char* text, int length, double adj, int gl2psActiv
     double base = 0.0;
     double scaling = 1.0;
 
-    if (gl2psActive > GL2PS_NONE) scaling = GL2PS_SCALING;
+    if (rc.gl2psActive > GL2PS_NONE) scaling = GL2PS_SCALING;
      
-    if ( adj > 0.25 && gl2psActive == GL2PS_POSITIONAL) {
+    if ( adj > 0.25 && rc.gl2psActive == GL2PS_POSITIONAL) {
       if (adj < 0.75) {
         base = 0.5;
         centering = GL2PS_TEXT_B;
@@ -44,14 +46,14 @@ void GLBitmapFont::draw(const char* text, int length, double adj, int gl2psActiv
       glBitmap(0,0, 0.0f,0.0f, (float)(scaling * textWidth * (base - adj)), 0.0f, NULL);
     }
   }
-  if (gl2psActive == GL2PS_NONE) {
+  if (rc.gl2psActive == GL2PS_NONE) {
     glListBase(listBase);
     glCallLists(length, GL_UNSIGNED_BYTE, text);
   } else
     gl2psTextOpt(text, GL2PS_FONT, GL2PS_FONTSIZE, centering, 0.0);
 }
 
-void GLBitmapFont::draw(const wchar_t* text, int length, double adj, int gl2psActive) {
+void GLBitmapFont::draw(const wchar_t* text, int length, double adj, const RenderContext& rc) {
   
   if (adj > 0) {
     unsigned int textWidth = 0;
@@ -65,7 +67,7 @@ void GLBitmapFont::draw(const wchar_t* text, int length, double adj, int gl2psAc
       glBitmap(0,0, 0.0f,0.0f, (float)(scaling * textWidth * (base - adj)), 0.0f, NULL);
     }
   }
-  if (gl2psActive == GL2PS_NONE) {
+  if (rc.gl2psActive == GL2PS_NONE) {
     glListBase(listBase);
     glCallLists(length, GL_UNSIGNED_SHORT, text);
   }
@@ -101,18 +103,35 @@ GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex, const cha
 
 }
 
+void GLFTFont::justify(double adv, double adj, const RenderContext& rc) {
+  GLdouble pos[4], pos2[4];
+  float base = 0.0;
 
-void GLFTFont::draw(const char* text, int length, double adj, int gl2psActive) {
+  glGetDoublev(GL_CURRENT_RASTER_POSITION, pos);    
+  pos[0] = pos[0] - adv*(adj-base); 
+  gluUnProject( pos[0], pos[1], pos[2], rc.modelview, rc.projection, rc.viewport, pos2, pos2 + 1, pos2 + 2);
+  glRasterPos3dv(pos2);
+}
 
-  // This ignores the adj
-  
+void GLFTFont::draw(const char* text, int length, double adj, const RenderContext& rc) {
+  double base = 0;
+  if (adj != base) {
+    GLboolean valid; 
+    justify( font->Advance(text), adj, rc );
+    glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
+    if (!valid) return;
+  }
   font->Render(text);
 }
 
-void GLFTFont::draw(const wchar_t* text, int length, double adj, int gl2psActive) {
-
-  // This ignores the adj
-  
+void GLFTFont::draw(const wchar_t* text, int length, double adj, const RenderContext& rc) {
+  double base = 0;
+  if (adj != base) {
+    GLboolean valid; 
+    justify( font->Advance(text), adj, rc );
+    glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
+    if (!valid) return;
+  }
   font->Render(text);
 }
       

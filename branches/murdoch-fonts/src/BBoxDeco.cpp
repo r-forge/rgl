@@ -110,7 +110,7 @@ void AxisInfo::draw(RenderContext* renderContext, Vertex4& v, Vertex4& dir, Matr
   }
   
   if (renderContext->font)
-    renderContext->font->draw(string.text, string.length, adj, renderContext->gl2psActive);
+    renderContext->font->draw(string.text, string.length, adj, *renderContext);
 
 }
 
