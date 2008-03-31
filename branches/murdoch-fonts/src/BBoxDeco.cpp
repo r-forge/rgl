@@ -243,13 +243,9 @@ void BBoxDeco::render(RenderContext* renderContext)
 
     Vertex4 eyev[8];
 
-    // transform vertices: used for edge distance criterion
+    // transform vertices: used for edge distance criterion and text justification
 
-    double mdata[16] = { 0 };
-
-    glGetDoublev(GL_MODELVIEW_MATRIX, mdata);
-
-    Matrix4x4 modelview(mdata);
+    Matrix4x4 modelview(renderContext->modelview);
 
     for(i=0;i<8;i++)
       eyev[i] = modelview * boxv[i];
