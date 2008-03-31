@@ -387,12 +387,18 @@ void Scene::render(RenderContext* renderContext)
 
     viewpoint->setupTransformation( renderContext, total_bsphere);
 
+    // Save matrices for projection/unprojection later
+    
+    glGetDoublev(GL_MODELVIEW_MATRIX,renderContext->modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX,renderContext->projection);
+    glGetIntegerv(GL_VIEWPORT, renderContext->viewport);    
+    
     //
     // RENDER BBOX DECO
     //
 
-    if (bboxDeco)
-      bboxDeco->render(renderContext);
+    if (bboxDeco) 
+      bboxDeco->render(renderContext);  // This changes the modelview/projection/viewport
 
     //
     // RENDER SOLID SHAPES
@@ -407,12 +413,6 @@ void Scene::render(RenderContext* renderContext)
     // DISABLE BLENDING
     glDisable(GL_BLEND);
 
-    // Save matrices for projection/unprojection later
-    
-    glGetDoublev(GL_MODELVIEW_MATRIX,renderContext->modelview);
-    glGetDoublev(GL_PROJECTION_MATRIX,renderContext->projection);
-    glGetIntegerv(GL_VIEWPORT, renderContext->viewport);
-    
     {
       std::vector<Shape*>::iterator iter;
 
