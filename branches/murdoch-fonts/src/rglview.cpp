@@ -64,7 +64,11 @@ void RGLView::hide()
 
 void RGLView::setWindowImpl(WindowImpl* impl) {
   View::setWindowImpl(impl);
-#ifdef HAVE_FREETYPE
+//
+// Currently the FreeType font handling in AGL on the Mac is too poor to be worth 
+// using, so default to not using it.
+//
+#if defined HAVE_FREETYPE && !defined RGL_CARBON
   renderContext.font = impl->getFont("sans", 1, 1, true);
 #else
   renderContext.font = impl->fonts[0];

@@ -407,6 +407,12 @@ void Scene::render(RenderContext* renderContext)
     // DISABLE BLENDING
     glDisable(GL_BLEND);
 
+    // Save matrices for projection/unprojection later
+    
+    glGetDoublev(GL_MODELVIEW_MATRIX,renderContext->modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX,renderContext->projection);
+    glGetIntegerv(GL_VIEWPORT, renderContext->viewport);
+    
     {
       std::vector<Shape*>::iterator iter;
 
@@ -439,14 +445,9 @@ void Scene::render(RenderContext* renderContext)
     //
 
     viewpoint->setupTransformation(renderContext, total_bsphere);
-    
-    double data[16];
-        
-    glGetDoublev(GL_MODELVIEW_MATRIX,data);
-    Matrix4x4 M(data);
-    
-    glGetDoublev(GL_PROJECTION_MATRIX,data);
-    Matrix4x4 P(data);
+
+    Matrix4x4 M(renderContext->modelview);    
+    Matrix4x4 P(renderContext->projection);
     P = P*M;
     
     renderContext->Zrow = P.getRow(2);

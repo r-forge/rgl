@@ -8,6 +8,7 @@
 
 #include "opengl.hpp"
 #include <vector>
+#include "RenderContext.hpp"
 
 // CLASS
 //   GLFont
@@ -32,8 +33,8 @@ public:
     delete [] fontname;
   }
   
-  virtual void draw(const char* text, int length, double adj, int gl2psActive) = 0;
-  virtual void draw(const wchar_t* text, int length, double adj, int gl2psActive) = 0;
+  virtual void draw(const char* text, int length, double adj, const RenderContext& rc) = 0;
+  virtual void draw(const wchar_t* text, int length, double adj, const RenderContext& rc) = 0;
 
   char* family;
   int style;
@@ -67,8 +68,8 @@ public:
     GLFont(in_family, in_style, in_cex, in_fontname, false) {};
   ~GLBitmapFont();
 
-  void draw(const char* text, int length, double adj, int gl2psActive);
-  void draw(const wchar_t* text, int length, double adj, int gl2psActive);  
+  void draw(const char* text, int length, double adj, const RenderContext& rc);
+  void draw(const wchar_t* text, int length, double adj, const RenderContext& rc);  
   
   GLuint listBase;
   GLuint firstGlyph;
@@ -92,8 +93,9 @@ public:
   
   ~GLFTFont();
 #ifdef HAVE_FREETYPE
-  void draw(const char* text, int length, double adj, int gl2psActive);
-  void draw(const wchar_t* text, int length, double adj, int gl2psActive);
+  void draw(const char* text, int length, double adj, const RenderContext& rc);
+  void draw(const wchar_t* text, int length, double adj, const RenderContext& rc);
+  void justify(double adv, double adj, const RenderContext& rc);
   
   FTFont *font;
 #endif

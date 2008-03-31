@@ -46,6 +46,10 @@ TextSet::~TextSet()
 {
 }
 
+void TextSet::render(RenderContext* renderContext) {
+  draw(renderContext);
+}
+
 void TextSet::draw(RenderContext* renderContext) {
 
   int cnt;
@@ -56,12 +60,16 @@ void TextSet::draw(RenderContext* renderContext) {
   StringArrayIterator iter(&textArray);
   for( cnt = 0, iter.first(); !iter.isDone(); iter.next(), cnt++ ) {
     if (!vertexArray[cnt].missing()) {
+      GLboolean valid;
       material.useColor(cnt);
       glRasterPos3f( vertexArray[cnt].x, vertexArray[cnt].y, vertexArray[cnt].z );
-      font = fonts[cnt % fonts.size()];
-      if (font) {
-        String text = iter.getCurrent();
-        font->draw( text.text, text.length, adj, renderContext->gl2psActive );
+      glGetBooleanv(GL_CURRENT_RASTER_POSITION_VALID, &valid);
+      if (valid) {
+        font = fonts[cnt % fonts.size()];
+        if (font) {
+          String text = iter.getCurrent();
+          font->draw( text.text, text.length, adj, *renderContext );
+        }
       }
     }
   }
