@@ -24,7 +24,7 @@ public:
   , gl2psActive(0)
   { }
   Scene* scene;
-  Rect   rect;
+  Rect2   rect;
   // RectSize size;
   Viewpoint* viewpoint;
   GLFont* font;
