@@ -456,6 +456,10 @@ rgl.texts <- function(x, y=NULL, z=NULL, text, adj = 0.5, justify, family=par3d(
         warning("adj and justify both specified: justify ignored")
      } else adj <- switch(justify,left=0,center=0.5,right=1)
   }
+  if (length(adj) == 0) adj = c(0.5, 0.5)
+  if (length(adj) == 1) adj = c(adj, 0.5)
+  if (length(adj) > 2) warning("Only the first two entries of adj are used")
+  
   vertex  <- rgl.vertex(x,y,z)
   nvertex <- rgl.nvertex(vertex)
   text    <- rep(text, length.out=nvertex)

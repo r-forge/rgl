@@ -348,12 +348,13 @@ GLBitmapFont* X11WindowImpl::initGLFont()
     font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
     GLuint listBase = glGenLists(font->nglyph);
     font->listBase   = listBase - font->firstGlyph;
-    glXUseXFont(factory->xfont, font->firstGlyph, font->nglyph, listBase);
+    glXUseXFont(factory->xfont->fid, font->firstGlyph, font->nglyph, listBase);
 
     font->widths = new unsigned int[font->nglyph];
 
     for(unsigned int i=0;i<font->nglyph;i++)
       font->widths[i] = 9;
+    font->ascent = factory->xfont->ascent;
     endGL();  // Should this be added?
   }
   return font;
@@ -435,7 +436,7 @@ X11GUIFactory::X11GUIFactory(const char* displayname)
 /*  XSynchronize(xdisplay, True); */
 
   // Load System font
-  xfont = XLoadFont(xdisplay,"fixed");
+  xfont = XLoadQueryFont(xdisplay,"fixed");
  
   // Obtain display atoms
   static char* atom_names[GUI_X11_ATOM_LAST] = {
@@ -493,7 +494,7 @@ void X11GUIFactory::disconnect()
 
   // free xfont
   if (xfont) {
-    XUnloadFont(xdisplay, xfont);
+    XUnloadFont(xdisplay, xfont->fid);
     xfont = 0;
   }
   
