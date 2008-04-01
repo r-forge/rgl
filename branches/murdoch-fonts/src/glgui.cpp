@@ -118,7 +118,7 @@ GLFTFont::GLFTFont(const char* in_family, int in_style, double in_cex, const cha
     error("Cannot create font, error code: %i.", 
 	  font->Error());
   }
-  double size = 16*cex + 0.5;
+  unsigned int size = 16*cex + 0.5;
   if (size<1) { size=1; }
   if (!font->FaceSize(size)) {
     error("Cannot create font of size %f.", size);
