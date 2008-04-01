@@ -20,7 +20,8 @@
 
 class TextSet : public Shape {
 public:
-  TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, double in_adj,
+  TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, 
+          double in_adjx, double in_adjy,
           int in_ignoreExtent, FontArray& in_fonts);
   ~TextSet();
   /* Can't use display lists */
@@ -34,7 +35,8 @@ private:
   StringArray textArray;
   FontArray fonts;
 
-  double adj;
+  double adjx;
+  double adjy;
 
 };
 

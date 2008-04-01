@@ -676,7 +676,8 @@ void rgl_texts(int* successptr, int* idata, double* adj, char** text, double* ve
     
     FontArray fonts;
     device->getFonts(fonts, *nfonts, family, style, cex, (bool) *useFreeType);
-    success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, *adj,
+    success = as_success( device->add( new TextSet(currentMaterial, ntext, text, vertex, 
+                                                   adj[0], adj[1],
     						   device->getIgnoreExtent(), fonts) ) );
   }
 

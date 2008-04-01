@@ -16,7 +16,8 @@
 //   a separate length buffer holds string lengths in order
 //
 
-TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, double in_adj,
+TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *in_center, 
+                 double in_adjx, double in_adjy,
                  int in_ignoreExtent, FontArray& in_fonts)
  : Shape(in_material, in_ignoreExtent), textArray(in_ntexts, in_texts)
 {
@@ -25,7 +26,8 @@ TextSet::TextSet(Material& in_material, int in_ntexts, char** in_texts, double *
   material.lit = false;
   material.colorPerVertex(false);
 
-  adj = in_adj;
+  adjx = in_adjx;
+  adjy = in_adjy;
 
   // init vertex array
 
@@ -68,7 +70,7 @@ void TextSet::draw(RenderContext* renderContext) {
         font = fonts[cnt % fonts.size()];
         if (font) {
           String text = iter.getCurrent();
-          font->draw( text.text, text.length, adj, *renderContext );
+          font->draw( text.text, text.length, adjx, adjy, *renderContext );
         }
       }
     }

@@ -378,6 +378,11 @@ GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex,
           font->firstGlyph = GL_BITMAP_FONT_FIRST_GLYPH;
           font->listBase   = listBase - font->firstGlyph;
           GetCharWidth32( dcHandle, font->firstGlyph, GL_BITMAP_FONT_LAST_GLYPH,  (LPINT) font->widths );
+          {
+            TEXTMETRIC tm;
+            GetTextMetrics( dcHandle, &tm);
+            font->ascent = tm.tmAscent;
+          }
           wglUseFontBitmaps(dcHandle, font->firstGlyph, font->nglyph, listBase);
           DeleteObject( hf );
           endGL();  

@@ -33,14 +33,19 @@ public:
     delete [] fontname;
   }
   
-  virtual void draw(const char* text, int length, double adj, const RenderContext& rc) = 0;
-  virtual void draw(const wchar_t* text, int length, double adj, const RenderContext& rc) = 0;
-
+  virtual void draw(const char* text, int length, double adjx, double adjy, const RenderContext& rc) = 0;
+  virtual void draw(const wchar_t* text, int length, double adjx, double adjy, const RenderContext& rc) = 0;
+  virtual double width(const char* text) = 0;
+  virtual double width(const wchar_t* text) = 0;
+  virtual double height() = 0;
+  // justify returns false if justification puts the text outside the viewport
+  GLboolean justify(double width, double height, double adjx, double adjy, const RenderContext& rc);
   char* family;
   int style;
   double cex;
   char* fontname;
   bool useFreeType;
+  int gl2ps_centering;
 };
 
 #define GL_BITMAP_FONT_FIRST_GLYPH  32
@@ -68,13 +73,17 @@ public:
     GLFont(in_family, in_style, in_cex, in_fontname, false) {};
   ~GLBitmapFont();
 
-  void draw(const char* text, int length, double adj, const RenderContext& rc);
-  void draw(const wchar_t* text, int length, double adj, const RenderContext& rc);  
+  void draw(const char* text, int length, double adjx, double adjy, const RenderContext& rc);
+  void draw(const wchar_t* text, int length, double adjx, double adjy, const RenderContext& rc); 
+  double width(const char* text);
+  double width(const wchar_t* text);
+  double height();
   
   GLuint listBase;
   GLuint firstGlyph;
   GLuint nglyph;
   unsigned int* widths;
+  unsigned int ascent;
 };
 
 #ifdef HAVE_FREETYPE
@@ -93,9 +102,11 @@ public:
   
   ~GLFTFont();
 #ifdef HAVE_FREETYPE
-  void draw(const char* text, int length, double adj, const RenderContext& rc);
-  void draw(const wchar_t* text, int length, double adj, const RenderContext& rc);
-  void justify(double adv, double adj, const RenderContext& rc);
+  void draw(const char* text, int length, double adjx, double adjy, const RenderContext& rc);
+  void draw(const wchar_t* text, int length, double adjx, double adjy, const RenderContext& rc);
+  double width(const char* text);
+  double width(const wchar_t* text);
+  double height();
   
   FTFont *font;
 #endif

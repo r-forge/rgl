@@ -205,6 +205,7 @@ GLBitmapFont* OSXWindowImpl::initGLFont()
   font->widths = new unsigned int[count];
   for (int i=0;i<count;++i)
     font->widths[i] = 8;
+  font->ascent = 10;  // Pure guess
   return font;
 }
 // ---------------------------------------------------------------------------

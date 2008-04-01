@@ -21,7 +21,8 @@ rglFonts(...)
     for details.}
   \item{text}{text character vector to draw}
   \item{texts}{text character vector to draw}
-  \item{adj}{ one value specifying the horizontal adjustment }.
+  \item{adj}{ one value specifying the horizontal adjustment, or two, 
+              specifying horizontal and vertical adjustment respectively. }.
   \item{justify}{(deprecated, please use adj instead) character string
 specifying the horizontal adjustment; options are \code{"left"}, \code{"right"},
     \code{"center"}.
@@ -36,9 +37,12 @@ specifying the horizontal adjustment; options are \code{"left"}, \code{"right"},
 }
 \details{
 The \code{adj} parameter determines the position of the text relative to the 
-specified coordinate.  Use \code{adj = 0} to place the left bottom corner at
-\code{(x,y,z)}, \code{adj = 0.5} to center the text there, and \code{adj = 1}
-to put the right bottom corner there.
+specified coordinate.  Use \code{adj = c(0,0)} to place the left bottom corner at
+\code{(x,y,z)}, \code{adj = c(0.5, 0.5)} to center the text there, and \code{adj = c(1,1)}
+to put the right top corner there. The optional second coordinate for vertical 
+adjustment defaults to \code{0.5}.  Placement is done using the "advance" of
+the string and the "ascent" of the font relative to the baseline, when these metrics
+are known.
 
 \code{text3d} and \code{texts3d} draw text using the \link{r3d}
 conventions. These are synonyms; the former is singular to be
