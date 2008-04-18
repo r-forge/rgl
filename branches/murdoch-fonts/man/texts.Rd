@@ -62,7 +62,8 @@ The \code{family} specification is the same as for standard graphics, i.e.
 families \code{c("serif", "sans", "mono", "symbol")} are normally
 available, but users may add additional families.  \code{font} numbers
 are restricted to the range 1 to 4 for standard, bold, italic and bold italic
-respectively; with font 5 recoded as family \code{"symbol"} font 1.  
+respectively; with font 5 recoded as family \code{"symbol"} font 1 if that
+exists.  On Windows, the TrueType Symbol font will be used if not.
 
 Using an unrecognized value for \code{"family"} will result in
 the system standard font as used in rgl up to version 0.76.  That font

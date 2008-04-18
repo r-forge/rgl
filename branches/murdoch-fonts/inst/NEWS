@@ -239,3 +239,5 @@ v0.76
     OSX doesn't render properly yet.
   - adj is supported both horizontally and vertically in drawing text.
   - rgl.pop was very slow when given a long list of ids.
+  - the "symbol" family (which will disappear in R 2.8.0) is faked on
+    Windows, if necessary.
