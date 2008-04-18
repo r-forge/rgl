@@ -336,6 +336,9 @@ GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex,
       SEXP Rfontname = VECTOR_ELT(PROTECT(eval(lang2(install("windowsFonts"), 
                                           ScalarString(mkChar(family))), R_GlobalEnv)),
                                           0);
+      if (isNull(Rfontname) && !strcmp(family, "symbol"))
+        Rfontname = ScalarString(mkChar("TT Symbol"));
+        
       if (isString(Rfontname)) {
         const char* fontname = CHAR(STRING_ELT(Rfontname, 0)); 
         GLBitmapFont* font = new GLBitmapFont(family, style, cex, fontname);
