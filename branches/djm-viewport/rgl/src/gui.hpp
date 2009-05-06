@@ -174,6 +174,7 @@ public:
 
 // services:
   void setTitle(const char* title);
+  void setViewport(Rect3 rect);  /* Set the viewport relative to the containing window, which would be (0,0,1,1) */
   void setVisibility(bool state);
   void update(void);
   int getSkipRedraw(void);
@@ -210,6 +211,7 @@ public:
   View* child;
   const char* title;
   bool skipRedraw;  
+  Rect3 viewport;
 };
 // ---------------------------------------------------------------------------
 } // namespace gui

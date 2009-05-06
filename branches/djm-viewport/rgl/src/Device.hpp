@@ -30,7 +30,7 @@ public: // -- all methods are blocking until action completed
   virtual ~Device();
   int  getID();
   void setName(const char* string);
-  bool open(void); // -- if failed, instance is invalid and should be deleted
+  bool open(Rect3 rect); // -- if failed, instance is invalid and should be deleted
   void close(void); // -- when done, instance is invalid and should be deleted
   bool snapshot(int format, const char* filename);
   bool pixels(int* ll, int* size, int component, float* result);

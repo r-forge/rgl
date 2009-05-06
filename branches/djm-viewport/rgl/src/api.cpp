@@ -64,9 +64,9 @@ void rgl_quit(int* successptr)
 //   rgl_dev_open
 //
 
-void rgl_dev_open(int* successptr)
+void rgl_dev_open(int* successptr, double* rect)
 {
-  *successptr = as_success( deviceManager && deviceManager->openDevice() );
+  *successptr = as_success( deviceManager && deviceManager->openDevice(Rect3(rect[0], rect[1], rect[2], rect[3])) );
   CHECKGLERROR;
 }
 
