@@ -31,10 +31,10 @@ DeviceManager::~DeviceManager()
   }
 }
 
-bool DeviceManager::openDevice() 
+bool DeviceManager::openDevice(Rect3 rect) 
 {
   Device* pDevice = new Device(newID);  
-  if ( pDevice->open() ) {
+  if ( pDevice->open(rect) ) {
     ++newID;
     pDevice->addDisposeListener(this);
     devices.insert( devices.end(), pDevice );

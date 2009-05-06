@@ -15,9 +15,9 @@
 ##
 ##
 
-rgl.open <- function() {
+rgl.open <- function(rect = c(0,0,1,1)) {
 
-  ret <- .C( rgl_dev_open, success=FALSE )
+  ret <- .C( rgl_dev_open, success=FALSE, rect=as.numeric(rect) )
 
   if (! ret$success)
     stop("rgl.open failed")

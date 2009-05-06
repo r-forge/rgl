@@ -141,6 +141,7 @@ Window::Window(View* in_child, GUIFactory* factory)
 : View(0,0,in_child->width, in_child->height,WINDOW_IMPL_OWNER)
 , child(in_child)
 , title("untitled")
+, viewport(0,0,1,1)
 {
   skipRedraw = false;  
   windowImpl = factory->createWindowImpl(this);
@@ -182,6 +183,12 @@ void Window::setVisibility(bool state)
   else
     windowImpl->hide();
 }
+// ---------------------------------------------------------------------------
+void Window::setViewport(Rect3 rect)
+{
+  viewport = rect;
+}
+
 // ---------------------------------------------------------------------------
 void Window::bringToTop(int stay)
 {

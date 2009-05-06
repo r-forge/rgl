@@ -39,8 +39,9 @@ void Device::update()
 //  window->update();
 }
 // ---------------------------------------------------------------------------
-bool Device::open(void)
+bool Device::open(Rect3 rect)
 {
+  window->setViewport(rect);
   window->setVisibility(true);
   return true;
 }
