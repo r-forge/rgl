@@ -1,0 +1,2 @@
+PKG_LDFLAGS=-framework Cocoa -framework OpenGL -framework GLU
+
