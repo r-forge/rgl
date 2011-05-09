@@ -96,6 +96,8 @@ void RGLView::resize(int in_width, int in_height) {
 
 void RGLView::paint(void) {
 
+  if (!windowImpl) return;
+  
   double last = renderContext.time;
   double t    = lib::getTime();
 

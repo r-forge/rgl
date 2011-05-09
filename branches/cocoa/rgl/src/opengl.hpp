@@ -24,5 +24,10 @@
 #include <GL/glu.h>
 #endif
 // ---------------------------------------------------------------------------
+#ifdef RGL_COCOA
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#include <OpenGL/glu.h>
+#endif
 #endif // RGL_OPENGL_HPP
  

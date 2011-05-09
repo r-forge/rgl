@@ -1,0 +1,7 @@
+TARGETS = RGLCocoaView.o
+.PHONY: all clean
+all: ${TARGETS}
+clean:
+	rm -f ${TARGETS}
+RGLCocoaView.o: RGLCocoaView.mm
+	${COMPILE.m} $< ${OUTPUT_OPTION}
