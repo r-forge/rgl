@@ -617,6 +617,10 @@ void rgl_sprites(int* successptr, int* idata, double* vertex, double* radius)
 
 void rgl_material(int *successptr, int* idata, char** cdata, double* ddata)
 {
+  int success = RGL_FAIL;
+  Device* device;
+  if (deviceManager && (device = deviceManager->getAnyDevice())) {
+
   Material& mat = currentMaterial;
 
   int ncolor    = idata[0];
@@ -664,7 +668,9 @@ void rgl_material(int *successptr, int* idata, char** cdata, double* ddata)
   mat.setup(); 
   CHECKGLERROR;
 
-  *successptr = RGL_SUCCESS;
+  success = RGL_SUCCESS;
+  }   
+  *successptr = success;
 }
 
 void rgl_getcolorcount(int* count)
