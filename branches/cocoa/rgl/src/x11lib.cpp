@@ -91,14 +91,6 @@ void quit()
 //
 
 //
-// printMessage
-//
-
-void printMessage( const char* string ) {
-  warning("RGL: %s\n", string);
-}
-
-//
 // getTime
 //
 
