@@ -1,3 +1,7 @@
+#include "config.hpp"
+
+#ifdef RGL_COCOA
+
 #include "lib.hpp"
 #include "gui.hpp"
 #include <sys/time.h>
@@ -14,15 +18,31 @@ class CocoaWindowImpl : public WindowImpl
 public:
   CocoaWindowImpl(Window* w) : WindowImpl(w) 
   {
-    NSRect rect = NSMakeRect(50.0, 50.0, 200.0, 200.0);
+    int init_w = 256, init_h = 256;
+    NSRect rect = NSMakeRect(50.0, 50.0, (float) init_w, (float) init_h);
     mRGLCocoaView = [[RGLCocoaView alloc] initWithFrame: rect andWindowImpl: this];
-    mNSWindow = [[NSWindow alloc] initWithContentRect: rect styleMask: NSTitledWindowMask|NSClosableWindowMask|NSMiniaturizableWindowMask|NSResizableWindowMask backing:NSBackingStoreBuffered defer:NO];
-    [mNSWindow setOpaque:NO];
-    // [mNSWindow setDelegate: mRGLCocoaView];
+    mNSWindow = [[NSWindow alloc] 
+      initWithContentRect: rect 
+      styleMask: NSTitledWindowMask 
+               | NSClosableWindowMask 
+               | NSMiniaturizableWindowMask
+               | NSResizableWindowMask 
+               // | NSTexturedBackgroundWindowMask
+      backing:NSBackingStoreBuffered 
+      defer:YES
+    ];
+    // [mNSWindow setOpaque:NO];
+    // [mNSWindow setAcceptsMouseMovedEvents:YES];
+    [mNSWindow setDelegate: mRGLCocoaView];
     [mNSWindow setContentView: mRGLCocoaView];
     [mNSWindow setInitialFirstResponder: mRGLCocoaView];
     [mNSWindow makeKeyAndOrderFront: NSApp];
-    w->resize(200,200);
+    setSize(init_w,init_h);
+  }
+  void setSize(int w, int h)
+  {
+    mHeight = h;
+    postResize(w,h);
   }
   virtual void setTitle(const char* title) 
   {
@@ -100,14 +120,19 @@ public:
     int w = (int) NSWidth(r);
     int h = (int) NSHeight(r);
     std::cout << "size " << w << " x " << h << "\n";
-    window->resize(w,h);
+    setSize(w,h);
   }
-  inline void postButtonPress(int button, int x, int y)   { window->buttonPress(button,x,y); }
-  inline void postButtonRelease(int button, int x, int y) { window->buttonRelease(button,x,y); }
-
+  inline void postResize       (int w, int h)             { window->resize(w,h); }
+  inline void postButtonPress  (int button, int x, int y) { window->buttonPress  (button,x,mHeight-y); }
+  inline void postButtonRelease(int button, int x, int y) { window->buttonRelease(button,x,mHeight-y); }
+  inline void postMouseMove    (int x, int y)             { window->mouseMove    (x,mHeight-y); }
+  inline void postWheelRotate  (int deltaY)               { window->wheelRotate  ( (deltaY>0.0) ? gui::GUI_WheelForward : gui::GUI_WheelBackward ); }
+  inline void postCaptureLost  ()                         { window->captureLost();  }
+  inline void postKeyPress     (int code)                 { window->keyPress(code); } 
 private:
   RGLCocoaView *mRGLCocoaView;
   NSWindow     *mNSWindow;
+  int           mHeight;
 };
 
 class CocoaGUIFactory : public GUIFactory
@@ -153,6 +178,11 @@ gui::GUIFactory* getGUIFactory()
         NSOpenGLPFAWindow,
         NSOpenGLPFADoubleBuffer,    // double buffered
         NSOpenGLPFADepthSize, (NSOpenGLPixelFormatAttribute)16, // 16 bit depth buffer
+        // NSOpenGLPFNoRecovery,
+        // NSOpenGLPFAccelerated,
+        NSOpenGLPFAColorSize, 24,
+        NSOpenGLPFAAlphaSize, 8,
+        // NSOpenGLPFAStencilSize, 8,
         (NSOpenGLPixelFormatAttribute)nil
     };
     return [[[NSOpenGLPixelFormat alloc] initWithAttributes:attributes] autorelease];
@@ -170,32 +200,206 @@ gui::GUIFactory* getGUIFactory()
 {
   DEBUG_LOG(drawRect)
   self->mWindowImpl->postPaint();
-  [ [self openGLContext] flushBuffer ];
+  // [ [self openGLContext] flushBuffer ];
 }
 
 - (void) reshape
 {
   DEBUG_LOG(reshape)
   self->mWindowImpl->postReshape();
+  self->mWindowImpl->update();
 }
 
-- (void) mouseDown: (NSEvent *) theEvent
-{
+#define DUMP(X) { NSPoint p = [theEvent locationInWindow]; int button = [theEvent buttonNumber]; std::cout << #X << ": button=" << button << " : " << p.x << "," << p.y << "\n"; }
+
+- (void) mouseDown:         (NSEvent *) theEvent {
+  NSUInteger f = [NSEvent modifierFlags];
   NSPoint p = [theEvent locationInWindow];
-  int button = gui::GUI_ButtonLeft; // [theEvent buttonNumber];
   int x = p.x;
   int y = p.y;
-  self->mWindowImpl->postButtonPress(button,x,y);
+  std::cout << "mouseDown: ";
+  self->mButtonDown = gui::GUI_ButtonLeft;
+  if (f & NSControlKeyMask)   { self->mButtonDown = gui::GUI_ButtonRight;  std::cout << "CTRL "; }
+  if (f & NSShiftKeyMask)     { self->mButtonDown = gui::GUI_ButtonMiddle; std::cout << "Shift "; } 
+  if (f & NSAlternateKeyMask) { self->mButtonDown = gui::GUI_ButtonMiddle; std::cout << "Alternate "; }
+  std::cout << "pos: " << x << "," << y << "\n";
+  mWindowImpl->postButtonPress(self->mButtonDown,x,y);
+}
+- (void) mouseUp:           (NSEvent *) theEvent {
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "mouseUp: ";
+  NSUInteger f = [NSEvent modifierFlags];
+  if (f & NSControlKeyMask) std::cout << "CTRL ";
+  if (f & NSShiftKeyMask) std::cout << "Shift ";
+  if (f & NSAlternateKeyMask) std::cout << "Alternate ";
+  std::cout << "pos: " << x << "," << y << "\n";
+  mWindowImpl->postButtonRelease(self->mButtonDown,x,y);
+}
+- (void) mouseDragged:      (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "mouseDragged: " << x << "," << y << "\n";
+  mWindowImpl->postMouseMove(x,y);
+}
+- (void) rightMouseDown:    (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  self->mButtonDown = gui::GUI_ButtonRight;
+  std::cout << "rightMouseDown: " << x << "," << y << "\n";
+  mWindowImpl->postButtonPress(self->mButtonDown,x,y);
+}
+- (void) rightMouseDragged: (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "rightMouseDragged: " << x << "," << y << "\n";
+  mWindowImpl->postMouseMove(x,y);
+}
+- (void) rightMouseUp:      (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "rightMouseUp: " << x << "," << y << "\n";
+  mWindowImpl->postButtonRelease(self->mButtonDown,x,y);
+}
+- (void) otherMouseDown:    (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  self->mButtonDown = gui::GUI_ButtonMiddle;
+  std::cout << "otherMouseDown: " << x << "," << y << "\n";
+  mWindowImpl->postButtonPress(self->mButtonDown,x,y);
+}
+- (void) otherMouseDragged: (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "otherMouseDragged: " << x << "," << y << "\n";
+  mWindowImpl->postMouseMove(x,y);
+}
+- (void) otherMouseUp:      (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  std::cout << "otherMouseUp: " << x << "," << y << "\n";
+  mWindowImpl->postButtonRelease(self->mButtonDown,x,y);
+}
+- (void) scrollWheel:       (NSEvent *) theEvent {
+  NSPoint p = [theEvent locationInWindow]; 
+  int button = [theEvent buttonNumber]; 
+  CGFloat x = [theEvent deltaX];
+  CGFloat y = [theEvent deltaY];
+  CGFloat z = [theEvent deltaZ];
+  std::cout << "scrollWheel: " << x << "," << y << "," << z << "\n"; 
+}
+- (void) rotateWithEvent:   (NSEvent *) theEvent DUMP(rotateWithEvent)
+- (void) magnifyWithEvent:  (NSEvent *) theEvent DUMP(magnifyWithEvent)
+- (void) swipeWithEvent:    (NSEvent *) theEvent DUMP(swipeWithEvent)
+
+// - (void) mouseMoved:        (NSEvent *) theEvent DUMP(mouseMoved)
+#if 0
+- (void) mouseDown: (NSEvent *) theEvent
+{
+  int button = [theEvent buttonNumber];
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  cout << "mouseDown: button=" << button << " : " << x << "," << y << "\n";
+#if 0
+
+  NSPoint p = [theEvent locationInWindow];
+ ) {
+    case NSLeftMouse: button = gui::GUI_ButtonLeft; break;
+    case NSRightMouse: button = gui::GUI_ButtonRight; break;
+    case NSOtherMouse:
+  int button = gui::GUI_ButtonLeft; // [theEvent buttonNumber];
+  // self->mWindowImpl->postButtonPress(button,x,y);
+#endif
 }
 
 - (void) mouseUp: (NSEvent *) theEvent
 {
+  DEBUG_LOG(mouseUp)
+  int button = [theEvent buttonNumber];
   NSPoint p = [theEvent locationInWindow];
   int x = p.x;
   int y = p.y;
-  int button = gui::GUI_ButtonLeft; // [theEvent buttonNumber];
+  cout << "mouseUp: button=" << button << " : " << x << "," << y << "\n";
+  // int button = gui::GUI_ButtonLeft; 
+  // self->mWindowImpl->postButtonRelease(button,x,y);
+}
+
+- (void) mouseMoved: (NSEvent *) theEvent
+{
+  int button = [theEvent buttonNumber];
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  cout << "mouseMoved: button=" << button << " : " << x << "," << y << "\n";
+  // self->mWindowImpl->postMouseMove(x,y);
+}
+
+- (void) mouseDragged: (NSEvent *) theEvent
+{
+  int button = [theEvent buttonNumber];
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  cout << "mouseDragged: button=" << button << " : " << x << "," << y << "\n";
+  // self->mWindowImpl->postMouseMove(x,y);
+}
+
+- (void) rightMouseDragged: (NSEvent *) theEvent
+{
+  DEBUG_LOG(rightMouseDragged)
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  self->mWindowImpl->postMouseMove(x,y);
+}
+
+- (void) rightMouseDown: (NSEvent *) theEvent
+{
+  NSPoint p = [theEvent locationInWindow];
+  int button = gui::GUI_ButtonRight;
+  int x = p.x;
+  int y = p.y;
+  cout << "rightMouseDown: " << x << "," << y << "\n";
+  self->mWindowImpl->postButtonPress(button,x,y);
+}
+
+- (void) rightMouseUp: (NSEvent *) theEvent
+{
+  DEBUG_LOG(rightMouseUp)
+  NSPoint p = [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  int button = gui::GUI_ButtonRight; 
   self->mWindowImpl->postButtonRelease(button,x,y);
 }
+#endif
+
+#if 0
+- (void) rightMouseMoved: (NSEvent *) theEvent
+{
+  NSPoint p [theEvent locationInWindow];
+  int x = p.x;
+  int y = p.y;
+  int button = gui::GUI_ButtonLeft;
+  self->mWindowImpl->postMouseMove(x,y);
+}
+#endif
 
 /*
 - (void) update
@@ -265,4 +469,6 @@ msgTime = getElapsedTime ();
 #endif
 
 @end
+
+#endif
 
