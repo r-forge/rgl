@@ -1,11 +1,11 @@
 #ifndef PLANESET_HPP
 #define PLANESET_HPP
 
-#include "scene.h"
-#include "geom.hpp"
-#include "Shape.hpp"
-#include "PrimitiveSet.hpp"
-#include <map>
+#include "TriangleSet.hpp"
+
+// #include "scene.h"
+// #include "geom.hpp"
+// #include <map>
 
 class PlaneSet : public TriangleSet {
 private:		/* Use parametrization ax + by + cz + d = 0 */

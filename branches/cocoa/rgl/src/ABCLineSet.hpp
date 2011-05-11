@@ -1,11 +1,10 @@
 #ifndef ABCLINESET_HPP
 #define ABCLINESET_HPP
 
-#include "scene.h"
-#include "geom.hpp"
-#include "Shape.hpp"
-#include "PrimitiveSet.hpp"
-#include <map>
+#include "LineSet.hpp"
+
+// #include "scene.h"
+// #include "geom.hpp"
 
 class ABCLineSet : public LineSet {
 private:		/* Use parametrization (x,y,z) + s*(a,b,c) */
@@ -36,4 +35,5 @@ public:
   void updateSegments(const AABox& sceneBBox);
 };
 
-#endif // PLANESET_HPP
+#endif // ABCLINESET_HPP
+

@@ -46,7 +46,7 @@ public:
 
 private:
   void initGL();
-  GLBitmapFont* initGLFont();
+  GLBitmapFont* initGLBitmapFont();
   void shutdownGL();
   static int translate_key(KeySym keysym);
   void on_init();
@@ -356,7 +356,7 @@ GLFont* X11WindowImpl::getFont(const char* family, int style, double cex,
   return fonts[0];  
 }
 
-GLBitmapFont* X11WindowImpl::initGLFont()
+GLBitmapFont* X11WindowImpl::initGLBitmapFont()
 {
   GLBitmapFont* font = NULL; 
   if (beginGL()) {
@@ -380,7 +380,7 @@ GLBitmapFont* X11WindowImpl::initGLFont()
 void X11WindowImpl::on_init()
 {
   initGL();
-  fonts[0] = initGLFont();
+  fonts[0] = initGLBitmapFont();
 }
 
 void X11WindowImpl::on_shutdown()

@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "RGLCocoaView.h"
 #include <iostream>
+#include "GLBitmapFont.hpp"
 
 #define DEBUG_LOG(X) std::cout << "DEBUG_LOG: " << #X << "\n";
 
@@ -16,8 +17,14 @@ namespace gui {
 class CocoaWindowImpl : public WindowImpl
 {
 public:
-  CocoaWindowImpl(Window* w) : WindowImpl(w) 
+  CocoaWindowImpl(Window* w)
+   : WindowImpl(w)
+   , mRGLCocoaView(0)
+   , mNSWindow(0)
+   , mDefaultFont(0)
+   , mHeight(0)
   {
+    fonts.push_back(NULL);
     int init_w = 256, init_h = 256;
     NSRect rect = NSMakeRect(50.0, 50.0, (float) init_w, (float) init_h);
     mRGLCocoaView = [[RGLCocoaView alloc] initWithFrame: rect andWindowImpl: this];
@@ -31,13 +38,13 @@ public:
       backing:NSBackingStoreBuffered 
       defer:YES
     ];
-    // [mNSWindow setOpaque:NO];
-    // [mNSWindow setAcceptsMouseMovedEvents:YES];
     [mNSWindow setDelegate: mRGLCocoaView];
     [mNSWindow setContentView: mRGLCocoaView];
     [mNSWindow setInitialFirstResponder: mRGLCocoaView];
-    [mNSWindow makeKeyAndOrderFront: NSApp];
-    setSize(init_w,init_h);
+    [mNSWindow setReleasedWhenClosed:NO]; // to make it close (and hide) and NOT release.
+    // [mNSWindow setOpaque:NO];
+    // [mNSWindow setAcceptsMouseMovedEvents:YES];
+    // setSize(init_w,init_h);
   }
   void setSize(int w, int h)
   {
@@ -50,36 +57,43 @@ public:
   }
   virtual void setWindowRect(int left, int top, int right, int bottom) 
   { 
-    DEBUG_LOG(setWindowRect)
-    // frameRectForContentRect: NSMakeRect(left,top,right-left+1,bottom-top+1)
-    // [mNSWindow setRect: rect]; 
+    // DEBUG_LOG(setWindowRect)
+    NSRect sr = [[NSScreen mainScreen] frame];
+    int h = bottom - top;
+    int w = right  - left;
+    NSRect cr = NSMakeRect(left,sr.size.height - top - h,w,h);
+    NSRect fr = [mNSWindow frameRectForContentRect: cr ];
+    [mNSWindow setFrame: fr display:YES]; 
   }
   virtual void getWindowRect(int *left, int *top, int *right, int *bottom) 
   {
-    DEBUG_LOG(getWindowRect)
-#if 0
-    NSRect r  = [mNSWindow contentRectForFrameRect: [mRGLCocoaView frame] ];
-    left [0]  = (int) r.origin.x;
-    top  [0]  = (int) r.origin.y;
-    right[0]  = (int) left[0] + r.size.width;
-    bottom[0] = (int) top[0]  + r.size.height;
-#endif
+    // DEBUG_LOG(getWindowRect)
+    NSRect sr = [[NSScreen mainScreen] frame];
+    NSRect cr = [mNSWindow contentRectForFrameRect: [mNSWindow frame]];
+    left [0]  = (int) cr.origin.x;
+    top  [0]  = (int) sr.size.height - (cr.origin.y+cr.size.height);
+    right[0]  = (int) left[0] + cr.size.width;
+    bottom[0] = (int) top[0]  + cr.size.height;
+    // NSRect r  = [mNSWindow contentRectForFrameRect: [mRGLCocoaView frame] ];
   }
   virtual void show(void) { 
-    DEBUG_LOG(show) 
+    // DEBUG_LOG(show) 
+    [mNSWindow makeKeyAndOrderFront: NSApp];
   }
   virtual void hide(void) { 
-    DEBUG_LOG(hide) 
+    // DEBUG_LOG(hide) 
+    [mNSWindow close]; // TODO: ensure it is not released!
   }
   virtual void update(void) { 
-    DEBUG_LOG(update)
-    [mNSWindow display];
-    [[mRGLCocoaView openGLContext]flushBuffer];
-    // [mRGLCocoaView setNeedsDisplay: YES];
+    // DEBUG_LOG(update)
+    // Try:
+    // [mNSWindow display];
+    
+    [mRGLCocoaView setNeedsDisplay: YES];
   }
 
   virtual void bringToTop(int stay) { 
-    DEBUG_LOG(bringToTop)
+    // DEBUG_LOG(bringToTop)
     [mNSWindow makeKeyAndOrderFront: NSApp];
   }
   /// @doc notifyDestroy will be called on success
@@ -95,27 +109,30 @@ public:
   virtual void endGL(void) { 
     // DEBUG_LOG(endGL)
   }
-  virtual void swap(void) { 
-    //TODO: remove? not called at all?
-    DEBUG_LOG(swap)
+  inline void swap(void) { 
     [ [mRGLCocoaView openGLContext ] flushBuffer];
   }
   virtual void captureMouse(View* captureView) { 
+    mCaptureView = captureView;
   }
   virtual void releaseMouse(void) { 
+    mCaptureView = 0;
   }
   virtual GLFont* getFont(const char* family, int style, double cex, 
-                          bool useFreeType) { return 0; }
+                          bool useFreeType) { 
+    return mDefaultFont; 
+  }
 
   void postPaint() {
     //THIS WAS IMPORTANT:
-    if (!window) return;
+    // if (!window) return;
+    assert(window);
     window->paint();
   }
   void postReshape() {
     //haven't checked..
-    if (!window) return;
-    
+    //if (!window) return;
+    assert(window);
     NSRect r = [mRGLCocoaView bounds];
     int w = (int) NSWidth(r);
     int h = (int) NSHeight(r);
@@ -124,15 +141,28 @@ public:
   }
   inline void postResize       (int w, int h)             { window->resize(w,h); }
   inline void postButtonPress  (int button, int x, int y) { window->buttonPress  (button,x,mHeight-y); }
-  inline void postButtonRelease(int button, int x, int y) { window->buttonRelease(button,x,mHeight-y); }
+  inline void postButtonRelease(int button, int x, int y) { window->buttonRelease(button,x,mHeight-y); mCaptureView = 0; }
   inline void postMouseMove    (int x, int y)             { window->mouseMove    (x,mHeight-y); }
   inline void postWheelRotate  (int deltaY)               { window->wheelRotate  ( (deltaY>0.0) ? gui::GUI_WheelForward : gui::GUI_WheelBackward ); }
   inline void postCaptureLost  ()                         { window->captureLost();  }
   inline void postKeyPress     (int code)                 { window->keyPress(code); } 
+  inline GLBitmapFont* initGLBitmapFont ()
+  {
+    GLBitmapFont* font = NULL;
+    if (beginGL()) {
+      font = new GLBitmapFont("bitmap", 1, 1, "fixed");  
+    }
+  }
+  inline void prepareOpenGL    ()
+  {
+    initGLBitmapFont(); 
+  }
 private:
   RGLCocoaView *mRGLCocoaView;
   NSWindow     *mNSWindow;
+  GLBitmapFont *mDefaultFont;
   int           mHeight;
+  View*         mCaptureView;
 };
 
 class CocoaGUIFactory : public GUIFactory
@@ -200,14 +230,20 @@ gui::GUIFactory* getGUIFactory()
 {
   DEBUG_LOG(drawRect)
   self->mWindowImpl->postPaint();
-  // [ [self openGLContext] flushBuffer ];
+  [ [self openGLContext] flushBuffer ];
 }
 
 - (void) reshape
 {
   DEBUG_LOG(reshape)
   self->mWindowImpl->postReshape();
+  // this is imporant, when resizing :
   self->mWindowImpl->update();
+}
+
+- (void) prepareOpenGL
+{
+  self->mWindowImpl->prepareOpenGL();
 }
 
 #define DUMP(X) { NSPoint p = [theEvent locationInWindow]; int button = [theEvent buttonNumber]; std::cout << #X << ": button=" << button << " : " << p.x << "," << p.y << "\n"; }
@@ -303,6 +339,9 @@ gui::GUIFactory* getGUIFactory()
   CGFloat z = [theEvent deltaZ];
   std::cout << "scrollWheel: " << x << "," << y << "," << z << "\n"; 
 }
+
+/* Multi-touch gesture */
+
 - (void) rotateWithEvent:   (NSEvent *) theEvent DUMP(rotateWithEvent)
 - (void) magnifyWithEvent:  (NSEvent *) theEvent DUMP(magnifyWithEvent)
 - (void) swipeWithEvent:    (NSEvent *) theEvent DUMP(swipeWithEvent)

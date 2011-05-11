@@ -1,7 +1,7 @@
-#ifndef MATERIAL_HPP
-#define MATERIAL_HPP
+#ifndef RGL_MATERIAL_HPP
+#define RGL_MATERIAL_HPP
 
-#include "Color.hpp"
+#include "ColorArray.hpp"
 #include "Texture.hpp"
 #include "RenderContext.hpp"
 
@@ -54,6 +54,4 @@ public:
   float        glVersion;
 };
 
-
-
-#endif // MATERIAL_HPP
+#endif // RGL_MATERIAL_HPP

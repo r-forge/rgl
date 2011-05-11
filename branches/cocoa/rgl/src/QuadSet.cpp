@@ -14,7 +14,7 @@ QuadSet::QuadSet(Material& in_material, int in_nelements, double* in_vertex)
   if (material.lit) {
     normalArray.alloc(nvertices);
     for (int i=0;i<nvertices-3;i+=4) {
-      normalArray[i+3] = normalArray[i+2] = normalArray[i+1] = normalArray[i] = vertexArray.getNormal(i,i+1,i+2);
+      normalArray[i+3] = normalArray[i+2] = normalArray[i+1] = normalArray[i] = vertexArray.computeNormal(i,i+1,i+2);
     }
   }
 }
