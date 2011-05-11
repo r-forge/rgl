@@ -197,9 +197,7 @@ void Window::setWindowRect(int left, int top, int width, int height)
 {
   windowImpl->setWindowRect(left, top, width, height);
 }
-
 // ---------------------------------------------------------------------------
-
 int Window::getSkipRedraw(void)
 {
   return (int)skipRedraw;

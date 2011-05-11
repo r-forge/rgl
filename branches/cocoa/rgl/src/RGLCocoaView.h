@@ -22,6 +22,7 @@ class CocoaWindowImpl;
 - (void) drawRect:      (NSRect) rect;
 /* OpenGL event */
 - (void) reshape;
+- (void) prepareOpenGL;
 /* UI event */
 
 - (void) mouseDown:  (NSEvent *) theEvent;

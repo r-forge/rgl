@@ -43,45 +43,12 @@ static void dimCheck(const char *what, SEXP v, int r, int c)
     	error(_("parameter \"%s\" has the wrong dimension"), what);
 }
 
-#ifdef UNUSED
-static void nonnegIntCheck(int x, const char *s)
-{
-    if (x == NA_INTEGER || x < 0)
-	par_error(s);
-}
-
-static void posIntCheck(int x, const char *s)
-{
-    if (x == NA_INTEGER || x <= 0)
-	par_error(s);
-}
-
-static void naIntCheck(int x, const char *s)
-{
-    if (x == NA_INTEGER)
-	par_error(s);
-}
-#endif
 
 static void posRealCheck(double x, const char *s)
 {
     if (!R_FINITE(x) || x <= 0)
 	par_error(s);
 }
-
-#ifdef UNUSED
-static void nonnegRealCheck(double x, const char *s)
-{
-    if (!R_FINITE(x) || x < 0)
-	par_error(s);
-}
-
-static void naRealCheck(double x, const char *s)
-{
-    if (!R_FINITE(x))
-	par_error(s);
-}
-#endif
 
 static void BoundsCheck(double x, double a, double b, const char *s)
 {

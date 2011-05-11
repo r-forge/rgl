@@ -74,7 +74,6 @@ public:
   virtual void destroy(void) = 0;
   virtual bool beginGL(void) = 0;
   virtual void endGL(void) = 0;
-  virtual void swap(void) = 0;
   virtual void captureMouse(View* captureView) = 0;
   virtual void releaseMouse(void) = 0;
   virtual GLFont* getFont(const char* family, int style, double cex, 
@@ -82,10 +81,10 @@ public:
   void getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex, 
                 bool useFreeType);
 
-  // OpenGL support (FIXME: remove)
-  FontArray fonts;
 protected:
   Window*      window;
+  // OpenGL support (FIXME: remove)
+  FontArray fonts;
 };
 // ---------------------------------------------------------------------------
 //

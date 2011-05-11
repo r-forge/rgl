@@ -89,7 +89,7 @@ void RGLView::resize(int in_width, int in_height) {
 
   View::resize(in_width, in_height);
 
-  renderContext.rect.width = in_width;
+  renderContext.rect.width  = in_width;
   renderContext.rect.height = in_height;
   if (drag) captureLost();
 }
@@ -101,7 +101,7 @@ void RGLView::paint(void) {
   double last = renderContext.time;
   double t    = lib::getTime();
 
-  double dt   = (last != 0.0f) ? last - t : 0.0f;
+  double dt   = (last != 0.0f) ? t - last : 0.0f;
   
   renderContext.time = t;
   renderContext.deltaTime = dt;
@@ -703,7 +703,9 @@ void RGLView::setDefaultFont(const char* family, int style, double cex, bool use
   
 const char* RGLView::getFontFamily() const 
 {
-  return renderContext.font->family;
+  if(renderContext.font)
+    return renderContext.font->getFamily();
+  return "";
 }
 
 void RGLView::setFontFamily(const char *family)
@@ -713,7 +715,10 @@ void RGLView::setFontFamily(const char *family)
 
 int RGLView::getFontStyle() const 
 {
-  return renderContext.font->style;
+  if (renderContext.font)
+    return renderContext.font->getStyle();
+  else
+    return 0;
 }
 
 void RGLView::setFontStyle(int style)
@@ -723,7 +728,9 @@ void RGLView::setFontStyle(int style)
 
 double RGLView::getFontCex() const 
 {
-  return renderContext.font->cex;
+  if (renderContext.font)
+    return renderContext.font->getCEX();
+  return 0.0;
 }
 
 void RGLView::setFontCex(double cex)
@@ -733,12 +740,18 @@ void RGLView::setFontCex(double cex)
 
 const char* RGLView::getFontname() const 
 {
-  return renderContext.font->fontname;
+  if (renderContext.font)
+    return renderContext.font->getFontName();
+  else
+    return "";
 }
 
 bool RGLView::getFontUseFreeType() const
 {
-  return renderContext.font->useFreeType;
+  if (renderContext.font)
+    return renderContext.font->isFreeType();
+  else
+    return false;
 }
 
 void RGLView::setFontUseFreeType(bool useFreeType)

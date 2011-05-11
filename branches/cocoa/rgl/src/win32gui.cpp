@@ -90,8 +90,8 @@ private:
 public:
   bool beginGL();
   void endGL();
-  void swap();
 private:
+  void swap();
   bool initGL();
   void shutdownGL();
   GLBitmapFont* initGLBitmapFont(u8 firstGlyph, u8 lastGlyph);
@@ -323,6 +323,30 @@ void Win32WindowImpl::shutdownGL()
   ReleaseDC(windowHandle, dcHandle);
   wglDeleteContext(glrcHandle);
 }
+
+/* The macros below are taken from the R internationalization code, which
+   is marked
+
+   Copyright (C) 1995-1999, 2000-2007 Free Software Foundation, Inc.
+*/   
+/* Pathname support.
+   ISSLASH(C)           tests whether C is a directory separator character.
+   IS_ABSOLUTE_PATH(P)  tests whether P is an absolute path.  If it is not,
+                        it may be concatenated to a directory pathname.
+ */
+#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __EMX__ || defined __DJGPP__
+  /* Win32, Cygwin, OS/2, DOS */
+# define ISSLASH(C) ((C) == '/' || (C) == '\\')
+# define HAS_DEVICE(P) \
+    ((((P)[0] >= 'A' && (P)[0] <= 'Z') || ((P)[0] >= 'a' && (P)[0] <= 'z')) \
+     && (P)[1] == ':')
+# define IS_ABSOLUTE_PATH(P) (ISSLASH ((P)[0]) || HAS_DEVICE (P))
+#else
+  /* Unix */
+# define ISSLASH(C) ((C) == '/')
+# define IS_ABSOLUTE_PATH(P) ISSLASH ((P)[0])
+#endif
+
 
 GLFont* Win32WindowImpl::getFont(const char* family, int style, double cex, 
                                  bool useFreeType)

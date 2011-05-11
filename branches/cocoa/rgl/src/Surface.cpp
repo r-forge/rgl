@@ -100,15 +100,15 @@ void Surface::setNormal(int ix, int iz)
   if (!vertexArray[i].missing()) {
     if (ix < nx-1 && !vertexArray[i+1].missing() ) {
       if (iz > 0 && !vertexArray[i-nx].missing() )     // right/top
-        n[num++] = vertexArray.getNormal(i, i+1, i-nx );
+        n[num++] = vertexArray.computeNormal(i, i+1, i-nx );
       if (iz < nz-1 && !vertexArray[i+nx].missing() )  // right/bottom
-        n[num++] = vertexArray.getNormal(i, i+nx, i+1 );
+        n[num++] = vertexArray.computeNormal(i, i+nx, i+1 );
     }
     if (ix > 0 && !vertexArray[i-1].missing() ) { 
       if (iz > 0 && !vertexArray[i-nx].missing() )     // left/top
-        n[num++] = vertexArray.getNormal(i, i-nx, i-1 );
+        n[num++] = vertexArray.computeNormal(i, i-nx, i-1 );
       if (iz < nz-1 && !vertexArray[i+nx].missing() )  // left/bottom
-        n[num++] = vertexArray.getNormal(i, i-1, i+nx );
+        n[num++] = vertexArray.computeNormal(i, i-1, i+nx );
     }
   }
   Vertex total(0.0f,0.0f,0.0f);

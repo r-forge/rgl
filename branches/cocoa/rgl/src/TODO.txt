@@ -1,3 +1,10 @@
+- getShapeName does strcpy all the time?! necessary?
+- support for multiple screens related to par3d/windowRect.
+- par3d/windowRect includes decoration frame from window manager or only content?
+- X11WindowImpl/setWindowRect: double XTranslate..?
+- add content/frame(outline) coordinates for windowRect?
+
+
 SHORT-TERM
 ==========
  - configure.win -> don't use copy just link with Rbitmap.dll

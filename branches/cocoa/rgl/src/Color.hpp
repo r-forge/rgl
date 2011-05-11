@@ -1,5 +1,5 @@
-#ifndef COLOR_HPP
-#define COLOR_HPP
+#ifndef RGL_COLOR_HPP
+#define RGL_COLOR_HPP
 
 //
 // CLASS
@@ -35,37 +35,7 @@ public:
   float data[4];
 };
 
-//
-// CLASS
-//   ColorArray
-// IMPLEMENTATION
-//   uses unsigned bytes as internal format for mass color datas
-//   carries alpha values
-//
+void StringToRGB8(const char* string, u8* colorptr);
 
-class ColorArray
-{
-public:
-  ColorArray();
-  ColorArray( ColorArray& src );
-  ColorArray( Color& bg, Color& fg );
-  ~ColorArray();
-//  void set( int ncolor, RColor* rcolors, u8 alpha=255 );
-  void set( int ncolor, char** colors, int nalpha, double* alphas );
-  void set( int ncolor, int* colors, int nalpha, double* alphas );
-  void useColor( int index ) const;
-  void useArray() const;
-  unsigned int getLength() const;
-  Color getColor( int index ) const;
-  void recycle( unsigned int newsize );
-  bool hasAlpha() const;
-private:
-  bool hint_alphablend;
-  unsigned int ncolor;
-  unsigned int nalpha;
-  u8* arrayptr;
-  friend class Material;
-};
-
-#endif // COLOR_HPP
+#endif // RGL_COLOR_HPP
 
