@@ -222,7 +222,6 @@ fi
 AC_ARG_ENABLE([ftgl],
 [  --disable-ftgl             compile without FTGL font support]
 )
-enable_ftgl="no"
 if test "x$enable_ftgl" != "xno"; then
   AC_CHECK_PROG([HAVE_FREETYPE_CONFIG],[freetype-config],[yes],[no])
   if test "x$HAVE_FREETYPE_CONFIG" = "xyes"; then
