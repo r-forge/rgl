@@ -4,23 +4,13 @@
 // Platform detection
 // ---------------------------------------------------------------------------
 #if defined(__APPLE__)
-# define RGL_COCOA
-
-#if 0
-# define RGL_OSX 1
-# if defined(RGL_USE_CARBON)
-#  define RGL_CARBON 1
-# else
-#  define RGL_X11 1
-# endif
-#endif
-
+#  ifndef RGL_X11
+#    define RGL_COCOA
+#  endif
+#elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+#  define RGL_W32
 #else
-# if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
-#  define RGL_W32 1
-# else
-#  define RGL_X11 1
-# endif
+#  define RGL_X11
 #endif
 // ---------------------------------------------------------------------------
 #endif //RGL_CONFIG_HPP

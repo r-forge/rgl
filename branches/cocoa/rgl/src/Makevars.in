@@ -1,0 +1,5 @@
+# Minimalistic rebirth of autoconf
+PKG_LIBS     = @LIBS@
+PKG_CXXFLAGS = @CXXFLAGS@
+PKG_CPPFLAGS = @CPPFLAGS@
+

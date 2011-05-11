@@ -1,2 +1,5 @@
-PKG_LDFLAGS=-framework Cocoa -framework OpenGL -framework GLU
+# Minimalistic rebirth of autoconf
+PKG_LIBS     =  -framework Cocoa -framework OpenGL
+PKG_CXXFLAGS = -g -O2
+PKG_CPPFLAGS = 
 
