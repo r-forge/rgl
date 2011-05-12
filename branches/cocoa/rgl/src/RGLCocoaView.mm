@@ -338,13 +338,37 @@ gui::GUIFactory* getGUIFactory()
   CGFloat y = [theEvent deltaY];
   CGFloat z = [theEvent deltaZ];
   std::cout << "scrollWheel: " << x << "," << y << "," << z << "\n"; 
+  // mWindowImpl->postWheelRotate(0,x);
+  // mWindowImpl->postWheelRotate(1,y);
+  // mWindowImpl->postWheelRotate(2,z);
 }
 
 /* Multi-touch gesture */
 
-- (void) rotateWithEvent:   (NSEvent *) theEvent DUMP(rotateWithEvent)
-- (void) magnifyWithEvent:  (NSEvent *) theEvent DUMP(magnifyWithEvent)
-- (void) swipeWithEvent:    (NSEvent *) theEvent DUMP(swipeWithEvent)
+- (void) rotateWithEvent:   (NSEvent *) theEvent
+{
+  float rotation = [theEvent rotation];
+  // float threshold = 0.0f; // [theEvent standardRotationThreshold];
+  std::cout << "rotateWithEvent: " << rotation << "\n"; // << "- standardRotationThreshold=" << threshold << "\n"; 
+  // mWindowImpl->postWheelRotate(3,rotation);
+}
+
+- (void) magnifyWithEvent:  (NSEvent *) theEvent
+{
+  CGFloat magnification = [theEvent magnification];
+
+  std::cout << "magnifyWithEvent: " << magnification << "\n";
+  // mWindowImpl->postWheelRotate(4, magnification);
+}
+
+- (void) swipeWithEvent:    (NSEvent *) theEvent
+{
+  CGFloat x = [theEvent deltaX];
+  CGFloat y = [theEvent deltaY];
+  std::cout << "swipeWithEvent: " << x << "," << y << "\n";
+  // if (x != 0.0f) mWindowImpl->postSwipe(0,x);
+  // if (y != 0.0f) mWindowImpl->postSwipe(1,y);
+}
 
 // - (void) mouseMoved:        (NSEvent *) theEvent DUMP(mouseMoved)
 #if 0

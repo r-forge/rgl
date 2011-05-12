@@ -208,4 +208,12 @@ struct PolarCoord
 
 typedef Vec4 Vertex4;
 
+
+//
+// Screen-Sphere Sensor Math (for Polar/Trackball navigation in RGLView):
+// 
+
+PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY);
+Vertex     screenToVector(int width, int height, int mouseX, int mouseY);
+
 #endif /* MATH_H */

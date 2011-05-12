@@ -80,6 +80,7 @@ public:
                           bool useFreeType) = 0;
   void getFonts(FontArray& outfonts, int nfonts, char** family, int* style, double* cex, 
                 bool useFreeType);
+  GLFont* getDefaultFont() { return fonts[0]; }
 
 protected:
   Window*      window;

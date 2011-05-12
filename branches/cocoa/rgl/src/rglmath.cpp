@@ -288,3 +288,84 @@ Vertex PolarCoord::vector() const {
     math::cos(p) * math::cos(t)
   );
 }
+
+
+//
+// FUNCTION
+//   screenToPolar
+//
+// DESCRIPTION
+//   screen space is the same as in OpenGL, starting 0,0 at left/bottom(!)
+//
+
+PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
+
+  float cubelen, cx,cy,dx,dy,r;
+
+  cubelen = (float) getMin(width,height);
+  r   = cubelen * 0.5f;
+
+  cx  = ((float)width)  * 0.5f;
+  cy  = ((float)height) * 0.5f;
+  dx  = ((float)mouseX) - cx;
+  dy  = ((float)mouseY) - cy;
+
+  //
+  // dx,dy = distance to center in pixels
+  //
+
+  dx = clamp(dx, -r,r);
+  dy = clamp(dy, -r,r);
+
+  //
+  // sin theta = dx / r
+  // sin phi   = dy / r
+  //
+  // phi   = arc sin ( sin theta )
+  // theta = arc sin ( sin phi   )
+  //
+
+  return PolarCoord(
+
+    math::rad2deg( math::asin( dx/r ) ),
+    math::rad2deg( math::asin( dy/r ) )
+    
+  );
+
+}
+
+
+Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
+
+    float radius = (float) getMax(width, height) * 0.5f;
+
+    float cx = ((float)width) * 0.5f;
+    float cy = ((float)height) * 0.5f;
+    float x  = (((float)mouseX) - cx)/radius;
+    float y  = (((float)mouseY) - cy)/radius;
+
+    // Make unit vector
+
+    float len = sqrt(x*x + y*y);
+    if (len > 1.0e-6) {
+        x = x/len;
+        y = y/len;
+    }
+    // Find length to first edge
+
+    float maxlen = math::sqrt(2.0f);
+
+    // zero length is vertical, max length is horizontal
+    float angle = (maxlen - len)/maxlen*math::pi<float>()/2.0f;
+
+    float z = math::sin(angle);
+
+    // renorm to unit length
+
+    len = math::sqrt(1.0f - z*z);
+    x = x*len;
+    y = y*len;
+
+    return Vertex(x, y, z);
+}
+
