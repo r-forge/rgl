@@ -52,7 +52,7 @@ RGLView::RGLView(Scene* in_scene)
 
 RGLView::~RGLView()
 {
-  for (int i=0; i<3; i++) 
+  for (int i=0; i<RGLVIEW_MAX_BUTTONS; i++) 
     if (cleanupCallback[i]) 
       (*cleanupCallback[i])(userData + 3*i);
 }
@@ -77,7 +77,7 @@ void RGLView::setWindowImpl(WindowImpl* impl) {
 #if defined HAVE_FREETYPE
   renderContext.font = impl->getFont("sans", 1, 1, true);
 #else
-  renderContext.font = impl->fonts[0];
+  renderContext.font = impl->getDefaultFont(); 
 #endif
 }
 
@@ -150,47 +150,43 @@ void RGLView::keyPress(int key)
 
 void RGLView::buttonPress(int button, int mouseX, int mouseY)
 {
-    Viewpoint* viewpoint = scene->getViewpoint();
-      if ( viewpoint->isInteractive() ) {
-	if (!drag) {
-	  drag = button;
-	  windowImpl->captureMouse(this);
-	  (this->*ButtonBeginFunc[button-1])(mouseX,mouseY);
-	}
-      }
+  Viewpoint* viewpoint = scene->getViewpoint();
+  if ( viewpoint->isInteractive() ) {
+    if (!drag) {
+      drag = button;
+      windowImpl->captureMouse(this);
+      (this->*ButtonBeginFunc[button-1])(mouseX,mouseY);
+    }
+  }
 }
 
 
 void RGLView::buttonRelease(int button, int mouseX, int mouseY)
 {
-  	if (drag == button) {
-	    windowImpl->releaseMouse();
-	    drag = 0;
-	    (this->*ButtonEndFunc[button-1])();
- 	}
+  if (drag == button) {
+    windowImpl->releaseMouse();
+    drag = 0;
+    (this->*ButtonEndFunc[button-1])();
+  }
 }
 
 void RGLView::mouseMove(int mouseX, int mouseY)
 {
-    if (drag) {
-  	mouseX = clamp(mouseX, 0, width-1);
-  	mouseY = clamp(mouseY, 0, height-1);
-
-  	(this->*ButtonUpdateFunc[drag-1])(mouseX,mouseY);
-    }
+  if (drag) {
+    mouseX = clamp(mouseX, 0, width-1);
+    mouseY = clamp(mouseY, 0, height-1);
+    (this->*ButtonUpdateFunc[drag-1])(mouseX,mouseY);
+  }
 }
-
-void RGLView::wheelRotate(int dir)
-{
-  Viewpoint* viewpoint = scene->getViewpoint();
-  
-  float zoom = viewpoint->getZoom();
 
 #define ZOOM_STEP  1.05f 
 #define ZOOM_PIXELLOGSTEP 0.02f
   
-  switch(dir)
-  {
+void RGLView::wheelRotate(int dir)
+{
+  Viewpoint* viewpoint = scene->getViewpoint();
+  float zoom = viewpoint->getZoom();
+  switch(dir) {
     case GUI_WheelForward:
       zoom *= ZOOM_STEP;
       break;
@@ -198,10 +194,8 @@ void RGLView::wheelRotate(int dir)
       zoom /= ZOOM_STEP;
       break;
   }
-
   zoom = clamp( zoom , ZOOM_MIN, ZOOM_MAX);
   viewpoint->setZoom(zoom);
-
   View::update();
 }
 
@@ -213,90 +207,11 @@ void RGLView::captureLost()
   }
 }
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // INTERACTIVE FEATURE
 //   adjustDirection
 //
-
-//
-// FUNCTION
-//   screenToPolar
-//
-// DESCRIPTION
-//   screen space is the same as in OpenGL, starting 0,0 at left/bottom(!)
-//
-
-static PolarCoord screenToPolar(int width, int height, int mouseX, int mouseY) {
-
-  float cubelen, cx,cy,dx,dy,r;
-
-  cubelen = (float) getMin(width,height);
-  r   = cubelen * 0.5f;
-
-  cx  = ((float)width)  * 0.5f;
-  cy  = ((float)height) * 0.5f;
-  dx  = ((float)mouseX) - cx;
-  dy  = ((float)mouseY) - cy;
-
-  //
-  // dx,dy = distance to center in pixels
-  //
-
-  dx = clamp(dx, -r,r);
-  dy = clamp(dy, -r,r);
-
-  //
-  // sin theta = dx / r
-  // sin phi   = dy / r
-  //
-  // phi   = arc sin ( sin theta )
-  // theta = arc sin ( sin phi   )
-  //
-
-  return PolarCoord(
-
-    math::rad2deg( math::asin( dx/r ) ),
-    math::rad2deg( math::asin( dy/r ) )
-    
-  );
-
-}
-
-static Vertex screenToVector(int width, int height, int mouseX, int mouseY) {
-
-    float radius = (float) getMax(width, height) * 0.5f;
-
-    float cx = ((float)width) * 0.5f;
-    float cy = ((float)height) * 0.5f;
-    float x  = (((float)mouseX) - cx)/radius;
-    float y  = (((float)mouseY) - cy)/radius;
-
-    // Make unit vector
-
-    float len = sqrt(x*x + y*y);
-    if (len > 1.0e-6) {
-        x = x/len;
-        y = y/len;
-    }
-    // Find length to first edge
-
-    float maxlen = math::sqrt(2.0f);
-
-    // zero length is vertical, max length is horizontal
-    float angle = (maxlen - len)/maxlen*math::pi<float>()/2.0f;
-
-    float z = math::sin(angle);
-
-    // renorm to unit length
-
-    len = math::sqrt(1.0f - z*z);
-    x = x*len;
-    y = y*len;
-
-    return Vertex(x, y, z);
-}
 
 void RGLView::trackballBegin(int mouseX, int mouseY)
 {
@@ -344,34 +259,27 @@ void RGLView::oneAxisUpdate(int mouseX, int mouseY)
 
 void RGLView::polarBegin(int mouseX, int mouseY)
 {
-	Viewpoint* viewpoint = scene->getViewpoint();
-
-  	camBase = viewpoint->getPosition();
-
-	dragBase = screenToPolar(width,height,mouseX,height-mouseY);
-
+  Viewpoint* viewpoint = scene->getViewpoint();
+  
+  camBase = viewpoint->getPosition();
+  dragBase = screenToPolar(width,height,mouseX,height-mouseY);
 }
 
 void RGLView::polarUpdate(int mouseX, int mouseY)
 {
-	Viewpoint* viewpoint = scene->getViewpoint();
-
-  dragCurrent = screenToPolar(width,height,mouseX,height-mouseY);
-
-  PolarCoord newpos = camBase - ( dragCurrent - dragBase );
-
-  newpos.phi = clamp( newpos.phi, -90.0f, 90.0f );
+  Viewpoint* viewpoint = scene->getViewpoint();
   
+  dragCurrent = screenToPolar(width,height,mouseX,height-mouseY);
+  PolarCoord newpos = camBase - ( dragCurrent - dragBase );
+  newpos.phi = clamp( newpos.phi, -90.0f, 90.0f );
   viewpoint->setPosition( newpos );
   View::update();
 }
 
 void RGLView::polarEnd()
 {
-
- //    Viewpoint* viewpoint = scene->getViewpoint();
- //    viewpoint->mergeMouseMatrix();
-
+ // Viewpoint* viewpoint = scene->getViewpoint();
+ // viewpoint->mergeMouseMatrix();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -390,15 +298,11 @@ void RGLView::adjustFOVBegin(int mouseX, int mouseY)
 void RGLView::adjustFOVUpdate(int mouseX, int mouseY)
 {
   Viewpoint* viewpoint = scene->getViewpoint();
-
+  
   int dy = mouseY - fovBaseY;
-
   float py = ((float)dy/(float)height) * 180.0f;
-
   viewpoint->setFOV( viewpoint->getFOV() + py );
-
   View::update();
-
   fovBaseY = mouseY;
 }
 

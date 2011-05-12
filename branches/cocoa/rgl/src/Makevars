@@ -1,5 +1,0 @@
-# Minimalistic rebirth of autoconf
-PKG_LIBS     =  -framework Cocoa -framework OpenGL -L/opt/local/lib -lfreetype -lz
-PKG_CXXFLAGS = -g -O2
-PKG_CPPFLAGS =  -DHAVE_FREETYPE -Iext/ftgl -I/opt/local/include/freetype2 -I/opt/local/include
-

@@ -23,6 +23,9 @@ typedef void (*userControlPtr)(void *userData, int mouseX, int mouseY);
 typedef void (*userControlEndPtr)(void *userData);
 typedef void (*userCleanupPtr)(void **userData);
 
+#define RGLVIEW_MAX_BUTTONS 3
+
+
 class RGLView : public View
 {
 public:
@@ -103,6 +106,8 @@ private:
   void polarUpdate(int mouseX, int mouseY);
   void polarEnd();
 
+// o DRAG FEATURE: trackball
+
   void trackballBegin(int mouseX, int mouseY);
   void trackballUpdate(int mouseX, int mouseY);
   void trackballEnd();
@@ -137,10 +142,10 @@ private:
   void userUpdate(int mouseX, int mouseY);
   void userEnd();
   
-  void* userData[9];
-  userControlPtr beginCallback[3], updateCallback[3];
-  userControlEndPtr endCallback[3];
-  userCleanupPtr cleanupCallback[3];
+  void* userData[RGLVIEW_MAX_BUTTONS*3]; /* begin, update and end x max buttons */
+  userControlPtr    beginCallback[RGLVIEW_MAX_BUTTONS], updateCallback[RGLVIEW_MAX_BUTTONS];
+  userControlEndPtr endCallback[RGLVIEW_MAX_BUTTONS];
+  userCleanupPtr cleanupCallback[RGLVIEW_MAX_BUTTONS];
   int activeButton;
   bool busy;
   
@@ -174,7 +179,7 @@ private:
 
   int  flags;
 
-  MouseModeID mouseMode[3];
+  MouseModeID mouseMode[RGLVIEW_MAX_BUTTONS];
   MouseSelectionID selectState;
   double  mousePosition[4];
 
