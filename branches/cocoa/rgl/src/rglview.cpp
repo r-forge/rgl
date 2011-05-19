@@ -109,6 +109,8 @@ void RGLView::paint(void) {
   SAVEGLERROR;  
   
   if (windowImpl->beginGL()) {
+
+
     scene->render(&renderContext);
     
 
