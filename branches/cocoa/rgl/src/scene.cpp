@@ -101,6 +101,10 @@ bool Scene::clear(TypeID typeID)
       bboxDeco = NULL;
       success = true;
       break;
+    case LAYER:
+      // deleteLayers();
+      // success = true;
+      break;
   }
   return success;
 }
@@ -118,6 +122,10 @@ void Scene::addShape(Shape* shape) {
     zsortShapes.push_back(shape);
   } else
     unsortedShapes.push_back(shape);
+}
+
+void Scene::addLayer(Layer* layer) {
+  mLayers.push_back(layer);
 }
 
 bool Scene::add(SceneNode* node)
@@ -142,6 +150,12 @@ bool Scene::add(SceneNode* node)
         Shape* shape = (Shape*) node;
         addShape(shape);
 
+        success = true;
+      }
+      break;
+    case LAYER:
+      {
+        addLayer( (Layer*) node );
         success = true;
       }
       break;
@@ -342,7 +356,6 @@ void Scene::render(RenderContext* renderContext)
   renderContext->scene     = this;
   renderContext->viewpoint = viewpoint;
 
-
   //
   // CLEAR BUFFERS
   //
@@ -425,9 +438,17 @@ void Scene::render(RenderContext* renderContext)
   // DISABLE Z-BUFFER FOR WRITING
   glDepthMask(GL_FALSE);
 
-  background->render(renderContext);
+  if (mLayers.size() > 0) {
+    int i;
+    for (i = 0 ; i < mLayers.size() ; ++i) {
+      mLayers[i]->renderGL();
+      SAVEGLERROR;
+    }
+  } else {
+    background->render(renderContext);
+    SAVEGLERROR;
+  }
 
-  SAVEGLERROR;
   
   //
   // RENDER MODEL

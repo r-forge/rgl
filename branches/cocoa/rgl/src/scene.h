@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "SceneNode.hpp"
-
 #include "geom.hpp"
 
 #include "String.hpp"
@@ -29,6 +28,7 @@
 #include "Viewpoint.hpp"
 #include "Background.hpp"
 #include "BBoxDeco.hpp"
+#include "Layer.hpp"
 
 class Scene {
 public:
@@ -111,6 +111,10 @@ private:
    * add shapes
    **/
   void addShape(Shape* shape);
+  /**
+   * add layer
+   **/
+  void addLayer(Layer* layer);
 
   // ---[ bounded slots ]----------------------------------------------------
   
@@ -126,6 +130,8 @@ private:
    * bounded decorator
    **/
   BBoxDeco*  bboxDeco;
+
+  std::vector<Layer*> mLayers;
 
   // ---[ stacks ]-----------------------------------------------------------
   
