@@ -48,7 +48,7 @@ public:
   double       getCEX()    { return cex;    }
   bool         isFreeType() { return useFreeType; }
   char const * getFontName() { return fontname; }
-protected:
+// protected:
   char*   family;
   int     style;
   double  cex;

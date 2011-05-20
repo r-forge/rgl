@@ -21,7 +21,7 @@ public:
   double width(const char* text);
   double width(const wchar_t* text);
   double height();
- private: 
+//  private: 
   GLuint listBase;
   GLuint firstGlyph;
   GLuint nglyph;

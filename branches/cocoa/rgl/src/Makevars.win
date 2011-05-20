@@ -1,0 +1,1 @@
+PKG_LIBS = -lgdi32 -lopengl32 -lglu32 
