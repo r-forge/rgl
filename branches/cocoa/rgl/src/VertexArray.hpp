@@ -24,5 +24,5 @@ protected:
   float* arrayptr;
 };
 
-#endif RGL_VERTEX_ARRAY_HPP
+#endif // RGL_VERTEX_ARRAY_HPP
 

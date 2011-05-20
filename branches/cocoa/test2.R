@@ -1,6 +1,8 @@
 library(rgl)
-quartz()
-dev.off()
+if (Sys.info()[["sysname"]] == "Darwin") {
+  quartz()
+  dev.off()
+}
 example(rgl.surface)
 library(rdyncall)
 dynport(GL)
