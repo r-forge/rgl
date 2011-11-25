@@ -6,10 +6,11 @@
   resize one or more rgl windows.
 }
 \usage{
-spin3d(dev = rgl.cur())
+spin3d(dev = rgl.cur(), ...)
 }
 \arguments{
-  \item{dev}{A vector of one or more rgl device numbers to control. }
+  \item{dev}{A vector of one or more rgl device numbers to control }
+  \item{...}{Arguments to pass to \code{\link{spinControl}} }
 }
 \author{ Ming Chen and Duncan Murdoch }
 \seealso{ \code{\link{spinControl}}}

@@ -1,7 +1,8 @@
 
-spinControl <- function(base, dev = rgl.cur()){
+spinControl <- function(base, dev = rgl.cur(), continue=FALSE,
+			speed=30, scale=100){
 
-	slider <- tclVar(100)
+	slider <- tclVar(speed)
 	getZooms <- function() {
 	 	old <- rgl.cur()
 	    	on.exit(rgl.set(old))
@@ -14,8 +15,8 @@ spinControl <- function(base, dev = rgl.cur()){
 	}
 	zooms <- getZooms()
 		
-	scale <- tclVar(100)
-	continuous <- tclVar(0)
+	scale <- tclVar(scale)
+	continuous <- tclVar(as.numeric(continue))
 	
 	buttonPress <- NULL
 	direction <- NULL
@@ -206,13 +207,12 @@ spinControl <- function(base, dev = rgl.cur()){
 }
 
 
-
-spin3d <- function(dev = rgl.cur()){
+spin3d <- function(dev = rgl.cur(), ...){
 
 	base <- tktoplevel()
 	tkwm.title(base, "Spin")
 	
-	spin <- spinControl(base, dev)		
+	spin <- spinControl(base, dev, ...)		
 
 	quit <- tkbutton(base,text="Quit", command=function()tkdestroy(base))
 

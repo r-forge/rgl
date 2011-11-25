@@ -25,6 +25,7 @@ History:
 0.4   \tab Compatibility with 2.0.0 tcltk package \cr
 0.5   \tab Added continuous rotation \cr
 0.6   \tab Added par3dsave \cr
+0.7   \tab Added parameters to \code{\link{spinControl}}, fixed startup \cr
 }
 
 Index:
