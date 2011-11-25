@@ -5,11 +5,15 @@
     This function may be used to embed a spin control in a TCL/TK window.
 }
 \usage{
-spinControl(base, dev = rgl.cur() )
+spinControl(base, dev = rgl.cur(), 
+	continue=FALSE, speed=30, scale=100 )
 }
 \arguments{
   \item{base}{The TCL/TK frame in which to insert this control.  }
   \item{dev}{A vector of one or more rgl device numbers to control. }
+  \item{continue}{Initial setting for continuous rotation checkbox. }
+  \item{speed}{Initial setting for speed slider. }
+  \item{scale}{Initial setting for scale slider. }
 }
 \author{ Ming Chen and Duncan Murdoch }
 \seealso{\code{\link{spin3d}}}
