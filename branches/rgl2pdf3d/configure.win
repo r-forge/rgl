@@ -1,0 +1,93 @@
+#
+# png pixmap support
+# test zlib and libpng libraries are available 
+#
+echo "  configure.win32..."
+
+# --- win32 base configuration -----------------------------------------------
+
+CPPFLAGS=
+CXXFLAGS="-fno-exceptions -fno-rtti"
+LIBS="-lgdi32 -lopengl32 -lglu32"
+
+# --- for pre 2.9.0 compatibility
+
+if test -z "$R_PACKAGE_DIR" ; then
+     R_PACKAGE_DIR=${DPKG}
+fi
+
+# --- libpng -----------------------------------------------------------------
+
+echo -n "  checking for zlib..."
+if [ -e "${R_HOME}/bin${R_ARCH_BIN}/Rzlib.dll" ]; then
+   CPPFLAGS="${CPPFLAGS} -I${R_HOME}/include "
+   LIBS="$LIBS -L${R_HOME}/bin${R_ARCH_BIN} -lRzlib "
+   havezlib=yes
+elif [ -e "${R_HOME}/src/extra/zlib/libz.a" ]; then
+   CPPFLAGS="${CPPFLAGS} -I${R_HOME}/src/extra/zlib "
+   LIBS="$LIBS -L${R_HOME}/src/extra/zlib -lz"
+   havezlib=yes
+else
+   havezlib=no
+fi
+echo ${havezlib}
+
+if [ "${havezlib}" = "yes" ]; then
+  echo -n "  checking for libpng..."
+  if [ -n "${HAVE_PNG}" ]; then
+    echo "yes"
+    CPPFLAGS="${CPPFLAGS} -DHAVE_PNG_H "
+    LIBS="$LIBS -lpng "
+  elif [ -e "${R_HOME}/src/gnuwin32/bitmap/libpng/libpng.a" ]; then
+    echo "yes"
+    CPPFLAGS="${CPPFLAGS} -DHAVE_PNG_H -I${R_HOME}/src/gnuwin32/bitmap/libpng "
+    LIBS="$LIBS -L${R_HOME}/src/gnuwin32/bitmap/libpng -lpng "
+  else
+    echo "no"
+  fi
+else
+  echo "  libpng requires zlib, so not installed."
+fi
+
+# --- freetype and ftgl ------------------------------------------------------
+
+if [ "${havezlib}" = "yes" ]; then
+  echo -n "  checking for freetype..."
+  if [ -n "$LIB_FREETYPE" ]; then
+    echo "yes, LIB_FREETYPE=$LIB_FREETYPE" 
+    mkdir -p $R_PACKAGE_DIR/libs${R_ARCH}
+    cp $LIB_FREETYPE/bin${R_ARCH_BIN}/freetype6.dll $R_PACKAGE_DIR/libs${R_ARCH}
+    if [ -e "${R_HOME}/bin${R_ARCH_BIN}/Rzlib.dll" ]; then
+      cp ${R_HOME}/bin${R_ARCH_BIN}/Rzlib.dll $R_PACKAGE_DIR/libs${R_ARCH}/zlib1.dll
+    else
+      echo "  Note:  freetype may require zlib1.dll"
+    fi
+    CPPFLAGS="${CPPFLAGS} -Iext/ftgl -I${LIB_FREETYPE}/include -I${LIB_FREETYPE}/include/freetype2 -DHAVE_FREETYPE"
+    LIBS="$LIBS -L$R_PACKAGE_DIR/libs${R_ARCH} -lfreetype6 "
+  else
+    echo "no, LIB_FREETYPE undefined"
+  fi
+else
+  echo "  freetype requires zlib, so not installed."
+fi
+
+# --- dump configuration -----------------------------------------------------
+# Debugging code removed -- cat was hanging on WinBuilder
+#cat <<EOF
+#---------- win32 configuration: ----------
+#PKG_CPPFLAGS = $CPPFLAGS
+#PKG_CXXFLAGS = $CXXFLAGS
+#PKG_LIBS     = $LIBS
+#------------------------------------------  
+#EOF
+
+# --- output Makevars --------------------------------------------------------
+
+sed \
+-e "s^@CPPFLAGS@^$CPPFLAGS^" \
+-e "s^@CXXFLAGS@^$CXXFLAGS^" \
+-e "s^@LIBS@^$LIBS^" \
+-e "s^@BUILD_AGL_TRUE@^#^" \
+-e "s^@C_VISIBILITY@^#^" \
+src/Makevars.in >src/Makevars
+
