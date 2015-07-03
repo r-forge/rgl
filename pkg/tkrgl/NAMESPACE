@@ -1,1 +1,5 @@
 export("par3dsave", "spinControl", "spin3d")
+importFrom("rgl", "rgl.cur", "par3d", "rgl.set", "rotationMatrix")
+importFrom("tcltk", "tktoplevel", "tkwm.title", "tklabel", "tkframe", 
+	   "tkbutton", "tkdestroy", "tkpack", "tkwait.window", "tclVar", 
+	   "tclObj", "tcl", "tkgrid", "tkbind", "tkcheckbutton", "tkscale")

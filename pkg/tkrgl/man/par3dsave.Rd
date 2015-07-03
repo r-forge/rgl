@@ -6,7 +6,8 @@ This function opens a modal dialog to allow particular views of an \code{rgl} sc
 to be saved.
 }
 \usage{
-par3dsave(params = c("userMatrix", "scale", "zoom", "FOV"), times = FALSE, dev = rgl.cur())
+par3dsave(params = c("userMatrix", "scale", "zoom", "FOV"),
+          times = FALSE, dev = rgl.cur())
 }
 \arguments{
   \item{params}{ Which parameters to save }
