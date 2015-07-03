@@ -1,11 +1,12 @@
 Package: tkrgl
-Title: TK widget tools for rgl package
-Version: 0.71
+Title: 'TK' Widget Tools for 'rgl'
+Version: 0.71.1255
 Author: Duncan Murdoch/Ming Chen
-Description: TK widget tools for rgl package 
+Description: Provides 'TK' widget tools for the 'rgl' package. 
 Maintainer: Duncan Murdoch <murdoch@stats.uwo.ca>
 License: GPL
-Depends: R (>= 2.0.0), tcltk, rgl (>= 0.66)
+Depends: R (>= 2.0.0)
+Imports: rgl (>= 0.66), tcltk
 SystemRequirements: rgl packages for rendering
 URL: http://www.stats.uwo.ca/faculty/murdoch
 BugReports: https://r-forge.r-project.org/projects/rgl/
