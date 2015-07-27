@@ -19,6 +19,10 @@ rglClass = function() {
     this.opaque = [];
     this.transparent = [];
     this.subscenes = [];
+    this.parents = [];
+    this.embeddings = [];
+    this.bboxes = [];
+    this.scales = [];
     this.vshaders = [];
     this.fshaders = [];
     this.flags = [];
@@ -216,6 +220,60 @@ rglClass = function() {
 	     this.vp = this.viewport[id];
 	     this.gl.viewport(this.vp[0], this.vp[1], this.vp[2], this.vp[3]);
 	     this.gl.scissor(this.vp[0], this.vp[1], this.vp[2], this.vp[3]);
+	   };
+
+	   this.setprMatrix = function(id) {
+       var embedding = this.embeddings[id].projection;
+       if (embedding === "replace")
+         this.prMatrix.makeIdentity();
+       else
+         this.setprMatrix(this.parents[id]);
+       if (embedding === "inherit")
+         return;
+       // This is based on the Frustum::enclose code from geom.cpp
+       var bbox = this.bboxes[id],
+           scale = this.scales[id],
+           ranges = [bbox[2]-bbox[1], bbox[4]-bbox[3], bbox[6]-bbox[5]]*
+                    scale/2,
+           radius = sqrt(sum(ranges^2))*1.1; // A bit bigger to handle labels
+       if (radius <= 0) radius = 1;
+       var observer = this.observers[id],
+           distance = observer[2],
+	         t = tan(this.FOV[id]*PI/360),
+	         near = distance - radius,
+	         far = distance + radius,
+	         hlen = t*near,
+	         aspect = this.vp[1]/this.vp[2],
+	         z = this.zoom[id];
+	     if (aspect > 1)
+	       this.prMatrix.frustum(-hlen*aspect*z, hlen*aspect*z,
+	                        -hlen*z, hlen*z, near, far);
+	     else
+	       this.prMatrix.frustum(-hlen*z, hlen*z,
+	                        -hlen*z/aspect, hlen*z/aspect,
+	                        near, far);
+	   };
+
+	   this.setmvMatrix = function(id) {
+	     var observer = this.observers[id];
+	     this.mvMatrix.makeIdentity();
+	     this.setModelMatrix(id);
+	     this.mvMatrix.translate(-observer[0], -observer[1], -observer[2]);
+
+	   };
+
+	   this.setModelMatrix = function(id) {
+	     var embedding = this.embeddings[id].model;
+	     if (embedding !== "inherit") {
+	       var scale = this.scales[id],
+	           bbox = this.bboxes[id],
+	           center = [bbox[0]+bbox[1], bbox[2]+bbox[3], bbox[4]+bbox[5]]/2;
+	       this.mvMatrix.translate(-center[0], -center[1], -center[2]);
+	       this.mvMatrix.scale(scale[0], scale[1], scale[2]);
+	       this.mvMatrix.multRight( this.userMatrix[id] );
+	     }
+	     if (embedding !== "replace")
+	       this.setModelMatrix(this.parents[id]);
 	   };
 
 }).call(rglClass.prototype);
