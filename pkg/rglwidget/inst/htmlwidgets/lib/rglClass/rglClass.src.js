@@ -151,7 +151,7 @@ rglClass = function() {
 
 	   this.loadImageToTexture = function(filename, texture) {
 	     var ctx = this.canvas.getContext("2d"),
-	         image = new Image()
+	         image = new Image(),
 	         self = this;
 
 	     image.onload = function() {
@@ -233,8 +233,9 @@ rglClass = function() {
        // This is based on the Frustum::enclose code from geom.cpp
        var bbox = this.bboxes[id],
            scale = this.scales[id],
-           ranges = [bbox[2]-bbox[1], bbox[4]-bbox[3], bbox[6]-bbox[5]]*
-                    scale/2,
+           ranges = [(bbox[1]-bbox[0])*scale[0]/2,
+                     (bbox[3]-bbox[2])*scale[1]/2,
+                     (bbox[5]-bbox[4])*scale[2]/2],
            radius = sqrt(sum(ranges^2))*1.1; // A bit bigger to handle labels
        if (radius <= 0) radius = 1;
        var observer = this.observers[id],
@@ -267,7 +268,9 @@ rglClass = function() {
 	     if (embedding !== "inherit") {
 	       var scale = this.scales[id],
 	           bbox = this.bboxes[id],
-	           center = [bbox[0]+bbox[1], bbox[2]+bbox[3], bbox[4]+bbox[5]]/2;
+	           center = [(bbox[0]+bbox[1])/2,
+	                     (bbox[2]+bbox[3])/2,
+	                     (bbox[4]+bbox[5])/2];
 	       this.mvMatrix.translate(-center[0], -center[1], -center[2]);
 	       this.mvMatrix.scale(scale[0], scale[1], scale[2]);
 	       this.mvMatrix.multRight( this.userMatrix[id] );
