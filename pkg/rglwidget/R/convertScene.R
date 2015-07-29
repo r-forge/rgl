@@ -358,8 +358,7 @@ convertScene <- function(scene,
 		list(vertex = vertex, fragment = fragment)
 	}
 
-
-	setUser <- function() {
+	initResult <- function() {
 		subsceneids <- rgl.ids("subscene", subscene = 0)$id
 		save <- currentSubscene3d()
 		on.exit(useSubscene3d(save))
@@ -398,124 +397,7 @@ convertScene <- function(scene,
 		result
 	}
 
-	setprMatrix <- function(subsceneid) {
-		info <- subsceneInfo(subsceneid)
-		embedding <- info$embeddings["projection"]
-		if (embedding == "replace")
-			result <-
-			'	     this.prMatrix.makeIdentity();'
-		else
-			result <- setprMatrix(info$parent);
-		if (embedding == "inherit")
-			return(result)
-
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
-
-		useSubscene3d(subsceneid)
-
-		# This is based on the Frustum::enclose code from geom.cpp
-		bbox <- par3d("bbox")
-		scale <- par3d("scale")
-		ranges <- c(bbox[2]-bbox[1], bbox[4]-bbox[3], bbox[6]-bbox[5])*scale/2
-		radius <- sqrt(sum(ranges^2))*1.1 # A bit bigger to handle labels
-		if (radius <= 0) radius <- 1
-		observer <- par3d("observer")
-		distance <- observer[3]
-		c(result, subst(
-			'	     var radius = %radius%,
-			distance = %distance%,
-			t = tan(this.FOV[%id%]*PI/360),
-			near = distance - radius,
-			far = distance + radius,
-			hlen = t*near,
-			aspect = this.vp[2]/this.vp[3],
-			z = this.zoom[%id%];
-			if (aspect > 1)
-			this.prMatrix.frustum(-hlen*aspect*z, hlen*aspect*z,
-			-hlen*z, hlen*z, near, far);
-			else
-			this.prMatrix.frustum(-hlen*z, hlen*z,
-			-hlen*z/aspect, hlen*z/aspect,
-			near, far);',
-			prefix, id = subsceneid, radius, distance))
-	}
-
-	setmvMatrix <- function(subsceneid) {
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
-
-		useSubscene3d(subsceneid)
-		observer <- par3d("observer")
-
-		c('
-		  this.mvMatrix.makeIdentity();',
-		  setmodelMatrix(subsceneid),
-		  subst(
-		  	'         this.mvMatrix.translate(%x%, %y%, %z%);',
-		  	x = -observer[1], y = -observer[2], z = -observer[3]))
-	}
-
-	setmodelMatrix <- function(subsceneid) {
-		info <- subsceneInfo(subsceneid)
-		embedding <- info$embeddings["model"]
-
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
-
-		useSubscene3d(subsceneid)
-
-		if (embedding != "inherit") {
-			scale <- par3d("scale")
-			bbox <- par3d("bbox")
-			center <- c(bbox[1]+bbox[2], bbox[3]+bbox[4], bbox[5]+bbox[6])/2
-			result <- subst(
-				'	     this.mvMatrix.translate( %cx%, %cy%, %cz% );
-				this.mvMatrix.scale( %sx%, %sy%, %sz% );
-				this.mvMatrix.multRight( %prefix%rgl.userMatrix[%id%] );',
-				prefix, id = subsceneid,
-				cx=-center[1], cy=-center[2], cz=-center[3],
-				sx=scale[1],   sy=scale[2],   sz=scale[3])
-		} else result <- character(0)
-
-		if (embedding != "replace")
-			result <- c(result, setmodelMatrix(info$parent))
-
-		result
-	}
-
-	setnormMatrix <- function(subsceneid) {
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
-
-		recurse <- function(subsceneid) {
-			info <- subsceneInfo(subsceneid)
-			embedding <- info$embeddings["model"]
-
-			useSubscene3d(subsceneid)
-			if (embedding != "inherit") {
-				scale <- par3d("scale")
-				result <- subst(
-					'	     normMatrix.scale( %sx%, %sy%, %sz% );
-					normMatrix.multRight( %prefix%rgl.userMatrix[%id%] );',
-					prefix, id = subsceneid,
-					sx=1/scale[1], sy=1/scale[2], sz=1/scale[3])
-			} else result <- character(0)
-
-			if (embedding != "replace")
-				result <- c(result, recurse(info$parent))
-			result
-		}
-		c('
-		  normMatrix.makeIdentity();',
-		  recurse(subsceneid))
-	}
-
-	setprmvMatrix <-
-		'	     this.prmvMatrix = new CanvasMatrix4( this.mvMatrix );
-	this.prmvMatrix.multRight( this.prMatrix );'
-
-	init <- function(id, type, flags) {
+	initObj <- function(id, type, flags) {
 		is_indexed <- flags["is_indexed"]
 		mat <- rgl.getmaterial(id=id)
 		is_lit <- flags["is_lit"]
@@ -535,28 +417,13 @@ convertScene <- function(scene,
 			fshader <- paste(gsub("\n", "\\\\n", shaders$fragment, fixed = TRUE),
 					 collapse = "\\\\n")
 		}
-		result <- subst(
-			'
-			// ****** %type% object %id% ******
-			this.flags[%id%] = %flags%;', type, id, flags = numericFlags(flags))
-		if (!sprites_3d && !is_clipplanes)
-			result <- c(result,
-				    if (flags["reuse"]) subst(
-				    	'           this.vshaders[%id%] = %thisprefix%rgl.vshaders[%id%];
-				    	this.fshaders[%id%] = %thisprefix%rgl.fshaders[%id%];',
-				    	thisprefix, id)
-				    else subst(
-				    	'           this.vshaders[%id%] = "%vshader%";
-				    	this.fshaders[%id%] = "%fshader%";', id, vshader, fshader),
+		result$flags[id] <<- numericFlags(flags)
 
-				    subst(
-				    	'           this.prog[%id%]  = gl.createProgram();
-				    	gl.attachShader(this.prog[%id%], this.getShader( gl, gl.VERTEX_SHADER, this.vshaders[%id%] ));
-				    	gl.attachShader(this.prog[%id%], this.getShader( gl, gl.FRAGMENT_SHADER, this.fshaders[%id%] ));
-				    	//  Force aPos to location 0, aCol to location 1
-				    	gl.bindAttribLocation(this.prog[%id%], 0, "aPos");
-				    	gl.bindAttribLocation(this.prog[%id%], 1, "aCol");
-				    	gl.linkProgram(this.prog[%id%]);', thisprefix, id))
+		if (!sprites_3d && !is_clipplanes)
+			if (!flags["reuse"]) {
+			  result$vshaders[id] = vshader
+			  result$fshaders[id] = fshader
+			}
 
 		nv <- rgl.attrib.count(id, "vertices")
 		if (nv)
@@ -594,11 +461,7 @@ convertScene <- function(scene,
 			offsets <- rgl.attrib(id, "offsets")
 			stopifnot(NCOL(values) == 3)
 			values <- cbind(values, offsets)
-			result <- c(result,subst(
-				'	   this.vClipplane[%id%]=[', id),
-				inRows(values, 4, leadin='	   '),
-				'	   ];
-				')
+			result$vClipplane[id] <<- values
 			return(result)
 		}
 
@@ -637,14 +500,8 @@ convertScene <- function(scene,
 			oofs <- NCOL(values)
 			values <- cbind(values, refs)
 			nv <- nv*4
-			result <- c(result,
-				    '	   texts = [',
-				    paste('	    "', texts, '"', sep="", collapse=",\n"),
-				    '	   ];',
-
-				    subst(
-				    	'	   texinfo = drawTextToCanvas(texts, %cex%);',
-				    	cex=cex[1], id))
+			result$texts[id] <<- texts
+			result$cexs[id] <<- cex
 		}
 
 		if (type == "sprites") {
@@ -659,16 +516,6 @@ convertScene <- function(scene,
 				nv <- nv*4
 			}
 		}
-
-		if (fixed_quads && !sprites_3d) result <- c(result, subst(
-			'	   this.ofsLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aOfs");',
-			id))
-
-		if (sprite_3d) result <- c(result, subst(
-			'	   this.origLoc[%id%] = gl.getUniformLocation(this.prog[%id%], "uOrig");
-			this.sizeLoc[%id%] = gl.getUniformLocation(this.prog[%id%], "uSize");
-			this.usermatLoc[%id%] = gl.getUniformLocation(this.prog[%id%], "usermat");',
-			id))
 
 		if (has_texture) {
 			tofs <- NCOL(values)
@@ -693,25 +540,6 @@ convertScene <- function(scene,
 				texid <- prefixes$id[i[1]]
 		} else
 			load_texture <- FALSE
-
-		if (load_texture || type == "text") result <- c(result, subst(
-			'	   this.texture[%id%] = gl.createTexture();
-			this.texLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aTexcoord");
-			this.sampler[%id%] = gl.getUniformLocation(this.prog[%id%],"uSampler");',
-			id))
-
-		if (load_texture)
-			result <- c(result, subst(
-				'	   loadImageToTexture("%texprefix%texture%texid%.png", this.texture[%id%]);',
-				id, texprefix, texid))
-		else if (has_texture)  # just reuse the existing texture
-			result <- c(result, subst(
-				'	   this.texture[%id%] = this.texture[%texid%];',
-				id, texid))
-
-		if (type == "text") result <- c(result, subst(
-			'	   handleLoadedTexture(this.texture[%id%], document.getElementById("%prefix%textureCanvas"));',
-			prefix, id))
 
 		stride <- 3
 		nc <- rgl.attrib.count(id, "colors")
@@ -753,53 +581,14 @@ convertScene <- function(scene,
 
 		stopifnot(stride == NCOL(values))
 
-		result <- c(result,
-			    subst(
-			    	'	   this.offsets[%id%]={vofs:0, cofs:%cofs%, nofs:%nofs%, radofs:%radofs%, oofs:%oofs%, tofs:%tofs%, stride:%stride%};',
-			    	id, cofs, nofs, radofs, oofs, tofs, stride),
+		result$offsets[id] = c(vofs=0, cofs=cofs, nofs=nofs, radofs=radofs, oofs=oofs, tofs=tofs, stride=stride)
 
-			    if (sprites_3d) subst(
-			    	'	   this.origsize[%id%]=new Float32Array([', id)
-			    else if (!flags["reuse"])
-			    	'	   v=new Float32Array([',
-			    if (!flags["reuse"])
-			    	c(inRows(values, stride, leadin='	   '),
-			    	  '	   ]);'),
-
-			    if (sprites_3d) c(subst(
-			    	'	   this.userMatrix[%id%] = new CanvasMatrix4([', id),
-			    	inRows(rgl.attrib(id, "usermatrix"), 4, leadin='	   '),
-			    	'	   ]);'),
-
-			    if (type == "text" && !flags["reuse"]) subst(
-			    	'	   for (i=0; i<%len%; i++)
-			    	for (j=0; j<4; j++) {
-			    	ind = this.offsets[%id%].stride*(4*i + j) + this.offsets[%id%].tofs;
-			    	v[ind+2] = 2*(v[ind]-v[ind+2])*texinfo.widths[i];
-			    	v[ind+3] = 2*(v[ind+1]-v[ind+3])*texinfo.textHeight;
-			    	v[ind] *= texinfo.widths[i]/texinfo.canvasX;
-			    	v[ind+1] = 1.0-(texinfo.offset + i*texinfo.skip -
-			    	v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
-			    	}', id, len=length(texts)),
-
-			    if (!sprites_3d && !flags["reuse"]) subst(
-			    	'	   this.values[%id%] = v;',
-			    	id),
-
-			    if (!sprites_3d && flags["reuse"]) subst(
-			    	'	   this.values[%id%] = %thisprefix%rgl.values[%id%];',
-			    	id, thisprefix),
-
-			    if (is_lit && !fixed_quads && !sprites_3d) subst(
-			    	'	   this.normLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aNorm");',
-			    	id),
-			    if (clipplanes && !sprites_3d) c(subst(
-			    	'	   this.clipLoc[%id%] = [];', id),
-			    	subst(paste0(
-			    		'	   this.clipLoc[%id%][', seq_len(clipplanes)-1, '] = gl.getUniformLocation(this.prog[%id%], "vClipplane', seq_len(clipplanes), '");'),
-			    		id))
-			    )
-
+		if (sprites_3d && !reuse)
+      result$origsize[id] <<- values
+		else if (!flags["reuse"])
+		  result$values[id] <<- values
+		if (sprites_3d)
+      result$userMatrix[id] <<- rgl.attrib(id, "usermatrix")
 
 		if (is_indexed) {
 			if (type %in% c("quads", "text", "sprites") && !sprites_3d) {
@@ -821,47 +610,11 @@ convertScene <- function(scene,
 			}
 
 			if (depth_sort) {
-				result <- c(result, subst(
-					'	   this.centers[%id%] = new Float32Array([', id),
-					inRows(rgl.attrib(id, "centers"), 3, leadin='	   '),
-					'	   ]);')
-
-				fname <- subst("this.f[%id%]", id)
-				drawtype <- "DYNAMIC_DRAW"
-			} else {
-				fname <- "f"
-				drawtype <- "STATIC_DRAW"
+				result$centers[id] <<- rgl.attrib(id, "centers")
+        result$f[id] <<- f
 			}
-
-			result <- c(result, subst(
-				'	   %fname%=new Uint16Array([',
-				fname),
-				inRows(c(f), frowsize, leadin='	   '),
-				'	   ]);')
 		}
-		result <- c(result,
-			    if (type != "spheres" && !sprites_3d) subst(
-			    	'	   this.buf[%id%] = gl.createBuffer();
-			    	gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[%id%]);
-			    	gl.bufferData(gl.ARRAY_BUFFER, this.values[%id%], gl.STATIC_DRAW);',
-			    	id),
-			    if (is_indexed && type != "spheres" && !sprites_3d) subst(
-			    	'	   this.ibuf[%id%] = gl.createBuffer();
-			    	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[%id%]);
-			    	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, %fname%, gl.%drawtype%);',
-			    	id, fname, drawtype),
-			    if (!sprites_3d && !is_clipplanes) subst(
-			    	'	   this.mvMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"mvMatrix");
-			    	this.prMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"prMatrix");',
-			    	id),
-			    if (type == "text") subst(
-			    	'	   this.textScaleLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"textScale");',
-			    	id),
-			    if (is_lit && !sprites_3d) subst(
-			    	'	   this.normMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"normMatrix");',
-			    	id)
-		)
-		c(result, '')
+
 	}
 
 	draw <- function(id, type, flags) {
