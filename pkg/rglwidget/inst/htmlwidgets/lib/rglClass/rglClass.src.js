@@ -258,12 +258,12 @@ rglClass = function() {
 	   this.setmvMatrix = function(id) {
 	     var observer = this.observers[id];
 	     this.mvMatrix.makeIdentity();
-	     this.setModelMatrix(id);
+	     this.setmodelMatrix(id);
 	     this.mvMatrix.translate(-observer[0], -observer[1], -observer[2]);
 
 	   };
 
-	   this.setModelMatrix = function(id) {
+	   this.setmodelMatrix = function(id) {
 	     var embedding = this.embeddings[id].model;
 	     if (embedding !== "inherit") {
 	       var scale = this.scales[id],
@@ -276,7 +276,265 @@ rglClass = function() {
 	       this.mvMatrix.multRight( this.userMatrix[id] );
 	     }
 	     if (embedding !== "replace")
-	       this.setModelMatrix(this.parents[id]);
+	       this.setmodelMatrix(this.parents[id]);
 	   };
 
+	   this.setnormMatrix = function(subsceneid) {
+	     var self = this;
+	     var recurse = function(id) {
+	       var embedding = self.embeddings[id].model;
+         if (embedding !== "inherit") {
+           var scale = self.scales[id];
+           self.normMatrix.scale(scale[0], scale[1], scale[2]);
+           self.normMatrix.multRight(self.userMatrix[id]);
+         }
+         if (embedding !== "replace")
+           recurse(self.parents[id]);
+       };
+       self.normMatrix.makeIdentity();
+       recurse(subsceneid);
+	   };
+
+	   this.setprmvMatrix = function() {
+	     this.prmvMatrix = new CanvasMatrix4( this.mvMatrix );
+	     this.prmvMatrix.multRight( this.prMatrix );
+	   };
+
+     this.initObj = function(id) {
+		   var is_indexed = this.flags[id] & this.f_is_indexed,
+           is_lit = this.flags[id] & this.f_is_lit,
+		       has_texture = this.flags[id] & this.f_has_texture,
+		       fixed_quads = this.flags[id] & this.f_fixed_quads,
+		       depth_sort = this.flags[id] & this.f_depth_sort,
+		       sprites_3d = this.flags[id] & this.f_sprites_3d,
+		       sprite_3d = this.flags[id] & this.f_sprite_3d,
+		       is_clipplanes = this.types[id] === "clipplanes",
+		       reuse = this.flags[id] & this.f_reuse,
+		       gl = this.gl;
+
+		if (!sprites_3d && !is_clipplanes) {
+			this.prog[id] = gl.createProgram();
+			gl.attachShader(this.prog[id], this.getShader( gl, gl.VERTEX_SHADER,                       this.vshaders[id] ));
+			gl.attachShader(this.prog[id], this.getShader( gl, gl.FRAGMENT_SHADE,
+			                this.fshaders[id] ));
+			//  Force aPos to location 0, aCol to location 1
+			gl.bindAttribLocation(this.prog[id], 0, "aPos");
+			gl.bindAttribLocation(this.prog[id], 1, "aCol");
+			gl.linkProgram(this.prog[id]);
+		}
+
+		if (type === "clipplanes") {
+			return();
+		}
+
+		if (type === "text") {
+      var texinfo = drawTextToCanvas(texts, this.cexs[id]);
+		}
+
+		if (fixed_quads && !sprites_3d)
+		  this.ofsLoc[id] = gl.getAttribLocation(this.prog[id], "aOfs");
+
+		if (sprite_3d) {
+			this.origLoc[id] = gl.getUniformLocation(this.prog[id], "uOrig");
+			this.sizeLoc[id] = gl.getUniformLocation(this.prog[id], "uSize");
+			this.usermatLoc[id] = gl.getUniformLocation(this.prog[id], "usermat");
+		}
+
+		DONE TO HERE
+
+		if (has_texture) {
+			tofs <- NCOL(values)
+			if (type != "sprites")
+				texcoords <- rgl.attrib(id, "texcoords")
+			if (!sprites_3d)
+				values <- cbind(values, texcoords)
+			if (mat$texture %in% prefixes$texture) {
+				i <- which(mat$texture == prefixes$texture)[1]
+				texprefix <- prefixes$prefix[i]
+				texid <- prefixes$id[i]
+			} else {
+				texprefix <- prefix
+				texid <- id
+				file.copy(mat$texture, file.path(dir, paste(texprefix, "texture", texid, ".png", sep="")))
+			}
+			i <- which(prefixes$id == id & prefixes$prefix == prefix)
+			prefixes$texture[i] <<- mat$texture
+			i <- which(mat$texture == prefixes$texture & prefix == prefixes$prefix)
+			load_texture <- length(i) < 2 # first time loaded in this scene
+			if (!load_texture)
+				texid <- prefixes$id[i[1]]
+		} else
+			load_texture <- FALSE
+
+		if (load_texture || type == "text") result <- c(result, subst(
+			'	   this.texture[%id%] = gl.createTexture();
+			this.texLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aTexcoord");
+			this.sampler[%id%] = gl.getUniformLocation(this.prog[%id%],"uSampler");',
+			id))
+
+		if (load_texture)
+			result <- c(result, subst(
+				'	   loadImageToTexture("%texprefix%texture%texid%.png", this.texture[%id%]);',
+				id, texprefix, texid))
+		else if (has_texture)  # just reuse the existing texture
+			result <- c(result, subst(
+				'	   this.texture[%id%] = this.texture[%texid%];',
+				id, texid))
+
+		if (type == "text") result <- c(result, subst(
+			'	   handleLoadedTexture(this.texture[%id%], document.getElementById("%prefix%textureCanvas"));',
+			prefix, id))
+
+		stride <- 3
+		nc <- rgl.attrib.count(id, "colors")
+		if (nc > 1) {
+			cofs <- stride
+			stride <- stride + 4
+		} else
+			cofs <- -1
+
+		nn <- rgl.attrib.count(id, "normals")
+		if (nn > 0) {
+			nofs <- stride
+			stride <- stride + 3
+		} else
+			nofs <- -1
+
+		if (type == "spheres") {
+			radofs <- stride
+			stride <- stride + 1
+		} else
+			radofs <- -1
+
+		if (type == "sprites" && !sprites_3d) {
+			oofs <- stride
+			stride <- stride + 2
+		} else
+			oofs <- -1
+
+		if (has_texture || type == "text") {
+			tofs <- stride
+			stride <- stride + 2
+		} else
+			tofs <- -1
+
+		if (type == "text") {
+			oofs <- stride
+			stride <- stride + 2
+		}
+
+		stopifnot(stride == NCOL(values))
+
+		result <- c(result,
+			    subst(
+			    	'	   this.offsets[%id%]={vofs:0, cofs:%cofs%, nofs:%nofs%, radofs:%radofs%, oofs:%oofs%, tofs:%tofs%, stride:%stride%};',
+			    	id, cofs, nofs, radofs, oofs, tofs, stride),
+
+			    if (sprites_3d) subst(
+			    	'	   this.origsize[%id%]=new Float32Array([', id)
+			    else if (!flags["reuse"])
+			    	'	   v=new Float32Array([',
+			    if (!flags["reuse"])
+			    	c(inRows(values, stride, leadin='	   '),
+			    	  '	   ]);'),
+
+			    if (sprites_3d) c(subst(
+			    	'	   this.userMatrix[%id%] = new CanvasMatrix4([', id),
+			    	inRows(rgl.attrib(id, "usermatrix"), 4, leadin='	   '),
+			    	'	   ]);'),
+
+			    if (type == "text" && !flags["reuse"]) subst(
+			    	'	   for (i=0; i<%len%; i++)
+			    	for (j=0; j<4; j++) {
+			    	ind = this.offsets[%id%].stride*(4*i + j) + this.offsets[%id%].tofs;
+			    	v[ind+2] = 2*(v[ind]-v[ind+2])*texinfo.widths[i];
+			    	v[ind+3] = 2*(v[ind+1]-v[ind+3])*texinfo.textHeight;
+			    	v[ind] *= texinfo.widths[i]/texinfo.canvasX;
+			    	v[ind+1] = 1.0-(texinfo.offset + i*texinfo.skip -
+			    	v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
+			    	}', id, len=length(texts)),
+
+			    if (!sprites_3d && !flags["reuse"]) subst(
+			    	'	   this.values[%id%] = v;',
+			    	id),
+
+			    if (!sprites_3d && flags["reuse"]) subst(
+			    	'	   this.values[%id%] = %thisprefix%rgl.values[%id%];',
+			    	id, thisprefix),
+
+			    if (is_lit && !fixed_quads && !sprites_3d) subst(
+			    	'	   this.normLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aNorm");',
+			    	id),
+			    if (clipplanes && !sprites_3d) c(subst(
+			    	'	   this.clipLoc[%id%] = [];', id),
+			    	subst(paste0(
+			    		'	   this.clipLoc[%id%][', seq_len(clipplanes)-1, '] = gl.getUniformLocation(this.prog[%id%], "vClipplane', seq_len(clipplanes), '");'),
+			    		id))
+			    )
+
+
+		if (is_indexed) {
+			if (type %in% c("quads", "text", "sprites") && !sprites_3d) {
+				v1 <- 4*(seq_len(nv/4) - 1)
+				v2 <- v1 + 1
+				v3 <- v2 + 1
+				v4 <- v3 + 1
+				f <- rbind(v1, v2, v3, v1, v3, v4)
+				frowsize <- 6
+			} else if (type == "triangles") {
+				v1 <- 3*(seq_len(nv/3) - 1)
+				v2 <- v1 + 1
+				v3 <- v2 + 1
+				f <- rbind(v1, v2, v3)
+				frowsize <- 3
+			} else if (type == "spheres") {
+				f <- seq_len(nv)-1
+				frowsize <- 8 # not used for depth sorting, just for display
+			}
+
+			if (depth_sort) {
+				result <- c(result, subst(
+					'	   this.centers[%id%] = new Float32Array([', id),
+					inRows(rgl.attrib(id, "centers"), 3, leadin='	   '),
+					'	   ]);')
+
+				fname <- subst("this.f[%id%]", id)
+				drawtype <- "DYNAMIC_DRAW"
+			} else {
+				fname <- "f"
+				drawtype <- "STATIC_DRAW"
+			}
+
+			result <- c(result, subst(
+				'	   %fname%=new Uint16Array([',
+				fname),
+				inRows(c(f), frowsize, leadin='	   '),
+				'	   ]);')
+		}
+		result <- c(result,
+			    if (type != "spheres" && !sprites_3d) subst(
+			    	'	   this.buf[%id%] = gl.createBuffer();
+			    	gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[%id%]);
+			    	gl.bufferData(gl.ARRAY_BUFFER, this.values[%id%], gl.STATIC_DRAW);',
+			    	id),
+			    if (is_indexed && type != "spheres" && !sprites_3d) subst(
+			    	'	   this.ibuf[%id%] = gl.createBuffer();
+			    	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[%id%]);
+			    	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, %fname%, gl.%drawtype%);',
+			    	id, fname, drawtype),
+			    if (!sprites_3d && !is_clipplanes) subst(
+			    	'	   this.mvMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"mvMatrix");
+			    	this.prMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"prMatrix");',
+			    	id),
+			    if (type == "text") subst(
+			    	'	   this.textScaleLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"textScale");',
+			    	id),
+			    if (is_lit && !sprites_3d) subst(
+			    	'	   this.normMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"normMatrix");',
+			    	id)
+		)
+		c(result, '')
+	}
+
+     }
 }).call(rglClass.prototype);
