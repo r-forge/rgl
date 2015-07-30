@@ -280,8 +280,8 @@ rglClass = function() {
 	   };
 
 	   this.setnormMatrix = function(subsceneid) {
-	     var self = this;
-	     var recurse = function(id) {
+	     var self = this,
+	         recurse = function(id) {
 	       var embedding = self.embeddings[id].model;
          if (embedding !== "inherit") {
            var scale = self.scales[id];
@@ -310,7 +310,8 @@ rglClass = function() {
 		       sprite_3d = this.flags[id] & this.f_sprite_3d,
 		       is_clipplanes = this.types[id] === "clipplanes",
 		       reuse = this.flags[id] & this.f_reuse,
-		       gl = this.gl;
+		       gl = this.gl,
+		       texinfo, drawtype, f;
 
 		if (!sprites_3d && !is_clipplanes) {
 			this.prog[id] = gl.createProgram();
@@ -328,11 +329,12 @@ rglClass = function() {
 		}
 
 		if (type === "text") {
-      var texinfo = drawTextToCanvas(texts, this.cexs[id]);
+      texinfo = drawTextToCanvas(texts, this.cexs[id]);
 		}
 
-		if (fixed_quads && !sprites_3d)
+		if (fixed_quads && !sprites_3d) {
 		  this.ofsLoc[id] = gl.getAttribLocation(this.prog[id], "aOfs");
+		}
 
 		if (sprite_3d) {
 			this.origLoc[id] = gl.getUniformLocation(this.prog[id], "uOrig");
@@ -340,201 +342,93 @@ rglClass = function() {
 			this.usermatLoc[id] = gl.getUniformLocation(this.prog[id], "usermat");
 		}
 
-		DONE TO HERE
-
-		if (has_texture) {
-			tofs <- NCOL(values)
-			if (type != "sprites")
-				texcoords <- rgl.attrib(id, "texcoords")
-			if (!sprites_3d)
-				values <- cbind(values, texcoords)
-			if (mat$texture %in% prefixes$texture) {
-				i <- which(mat$texture == prefixes$texture)[1]
-				texprefix <- prefixes$prefix[i]
-				texid <- prefixes$id[i]
-			} else {
-				texprefix <- prefix
-				texid <- id
-				file.copy(mat$texture, file.path(dir, paste(texprefix, "texture", texid, ".png", sep="")))
-			}
-			i <- which(prefixes$id == id & prefixes$prefix == prefix)
-			prefixes$texture[i] <<- mat$texture
-			i <- which(mat$texture == prefixes$texture & prefix == prefixes$prefix)
-			load_texture <- length(i) < 2 # first time loaded in this scene
-			if (!load_texture)
-				texid <- prefixes$id[i[1]]
-		} else
-			load_texture <- FALSE
-
-		if (load_texture || type == "text") result <- c(result, subst(
-			'	   this.texture[%id%] = gl.createTexture();
-			this.texLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aTexcoord");
-			this.sampler[%id%] = gl.getUniformLocation(this.prog[%id%],"uSampler");',
-			id))
-
-		if (load_texture)
-			result <- c(result, subst(
-				'	   loadImageToTexture("%texprefix%texture%texid%.png", this.texture[%id%]);',
-				id, texprefix, texid))
-		else if (has_texture)  # just reuse the existing texture
-			result <- c(result, subst(
-				'	   this.texture[%id%] = this.texture[%texid%];',
-				id, texid))
-
-		if (type == "text") result <- c(result, subst(
-			'	   handleLoadedTexture(this.texture[%id%], document.getElementById("%prefix%textureCanvas"));',
-			prefix, id))
-
-		stride <- 3
-		nc <- rgl.attrib.count(id, "colors")
-		if (nc > 1) {
-			cofs <- stride
-			stride <- stride + 4
-		} else
-			cofs <- -1
-
-		nn <- rgl.attrib.count(id, "normals")
-		if (nn > 0) {
-			nofs <- stride
-			stride <- stride + 3
-		} else
-			nofs <- -1
-
-		if (type == "spheres") {
-			radofs <- stride
-			stride <- stride + 1
-		} else
-			radofs <- -1
-
-		if (type == "sprites" && !sprites_3d) {
-			oofs <- stride
-			stride <- stride + 2
-		} else
-			oofs <- -1
-
-		if (has_texture || type == "text") {
-			tofs <- stride
-			stride <- stride + 2
-		} else
-			tofs <- -1
-
-		if (type == "text") {
-			oofs <- stride
-			stride <- stride + 2
+		if (load_texture || type == "text") {
+		  this.texture[id] = gl.createTexture();
+			this.texLoc[id] = gl.getAttribLocation(this.prog[id], "aTexcoord");
+			this.sampler[id] = gl.getUniformLocation(this.prog[id],"uSampler");
 		}
 
-		stopifnot(stride == NCOL(values))
+		if (load_texture) {
+			this.loadImageToTexture(this.textureFile[id], this.texture[id]);
+		} else if (has_texture) {
+			this.texture[id] = this.texture[texid];
+		}
 
-		result <- c(result,
-			    subst(
-			    	'	   this.offsets[%id%]={vofs:0, cofs:%cofs%, nofs:%nofs%, radofs:%radofs%, oofs:%oofs%, tofs:%tofs%, stride:%stride%};',
-			    	id, cofs, nofs, radofs, oofs, tofs, stride),
+		if (type === "text") {
+		  handleLoadedTexture(this.texture[id],
+		    document.getElementById("prefixtextureCanvas"));
+		}
 
-			    if (sprites_3d) subst(
-			    	'	   this.origsize[%id%]=new Float32Array([', id)
-			    else if (!flags["reuse"])
-			    	'	   v=new Float32Array([',
-			    if (!flags["reuse"])
-			    	c(inRows(values, stride, leadin='	   '),
-			    	  '	   ]);'),
+    if (sprites_3d) {
+			this.userMatrix[id] = new CanvasMatrix4(this.userMatrix[id]);
+    }
 
-			    if (sprites_3d) c(subst(
-			    	'	   this.userMatrix[%id%] = new CanvasMatrix4([', id),
-			    	inRows(rgl.attrib(id, "usermatrix"), 4, leadin='	   '),
-			    	'	   ]);'),
-
-			    if (type == "text" && !flags["reuse"]) subst(
-			    	'	   for (i=0; i<%len%; i++)
-			    	for (j=0; j<4; j++) {
-			    	ind = this.offsets[%id%].stride*(4*i + j) + this.offsets[%id%].tofs;
+		if (type === "text" && !reuse) {
+			for (i=0; i < this.texts[id].length; i++)
+			  for (j=0; j<4; j++) {
+			    ind = this.offsets[id].stride*(4*i + j) + this.offsets[id].tofs;
 			    	v[ind+2] = 2*(v[ind]-v[ind+2])*texinfo.widths[i];
 			    	v[ind+3] = 2*(v[ind+1]-v[ind+3])*texinfo.textHeight;
 			    	v[ind] *= texinfo.widths[i]/texinfo.canvasX;
 			    	v[ind+1] = 1.0-(texinfo.offset + i*texinfo.skip -
-			    	v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
-			    	}', id, len=length(texts)),
+			    	           v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
+			  }
+		}
 
-			    if (!sprites_3d && !flags["reuse"]) subst(
-			    	'	   this.values[%id%] = v;',
-			    	id),
+		if (!sprites_3d && !reuse) {
+			 this.values[id] = v;
+		}
 
-			    if (!sprites_3d && flags["reuse"]) subst(
-			    	'	   this.values[%id%] = %thisprefix%rgl.values[%id%];',
-			    	id, thisprefix),
+		if (!sprites_3d && reuse) {
+			 this.values[id] = thisprefixrgl.values[id];
+		}
 
-			    if (is_lit && !fixed_quads && !sprites_3d) subst(
-			    	'	   this.normLoc[%id%] = gl.getAttribLocation(this.prog[%id%], "aNorm");',
-			    	id),
-			    if (clipplanes && !sprites_3d) c(subst(
-			    	'	   this.clipLoc[%id%] = [];', id),
-			    	subst(paste0(
-			    		'	   this.clipLoc[%id%][', seq_len(clipplanes)-1, '] = gl.getUniformLocation(this.prog[%id%], "vClipplane', seq_len(clipplanes), '");'),
-			    		id))
-			    )
+    if (is_lit && !fixed_quads && !sprites_3d) {
+			 this.normLoc[id] = gl.getAttribLocation(this.prog[id], "aNorm");
+    }
 
+		if (clipplanes && !sprites_3d) {
+		  this.clipLoc[id] = [];
+		  for (i=0; i < clipplanes; i++)
+        this.clipLoc[id][i] = gl.getUniformLocation(this.prog[id],                                       "vClipplane" + (i+1));
+		}
 
 		if (is_indexed) {
-			if (type %in% c("quads", "text", "sprites") && !sprites_3d) {
-				v1 <- 4*(seq_len(nv/4) - 1)
-				v2 <- v1 + 1
-				v3 <- v2 + 1
-				v4 <- v3 + 1
-				f <- rbind(v1, v2, v3, v1, v3, v4)
-				frowsize <- 6
-			} else if (type == "triangles") {
-				v1 <- 3*(seq_len(nv/3) - 1)
-				v2 <- v1 + 1
-				v3 <- v2 + 1
-				f <- rbind(v1, v2, v3)
-				frowsize <- 3
-			} else if (type == "spheres") {
-				f <- seq_len(nv)-1
-				frowsize <- 8 # not used for depth sorting, just for display
-			}
-
 			if (depth_sort) {
-				result <- c(result, subst(
-					'	   this.centers[%id%] = new Float32Array([', id),
-					inRows(rgl.attrib(id, "centers"), 3, leadin='	   '),
-					'	   ]);')
-
-				fname <- subst("this.f[%id%]", id)
-				drawtype <- "DYNAMIC_DRAW"
+				this.f[id] = new Uint16Array([this.f[id]]);
+				drawtype = "DYNAMIC_DRAW";
+				f = this.f[id];
 			} else {
-				fname <- "f"
-				drawtype <- "STATIC_DRAW"
+				f = new Uint16Array([this.f[id]]);
+				drawtype = "STATIC_DRAW";
 			}
-
-			result <- c(result, subst(
-				'	   %fname%=new Uint16Array([',
-				fname),
-				inRows(c(f), frowsize, leadin='	   '),
-				'	   ]);')
 		}
-		result <- c(result,
-			    if (type != "spheres" && !sprites_3d) subst(
-			    	'	   this.buf[%id%] = gl.createBuffer();
-			    	gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[%id%]);
-			    	gl.bufferData(gl.ARRAY_BUFFER, this.values[%id%], gl.STATIC_DRAW);',
-			    	id),
-			    if (is_indexed && type != "spheres" && !sprites_3d) subst(
-			    	'	   this.ibuf[%id%] = gl.createBuffer();
-			    	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[%id%]);
-			    	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, %fname%, gl.%drawtype%);',
-			    	id, fname, drawtype),
-			    if (!sprites_3d && !is_clipplanes) subst(
-			    	'	   this.mvMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"mvMatrix");
-			    	this.prMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"prMatrix");',
-			    	id),
-			    if (type == "text") subst(
-			    	'	   this.textScaleLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"textScale");',
-			    	id),
-			    if (is_lit && !sprites_3d) subst(
-			    	'	   this.normMatLoc[%id%] = gl.getUniformLocation(this.prog[%id%],"normMatrix");',
-			    	id)
-		)
-		c(result, '')
-	}
 
-     }
+		if (type !== "spheres" && !sprites_3d) {
+		  this.buf[id] = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[id]);
+			gl.bufferData(gl.ARRAY_BUFFER, this.values[id], gl.STATIC_DRAW);
+		}
+
+		if (is_indexed && type !== "spheres" && !sprites_3d) {
+			this.ibuf[id] = gl.createBuffer();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[id]);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, f, gl[drawtype]);
+		}
+
+		if (!sprites_3d && !is_clipplanes) {
+			this.mvMatLoc[id] = gl.getUniformLocation(this.prog[id], "mvMatrix");
+			this.prMatLoc[id] = gl.getUniformLocation(this.prog[id], "prMatrix");
+		}
+
+		if (type === "text") {
+			this.textScaleLoc[id] = gl.getUniformLocation(this.prog[id], "textScale");
+		}
+
+		if (is_lit && !sprites_3d) {
+			this.normMatLoc[id] = gl.getUniformLocation(this.prog[id], "normMatrix");
+		}
+
+  };
+
 }).call(rglClass.prototype);
