@@ -69,6 +69,7 @@ rglClass = function() {
             alert(gl.getShaderInfoLog(shader));
         return shader;
     };
+
     this.multMV = function(M, v) {
         return [ M.m11 * v[0] + M.m12 * v[1] + M.m13 * v[2] + M.m14 * v[3],
                  M.m21 * v[0] + M.m22 * v[1] + M.m23 * v[2] + M.m24 * v[3],
@@ -76,6 +77,7 @@ rglClass = function() {
                  M.m41 * v[0] + M.m42 * v[1] + M.m43 * v[2] + M.m44 * v[3]
                ];
     };
+
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
     this.f_has_texture = 4;
@@ -89,6 +91,7 @@ rglClass = function() {
     this.f_is_subscene = 1024;
     this.f_is_clipplanes = 2048;
     this.f_reuse = 4096;
+
     this.whichList = function(id) {
         if (this.flags[id] & this.f_is_subscene)
             return "subscenes";
@@ -98,21 +101,25 @@ rglClass = function() {
             return "transparent";
         else return "opaque";
     };
+
     this.inSubscene = function(id, subscene) {
         var thelist = this.whichList(id);
         return this[thelist][subscene].indexOf(id) > -1;
     };
+
     this.addToSubscene = function(id, subscene) {
         var thelist = this.whichList(id);
         if (this[thelist][subscene].indexOf(id) == -1)
             this[thelist][subscene].push(id);
     };
+
     this.delFromSubscene = function(id, subscene) {
         var thelist = this.whichList(id),
             i = this[thelist][subscene].indexOf(id);
         if (i > -1)
             this[thelist][subscene].splice(i, 1);
     };
+
     this.setSubsceneEntries = function(ids, subscene) {
         this.subscenes[subscene] = [];
         this.clipplanes[subscene] = [];
@@ -121,6 +128,7 @@ rglClass = function() {
         for (var i = 0; i < ids.length; i++)
             this.addToSubscene(ids[i], subscene);
     };
+
     this.getSubsceneEntries = function(subscene) {
         return this.subscenes[subscene].
                concat(this.clipplanes[subscene]).
@@ -136,7 +144,7 @@ rglClass = function() {
 	     return pow;
 	   };
 
-	   this.handleLoadedTexture = function(texture, textureCanvas) {
+    this.handleLoadedTexture = function(texture, textureCanvas) {
 	     var gl = this.gl;
 	     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -149,7 +157,7 @@ rglClass = function() {
 	     gl.bindTexture(gl.TEXTURE_2D, null);
 	   };
 
-	   this.loadImageToTexture = function(filename, texture) {
+	  this.loadImageToTexture = function(filename, texture) {
 	     var ctx = this.canvas.getContext("2d"),
 	         image = new Image(),
 	         self = this;
@@ -169,7 +177,7 @@ rglClass = function() {
 	     image.src = filename;
 	   };
 
-	   this.drawTextToCanvas = function(text, cex, fontFamily) {
+    this.drawTextToCanvas = function(text, cex, fontFamily) {
 	     var canvasX, canvasY,
 	         textX, textY,
 
@@ -216,13 +224,13 @@ rglClass = function() {
 	             offset:offset, skip:skip};
 	   };
 
-	   this.setViewport = function(id) {
+    this.setViewport = function(id) {
 	     this.vp = this.viewport[id];
 	     this.gl.viewport(this.vp[0], this.vp[1], this.vp[2], this.vp[3]);
 	     this.gl.scissor(this.vp[0], this.vp[1], this.vp[2], this.vp[3]);
 	   };
 
-	   this.setprMatrix = function(id) {
+	  this.setprMatrix = function(id) {
        var embedding = this.embeddings[id].projection;
        if (embedding === "replace")
          this.prMatrix.makeIdentity();
@@ -255,7 +263,7 @@ rglClass = function() {
 	                        near, far);
 	   };
 
-	   this.setmvMatrix = function(id) {
+	  this.setmvMatrix = function(id) {
 	     var observer = this.observers[id];
 	     this.mvMatrix.makeIdentity();
 	     this.setmodelMatrix(id);
@@ -263,7 +271,7 @@ rglClass = function() {
 
 	   };
 
-	   this.setmodelMatrix = function(id) {
+    this.setmodelMatrix = function(id) {
 	     var embedding = this.embeddings[id].model;
 	     if (embedding !== "inherit") {
 	       var scale = this.scales[id],
@@ -279,7 +287,7 @@ rglClass = function() {
 	       this.setmodelMatrix(this.parents[id]);
 	   };
 
-	   this.setnormMatrix = function(subsceneid) {
+	  this.setnormMatrix = function(subsceneid) {
 	     var self = this,
 	         recurse = function(id) {
 	       var embedding = self.embeddings[id].model;
@@ -295,12 +303,12 @@ rglClass = function() {
        recurse(subsceneid);
 	   };
 
-	   this.setprmvMatrix = function() {
+	  this.setprmvMatrix = function() {
 	     this.prmvMatrix = new CanvasMatrix4( this.mvMatrix );
 	     this.prmvMatrix.multRight( this.prMatrix );
 	   };
 
-     this.initObj = function(id) {
+    this.initObj = function(id) {
 		   var is_indexed = this.flags[id] & this.f_is_indexed,
            is_lit = this.flags[id] & this.f_is_lit,
 		       has_texture = this.flags[id] & this.f_has_texture,
