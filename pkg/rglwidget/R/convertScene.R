@@ -421,8 +421,8 @@ convertScene <- function(scene,
 
 		if (!sprites_3d && !is_clipplanes)
 			if (!flags["reuse"]) {
-			  result$vshaders[id] = vshader
-			  result$fshaders[id] = fshader
+			  result$vshaders[id] <<- vshader
+			  result$fshaders[id] <<- fshader
 			}
 
 		nv <- rgl.attrib.count(id, "vertices")
@@ -433,6 +433,7 @@ convertScene <- function(scene,
 		if (nv > 65535)
 			warning(gettextf("Object %s has %s vertices.  Some browsers support only 65535", id, nv),
 				domain = NA)
+		result$vertexCount[id] <<- nv
 
 		nc <- rgl.attrib.count(id, "colors")
 		colors <- rgl.attrib(id, "colors")
@@ -443,12 +444,14 @@ convertScene <- function(scene,
 			}
 			values <- cbind(values, colors)
 		}
+		result$colorCount[id] <<- nc
 
 		nn <- rgl.attrib.count(id, "normals")
 		if (nn > 0) {
 			normals <- rgl.attrib(id, "normals")
 			values <- cbind(values, normals)
 		}
+		result$normalCount[id] <<- nn
 
 		if (type == "spheres") {
 			radii <- rgl.attrib(id, "radii")
