@@ -309,17 +309,19 @@ rglClass = function() {
 	   };
 
     this.initObj = function(id) {
-		   var is_indexed = this.flags[id] & this.f_is_indexed,
-           is_lit = this.flags[id] & this.f_is_lit,
-		       has_texture = this.flags[id] & this.f_has_texture,
-		       fixed_quads = this.flags[id] & this.f_fixed_quads,
-		       depth_sort = this.flags[id] & this.f_depth_sort,
-		       sprites_3d = this.flags[id] & this.f_sprites_3d,
-		       sprite_3d = this.flags[id] & this.f_sprite_3d,
-		       is_clipplanes = this.types[id] === "clipplanes",
-		       reuse = this.flags[id] & this.f_reuse,
-		       gl = this.gl,
-		       texinfo, drawtype, f;
+	    var flags = this.flags[id],
+	        type = this.types[id],
+	        is_indexed = flags & this.f_is_indexed,
+          is_lit = flags & this.f_is_lit,
+		      has_texture = flags & this.f_has_texture,
+		      fixed_quads = flags & this.f_fixed_quads,
+		      depth_sort = flags & this.f_depth_sort,
+		      sprites_3d = flags & this.f_sprites_3d,
+		      sprite_3d = flags & this.f_sprite_3d,
+		      is_clipplanes = type === "clipplanes",
+		      reuse = flags & this.f_reuse,
+		      gl = this.gl,
+          texinfo, drawtype, f;
 
 		if (!sprites_3d && !is_clipplanes) {
 			this.prog[id] = gl.createProgram();
@@ -438,5 +440,258 @@ rglClass = function() {
 		}
 
   };
+
+	 this.mode4type = {points : "POINTS",
+							       linestrip : "LINE_STRIP",
+							       abclines : "LINES",
+							       lines : "LINES",
+							       sprites : "TRIANGLES",
+							       planes : "TRIANGLES",
+							       text : "TRIANGLES",
+							       quads : "TRIANGLES",
+							       surface : "TRIANGLES",
+							       triangles = "TRIANGLES"};
+
+	  this.drawObj = function(id) {
+	    var flags = this.flags[id],
+	        type = this.types[id],
+	        is_indexed = flags & this.f_is_indexed,
+          is_lit = flags & this.f_is_lit,
+		      has_texture = flags & this.f_has_texture,
+		      fixed_quads = flags & this.f_fixed_quads,
+		      depth_sort = flags & this.f_depth_sort,
+		      sprites_3d = flags & this.f_sprites_3d,
+		      sprite_3d = flags & this.f_sprite_3d,
+		      is_clipplanes = type === "clipplanes",
+		      reuse = flags & this.f_reuse,
+		      gl = this.gl,
+		      thisprefix = this.getPrefix(id),
+		      sphereMV, baseofs, ofs, sscale;
+
+		  if (type === "clipplanes") {
+			  var count = this.offsets[id].length;
+			  rgl.attrib.count(id, "offsets")
+			  this.IMVClip[id] = [];
+			  for (i=0; i < count; i++) {
+				  this.IMVClip[id][i] = this.multMV(this.invMatrix, this.vClipplane[id].slice(4*i, 4*(i+1)));
+ 			  }
+			  this.clipFns[id] = function(id, objid, count1) {
+			    var count2 = this.offsets[id].length, i;
+    	    for (i=0; i<count2; i++) {
+	    	    gl.uniform4fv(this.clipLoc[objid][count1 + i], this.IMVClip[id][i]);
+    	    }
+	    	  return(count1 + count2);
+		    };
+      return();
+			}
+
+      if (sprites_3d) {
+			  var norigs = this.norigs[id],
+			      iOrig, i, spriteid;
+			  this.origs = this.origsize[id];
+				this.usermat = this.userMatrix[id];
+				for (iOrig=0; iOrig < norigs; iOrig++) {
+			    for (i=0; i < this.spriteids[id].length; i++) {
+					  this.drawObj(this.spriteids[id][i], clipplanes);
+					}
+				}
+			} else {
+				gl.useProgram(this.prog[id]);
+			}
+
+			if (sprite_3d) {
+			  gl.uniform3f(this.origLoc[id], this.origs[4*iOrig],
+							       this.origs[4*iOrig+1],
+							       this.origs[4*iOrig+2]);
+				gl.uniform1f(this.sizeLoc[id], this.origs[4*iOrig+3]);
+				gl.uniformMatrix4fv(this.usermatLoc[id], false, this.usermat);
+			}
+
+			if (type === "spheres") {
+			  gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuf);
+			} else {
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[id]);
+			}
+
+			if (is_indexed && type !== "spheres") {
+			  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[id]);
+			} else if (type === "spheres") {
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereIbuf);
+			}
+
+			gl.uniformMatrix4fv( this.prMatLoc[id], false, new Float32Array(this.prMatrix.getAsArray()) );
+			gl.uniformMatrix4fv( this.mvMatLoc[id], false, new Float32Array(this.mvMatrix.getAsArray()) );
+      var clipcheck = 0;
+			for (i=0; i < clipplanes.length; i++) {
+			  clipcheck = this.clipFns[clipplanes[i]].call(this, clipplanes[i], id, clipcheck);
+			}
+
+			if (is_lit && !sprite_3d) {
+			  gl.uniformMatrix4fv( this.normMatLoc[id], false, new Float32Array(normMatrix.getAsArray()) );
+			}
+
+			if (is_lit && sprite_3d) {
+				gl.uniformMatrix4fv( this.normMatLoc[id], false, this.usermat);
+			}
+
+			if (type === "text") {
+				gl.uniform2f( this.textScaleLoc[id], 0.75/this.vp[2], 0.75/this.vp[3]);
+			}
+
+			gl.enableVertexAttribArray( posLoc );
+
+			var count = this.vertexCount[id],
+			    nc = this.colorCount[id],
+					nn = this.normalCount[id];
+
+			if (depth_sort) {
+						var nfaces = this.centers[id].length,
+						    frowsize, z, w;
+						if (sprites_3d) frowsize = 1;
+						else if (type === "triangles") frowsize = 3;
+						else frowsize = 6;
+            var depths = new Float32Array(nfaces),
+							  faces = new Array(nfaces);
+						for(i=0; i<nfaces; i++) {
+							z = this.prmvMatrix.m13*this.centers[id][3*i]
+							  + this.prmvMatrix.m23*this.centers[id][3*i+1]
+						    + this.prmvMatrix.m33*this.centers[id][3*i+2]
+					      + this.prmvMatrix.m43;
+							w = this.prmvMatrix.m14*this.centers[id][3*i]
+				  			+ this.prmvMatrix.m24*this.centers[id][3*i+1]
+					  		+ this.prmvMatrix.m34*this.centers[id][3*i+2]
+						  	+ this.prmvMatrix.m44;
+							depths[i] = z/w;
+							faces[i] = i;
+						}
+						var depthsort = function(i,j) { return depths[j] - depths[i] };
+						faces.sort(depthsort);
+
+						if (type !== "spheres") {
+						  var f = new Uint16Array(this.f[id].length);
+							for (i=0; i<nfaces; i++) {
+					  	  for (var j=0; j<frowsize; j++) {
+							    f[frowsize*i + j] = this.f[id][frowsize*faces[i] + j];
+							  }
+							}
+							gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, f, gl.DYNAMIC_DRAW);
+						}
+					}
+
+			if (type === "spheres") {
+				var scale = this.scales[id],
+						scount = count;
+				gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
+				gl.enableVertexAttribArray(this.normLoc[id] );
+				gl.vertexAttribPointer(this.normLoc[id],  3, gl.FLOAT, false, this.sphereStride,  0);
+				gl.disableVertexAttribArray( colLoc );
+				var sphereNorm = new CanvasMatrix4();
+				sphereNorm.scale(scale[0], scale[1], scale[2]);
+				sphereNorm.multRight(this.normMatrix);
+				gl.uniformMatrix4fv( this.normMatLoc[id], false, new Float32Array(sphereNorm.getAsArray()) );
+
+
+			  if (nc == 1) {
+				  gl.vertexAttrib4fv( colLoc, this.colors[id]);
+			  }
+
+			  for (i = 0; i < scount; i++) {
+			    sphereMV = new CanvasMatrix4();
+
+			  	if (depth_sort) {
+				    baseofs = faces[i]*thisprefixrgl.offsets[id].stride;
+				  } else {
+				    baseofs = i*thisprefixrgl.offsets[id].stride;
+				  }
+
+          ofs = baseofs + this.offsets[id].radofs;
+				  sscale = this.values[id][ofs];
+
+				  sphereMV.scale(sscale*scale[0], sscale*scale[1], sscale*scale[2]);
+				  sphereMV.translate(this.values[id][baseofs],
+				                     this.values[id][baseofs+1],
+				                     this.values[id][baseofs+2]);
+				  sphereMV.multRight(this.mvMatrix);
+				  gl.uniformMatrix4fv( this.mvMatLoc[id], false, new Float32Array(sphereMV.getAsArray()) );
+
+				  if (nc > 1) {
+				    ofs = baseofs + this.offsets[id].cofs;
+					  gl.vertexAttrib4f( colLoc, this.values[id][ofs],
+					   		                       this.values[id][ofs+1],
+                                       this.values[id][ofs+2],
+							                         this.values[id][ofs+3] );
+				  }
+				  gl.drawElements(gl.TRIANGLES, sphereCount, gl.UNSIGNED_SHORT, 0);
+
+			  }
+			} else {
+				if (nc === 1) {
+					gl.disableVertexAttribArray( colLoc );
+				  gl.vertexAttrib4fv( colLoc, this.colors[id]);
+				} else {
+					gl.enableVertexAttribArray( colLoc );
+					gl.vertexAttribPointer(colLoc, 4, gl.FLOAT, false, 4*this.offsets[id].stride, 4*this.offsets[id].cofs);
+				}
+      }
+
+			if (is_lit && nn > 0) {
+				gl.enableVertexAttribArray( this.normLoc[id] );
+				gl.vertexAttribPointer(this.normLoc[id], 3, gl.FLOAT, false, 4*this.offsets[id].stride, 4*this.offsets[id].nofs);
+			}
+
+			if (has_texture || type === "text") {
+				gl.enableVertexAttribArray( this.texLoc[id] );
+				gl.vertexAttribPointer(this.texLoc[id], 2, gl.FLOAT, false, 4*this.offsets[id].stride, 4*this.offsets[id].tofs);
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, this.texture[id]);
+				gl.uniform1i( this.sampler[id], 0);
+			}
+
+			if (fixed_quads) {
+				gl.enableVertexAttribArray( this.ofsLoc[id] );
+				gl.vertexAttribPointer(this.ofsLoc[id], 2, gl.FLOAT, false, 4*this.offsets[id].stride, 4*this.offsets[id].oofs);
+			}
+
+			var mode = mode4type[type];
+
+
+			DONE TO HERE
+
+
+						switch(type,
+						       sprites =,
+						       text = count <- count*6,
+						       quads = count <- count*6/4,
+						       surface = {
+						       	dim <- rgl.attrib(id, "dim")
+						       	nx <- dim[1]
+						       	nz <- dim[2]
+						       	count <- (nx - 1)*(nz - 1)*6
+						       })
+
+						if (flags["is_lines"]) {
+							lwd <- mat$lwd
+							result <- c(result,subst(
+								'	     gl.lineWidth( %lwd% );',
+								lwd))
+						}
+
+						result <- c(result,
+							    '	     gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, 4*this.offsets[id].stride,  4*this.offsets[id].vofs);',
+
+							    if (is_indexed) subst(
+							    	'	     gl.drawElements(gl.%mode%, %count%, gl.UNSIGNED_SHORT, 0);',
+							    	mode, count)
+							    else
+							    	subst(
+							    		'	     gl.drawArrays(gl.%mode%, 0, %count%);',
+							    		mode, count))
+						}
+						}
+		result <- c(result,
+			    '       };')
+		result
+					}
+
 
 }).call(rglClass.prototype);
