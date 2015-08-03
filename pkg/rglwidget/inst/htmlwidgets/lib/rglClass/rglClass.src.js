@@ -441,7 +441,7 @@ rglClass = function() {
 
   };
 
-	 this.mode4type = {points : "POINTS",
+	  this.mode4type = {points : "POINTS",
 							       linestrip : "LINE_STRIP",
 							       abclines : "LINES",
 							       lines : "LINES",
@@ -654,44 +654,91 @@ rglClass = function() {
 
 			var mode = mode4type[type];
 
+      if (type === "sprites" || type === "text") {
+        count = count*6;
+      } else if (type === "quads") {
+        count = count * 6/4;
+      } else if (type === "surface") {
+				var dim = this.dims[id],
+						nx = dim[0],
+						nz = dim[1];
+				count = (nx - 1)*(nz - 1)*6;
+      }
 
-			DONE TO HERE
+			if (is_lines) {
+				gl.lineWidth( this.lineWidths[id] );
+			}
 
+			gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, 4*this.offsets[id].stride,  4*this.offsets[id].vofs);
 
-						switch(type,
-						       sprites =,
-						       text = count <- count*6,
-						       quads = count <- count*6/4,
-						       surface = {
-						       	dim <- rgl.attrib(id, "dim")
-						       	nx <- dim[1]
-						       	nz <- dim[2]
-						       	count <- (nx - 1)*(nz - 1)*6
-						       })
+			if (is_indexed) {
+			  gl.drawElements(gl[mode], count, gl.UNSIGNED_SHORT, 0);
+			} else {
+			  gl.drawArrays(gl[mode], 0, count);
+			}
+	 };
 
-						if (flags["is_lines"]) {
-							lwd <- mat$lwd
-							result <- c(result,subst(
-								'	     gl.lineWidth( %lwd% );',
-								lwd))
-						}
+	  this.drawSubscene = function(subsceneid) {
+		  var subids = this.subids[subsceneid],
+		      subscene_has_faces = false,
+		      subscene_needs_sorting = false,
+		      flags;
 
-						result <- c(result,
-							    '	     gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, 4*this.offsets[id].stride,  4*this.offsets[id].vofs);',
+		  for (i=0; i < subids.length; i++) {
+		    flags = this.flags[subids[i]];
+		    subscene_has_faces |= (flags & this.f_is_lit)
+		                       & !(flags & this.f_fixed_quads);
+		    subscene_needs_sorting |= (flags & this.f_depth_sort);
+		  }
 
-							    if (is_indexed) subst(
-							    	'	     gl.drawElements(gl.%mode%, %count%, gl.UNSIGNED_SHORT, 0);',
-							    	mode, count)
-							    else
-							    	subst(
-							    		'	     gl.drawArrays(gl.%mode%, 0, %count%);',
-							    		mode, count))
-						}
-						}
-		result <- c(result,
-			    '       };')
-		result
-					}
+		  var bgid = this.backgroundObj[subsceneid],
+		      bg;
 
+      if (typeof bgid === "undefined" || !this.colors[bgid].length)
+			  bg = c(1,1,1,1);
+			else
+			  bg = this.colors[bgid][0];
+
+			this.setViewport();
+			gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+			if (typeof subids !== "undefined") {
+			  this.setprMatrix(subsceneid);
+			  this.setmvMatrix(subsceneid);
+
+				if (subscene_has_faces)
+				  this.setnormMatrix(subsceneid);
+
+				if (subscene_needs_sorting)
+				  this.setprmvMatrix();
+
+				var clipids = this.clipplanes[id];
+				if (clipids.length > 0) {
+				  this.invMatrix = new CanvasMatrix4(this.mvMatrix);
+				  this.invMatrix.invert();
+				  for (i = 0; i < this.clipplanes[id].length; i++)
+				    this.drawFns[clipids[i]].call(this, clipids[i]);
+				}
+				subids = this.opaque[id];
+				for (i = 0; subids && i < subids.length; i++) {
+				  this.drawObj(subids[i]], clipids);
+				}
+				subids = this.transparent[id];
+				if (subids) {
+				  gl.depthMask(false);
+				  gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+				                       gl.ONE, gl.ONE);
+				  gl.enable(gl.BLEND);
+				  for (i = 0; i < subids.length; i++) {
+				    this.drawObj(subids[i], clipids);
+				  }
+				}
+				subids = this.subscenes[id];
+				for (i = 0; subids && i < subids.length; i++) {
+				  this.drawFns[subids[i]].call(this, subids[i]);
+				}
+			}
+	  };
 
 }).call(rglClass.prototype);
