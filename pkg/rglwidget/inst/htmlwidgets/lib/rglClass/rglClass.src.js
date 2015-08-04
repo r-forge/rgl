@@ -10,6 +10,7 @@ var min = Math.min,
     exp = Math.exp;
 
 rglClass = function() {
+    this.canvas = null;
     this.zoom = [];
     this.FOV = [];
     this.userMatrix = new CanvasMatrix4();
@@ -21,10 +22,12 @@ rglClass = function() {
     this.subscenes = [];
     this.parents = [];
     this.embeddings = [];
+    this.observers = [];
     this.bboxes = [];
     this.scales = [];
     this.vshaders = [];
     this.fshaders = [];
+    this.types = [];
     this.flags = [];
     this.prog = [];
     this.ofsLoc = [];
@@ -35,12 +38,15 @@ rglClass = function() {
     this.texture = [];
     this.texLoc = [];
     this.sampler = [];
+    this.norigs = [];
     this.origsize = [];
     this.values = [];
     this.offsets = [];
     this.normLoc = [];
     this.clipLoc = [];
     this.centers = [];
+    this.texts = [];
+    this.cexs = [];
     this.f = [];
     this.buf = [];
     this.ibuf = [];
@@ -652,7 +658,7 @@ rglClass = function() {
 				gl.vertexAttribPointer(this.ofsLoc[id], 2, gl.FLOAT, false, 4*this.offsets[id].stride, 4*this.offsets[id].oofs);
 			}
 
-			var mode = mode4type[type];
+			var mode = this.mode4type[type];
 
       if (type === "sprites" || type === "text") {
         count = count*6;
