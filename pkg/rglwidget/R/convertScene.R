@@ -363,23 +363,27 @@ convertScene <- function(scene,
 		save <- currentSubscene3d()
 		on.exit(useSubscene3d(save))
 
-		result <- list(activeSubscene = rootSubscene(), flags = numeric(),
+		result <- list(activeSubscene = rootSubscene(),
+		               types = character(), flags = numeric(),
 		               zoom = numeric(), FOV = numeric(), viewport = list(),
 		               userMatrix = list(), clipplanes = list(),
 		               opaque = list(), transparent = list(),
-		               subscenes = list())
+		               subscenes = list(), embeddings = list(),
+		               norigs = numeric(), origsize = list())
 
 		for (id in subsceneids) {
 			useSubscene3d(id)
 			info <- subsceneInfo(id)
-			x$flags[id] = numericFlags(getSubsceneFlags(id))
+			result$types[id] <- "subscene"
+			result$flags[id] <- numericFlags(getSubsceneFlags(id))
+			result$embeddings[id] <- info$embeddings
 			if (info$embeddings["projection"] != "inherit") {
-				useSubscene3d(id)
-				result$zoom[id] = par3d("zoom")
-			  result$FOV[id] = max(1, min(179, par3d("FOV")))
+				result$zooms[id] <- par3d("zoom")
+			  result$FOVs[id] <- max(1, min(179, par3d("FOV")))
 			}
 			viewport <- par3d("viewport")*c(wfactor, hfactor)
-			result$viewport[[id]] = viewport
+			result$viewport[[id]] <- viewport
+			result$observers[[id]] <- par3d("observer")
 			if (info$embeddings["model"] != "inherit")
 				result$userMatrix[[id]] <- par3d("userMatrix")
 
@@ -417,6 +421,7 @@ convertScene <- function(scene,
 			fshader <- paste(gsub("\n", "\\\\n", shaders$fragment, fixed = TRUE),
 					 collapse = "\\\\n")
 		}
+		result$types[id] <<- type
 		result$flags[id] <<- numericFlags(flags)
 
 		if (!sprites_3d && !is_clipplanes)
@@ -586,9 +591,10 @@ convertScene <- function(scene,
 
 		result$offsets[id] = c(vofs=0, cofs=cofs, nofs=nofs, radofs=radofs, oofs=oofs, tofs=tofs, stride=stride)
 
-		if (sprites_3d && !reuse)
+		if (sprites_3d && !reuse) {
+		  result$norigs[id] <<- NROW(values)
       result$origsize[id] <<- values
-		else if (!flags["reuse"])
+		} else if (!flags["reuse"])
 		  result$values[id] <<- values
 		if (sprites_3d)
       result$userMatrix[id] <<- rgl.attrib(id, "usermatrix")
