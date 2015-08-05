@@ -93,8 +93,7 @@ countClipplanes <- function(id, minValue = getOption("rgl.minClipplanes", 0)) {
 	max(minValue, recurse(rootSubscene()))
 }
 
-convertScene <- function(scene,
-		       width, height) {
+convertScene <- function(width, height, reuse = NULL) {
 
 	# Lots of utility functions and constants defined first; execution starts way down there...
 
@@ -626,28 +625,6 @@ convertScene <- function(scene,
 
 	}
 
-	scriptMiddle <- function() {
-		rootid <- rootSubscene()
-		subst(
-			'	   gl.enable(gl.DEPTH_TEST);
-			gl.depthFunc(gl.LEQUAL);
-			gl.clearDepth(1.0);
-			gl.clearColor(1,1,1,1);
-			var drag  = 0;
-
-			this.drawScene = function() {
-			gl.depthMask(true);
-			gl.disable(gl.BLEND);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-			this.drawFns[%rootid%].call(this, %rootid%);
-			gl.flush();
-			};
-			', rootid)
-	}
-
-	drawEnd <- '
-	this.drawScene();
-	'
 	mouseHandlers <- function() {
 		save <- currentSubscene3d()
 		on.exit(useSubscene3d(save))
@@ -915,81 +892,9 @@ convertScene <- function(scene,
 			e1=end[1],  e2=end[2],  e3=end[3]))
 		}
 
-	scriptEnd <- subst(
-		'	   function relMouseCoords(event){
-		var totalOffsetX = 0,
-		totalOffsetY = 0,
-		currentElement = canvas;
-
-		do{
-		totalOffsetX += currentElement.offsetLeft;
-		totalOffsetY += currentElement.offsetTop;
-		currentElement = currentElement.offsetParent;
-		}
-		while(currentElement);
-
-		var canvasX = event.pageX - totalOffsetX,
-		canvasY = event.pageY - totalOffsetY;
-
-		return {x:canvasX, y:canvasY};
-			}
-
-		canvas.onmousedown = function ( ev ){
-		if (!ev.which) // Use w3c defns in preference to MS
-		switch (ev.button) {
-		case 0: ev.which = 1; break;
-		case 1:
-		case 4: ev.which = 2; break;
-		case 2: ev.which = 3;
-		}
-		drag = ev.which;
-		var f = mousedown[drag-1];
-		if (f) {
-		var coords = relMouseCoords(ev);
-		coords.y = height-coords.y;
-		activeSubscene = whichSubscene(coords);
-		coords = translateCoords(activeSubscene, coords);
-		f(coords.x, coords.y);
-		ev.preventDefault();
-		}
-		};
-
-		canvas.onmouseup = function ( ev ){
-		if ( drag === 0 ) return;
-		var f = mouseend[drag-1];
-		if (f)
-		f();
-		drag = 0;
-		};
-
-		canvas.onmouseout = canvas.onmouseup;
-
-		canvas.onmousemove = function ( ev ){
-		if ( drag === 0 ) return;
-		var f = mousemove[drag-1];
-		if (f) {
-		var coords = relMouseCoords(ev);
-		coords.y = height - coords.y;
-		coords = translateCoords(activeSubscene, coords);
-		f(coords.x, coords.y);
-		}
-		};
-
-		var wheelHandler = function(ev) {
-		var del = 1.1;
-		if (ev.shiftKey) del = 1.01;
-		var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
-		l = %prefix%rgl.listeners[activeProjection[activeSubscene]];
-		for (var i = 0; i < l.length; i++)
-		%prefix%rgl.zoom[l[i]] *= ds;
-		%prefix%rgl.drawScene();
-		ev.preventDefault();
-		};
-		canvas.addEventListener("DOMMouseScroll", wheelHandler, false);
-		canvas.addEventListener("mousewheel", wheelHandler, false);
-
-			};
-		</script>', prefix)
+# 	scriptEnd <- subst(
+# 		'	   (mouse handlers)
+# 		</script>', prefix)
 
 	flagnames <- c("is_lit", "is_smooth", "has_texture", "is_indexed",
 		       "depth_sort", "fixed_quads", "is_transparent",
@@ -1056,15 +961,6 @@ convertScene <- function(scene,
 
 	# Do a few checks first
 
-	if (!file.exists(dir))
-		dir.create(dir)
-	if (!file.info(dir)$isdir)
-		stop(gettextf("'%s' is not a directory", dir), domain = NA)
-
-	if (commonParts)
-		file.copy(system.file(file.path("doc", "CanvasMatrix.js"), package = "rgl"),
-			  file.path(dir, "CanvasMatrix.js"))
-
 	if (is.null(reuse) || isTRUE(reuse))
 		prefixes <- data.frame(id = integer(), prefix = character(), texture = character(),
 				       stringsAsFactors = FALSE)
@@ -1087,32 +983,14 @@ convertScene <- function(scene,
 		if (missing(height)) {
 			wfactor <- hfactor <- width/rwidth
 		} else {
-			wfactor <- width/rwidth;
-			hfactor <- height/rheight;
+			wfactor <- width/rwidth
+			hfactor <- height/rheight
 		}
 	}
-	width <- wfactor*rwidth;
-	height <- hfactor*rheight;
+	width <- wfactor*rwidth
+	height <- hfactor*rheight
 
-	if (snapshot) {
-		snapshot3d(file.path(dir, paste(prefix, "snapshot.png", sep="")))
-		snapshotimg <- subst('<img src="%prefix%snapshot.png" alt="%prefix%snapshot" width=%width%/><br>', prefix, width)
-		snapshotimg2 <- gsub('"', '\\\\\\\\"', snapshotimg)
-	} else snapshotimg2 <- snapshotimg <- ""
-
-	if (!is.null(template)) {
-		templatelines <- readLines(template)
-		templatelines <- subst(templatelines, rglVersion = packageVersion("rgl"), prefix = prefix)
-
-		target <- paste("%", prefix, "WebGL%", sep="")
-		replace <- grep( target, templatelines, fixed=TRUE)
-		if (length(replace) != 1)
-			stop(gettextf("template '%s' does not contain '%s'", template, target),
-			     domain = NA)
-
-		result <- c(templatelines[seq_len(replace-1)], header())
-	} else
-		result <- header()
+	result <- initResult()
 
 	if (NROW(rgl.ids("bboxdeco", subscene = 0))) {
 		saveredraw <- par3d(skipRedraw = TRUE)
@@ -1149,7 +1027,7 @@ convertScene <- function(scene,
 
 	if (length(ids))
 		prefixes <- rbind(prefixes, data.frame(id = ids,
-						       prefix = prefix, texture = "",
+						       prefix = "this", texture = "",
 						       stringsAsFactors = FALSE))
 
 	texnums <- -1
@@ -1157,22 +1035,10 @@ convertScene <- function(scene,
 	scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])
 	scene_needs_sorting <- any(flags[,"depth_sort"])
 
-	result <- c(result, scriptheader(), setUser(),
-		    textureSupport,
-		    if ("text" %in% types) textSupport,
-		    if ("spheres" %in% types) sphereSupport())
+	result$ids <- ids
+	result$rootid <- rootSubscene();
 
-	for (i in seq_along(ids))
-		result <- c(result, init(ids[i], types[i], flags[i,]))
-
-	result <- c(result, scriptMiddle())
-
-	for (i in seq_along(ids))
-		result <- c(result, draw(ids[i], types[i], flags[i,]))
-
-	subscenes <- rgl.ids("subscene", subscene = 0)$id
-	for (i in seq_along(subscenes))
-		result <- c(result, drawSubscene(subscenes[i]))
+	result$subscenes <- rgl.ids("subscene", subscene = 0)$id
 
 	result <- c(result, drawEnd, mouseHandlers(), scriptEnd, footer(),
 		    if (!is.null(template))

@@ -456,7 +456,7 @@ rglClass = function() {
 							       text : "TRIANGLES",
 							       quads : "TRIANGLES",
 							       surface : "TRIANGLES",
-							       triangles = "TRIANGLES"};
+							       triangles : "TRIANGLES"};
 
 	  this.drawObj = function(id) {
 	    var flags = this.flags[id],
@@ -472,17 +472,16 @@ rglClass = function() {
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
-		      sphereMV, baseofs, ofs, sscale;
+		      sphereMV, baseofs, ofs, sscale, iOrig, i, count;
 
 		  if (type === "clipplanes") {
 			  var count = this.offsets[id].length;
-			  rgl.attrib.count(id, "offsets")
 			  this.IMVClip[id] = [];
 			  for (i=0; i < count; i++) {
 				  this.IMVClip[id][i] = this.multMV(this.invMatrix, this.vClipplane[id].slice(4*i, 4*(i+1)));
  			  }
 			  this.clipFns[id] = function(id, objid, count1) {
-			    var count2 = this.offsets[id].length, i;
+			    var count2 = this.offsets[id].length;
     	    for (i=0; i<count2; i++) {
 	    	    gl.uniform4fv(this.clipLoc[objid][count1 + i], this.IMVClip[id][i]);
     	    }
@@ -492,8 +491,7 @@ rglClass = function() {
 			}
 
       if (sprites_3d) {
-			  var norigs = this.norigs[id],
-			      iOrig, i, spriteid;
+			  var norigs = this.norigs[id], spriteid;
 			  this.origs = this.origsize[id];
 				this.usermat = this.userMatrix[id];
 				for (iOrig=0; iOrig < norigs; iOrig++) {
@@ -546,10 +544,9 @@ rglClass = function() {
 
 			gl.enableVertexAttribArray( posLoc );
 
-			var count = this.vertexCount[id],
-			    nc = this.colorCount[id],
+			var nc = this.colorCount[id],
 					nn = this.normalCount[id];
-
+      count = this.vertexCount[id];
 			if (depth_sort) {
 						var nfaces = this.centers[id].length,
 						    frowsize, z, w;
@@ -559,18 +556,18 @@ rglClass = function() {
             var depths = new Float32Array(nfaces),
 							  faces = new Array(nfaces);
 						for(i=0; i<nfaces; i++) {
-							z = this.prmvMatrix.m13*this.centers[id][3*i]
-							  + this.prmvMatrix.m23*this.centers[id][3*i+1]
-						    + this.prmvMatrix.m33*this.centers[id][3*i+2]
-					      + this.prmvMatrix.m43;
-							w = this.prmvMatrix.m14*this.centers[id][3*i]
-				  			+ this.prmvMatrix.m24*this.centers[id][3*i+1]
-					  		+ this.prmvMatrix.m34*this.centers[id][3*i+2]
-						  	+ this.prmvMatrix.m44;
+							z = this.prmvMatrix.m13*this.centers[id][3*i] +
+							    this.prmvMatrix.m23*this.centers[id][3*i+1] +
+						      this.prmvMatrix.m33*this.centers[id][3*i+2] +
+					        this.prmvMatrix.m43;
+							w = this.prmvMatrix.m14*this.centers[id][3*i] +
+				  			  this.prmvMatrix.m24*this.centers[id][3*i+1] +
+					  		  this.prmvMatrix.m34*this.centers[id][3*i+2] +
+						  	  this.prmvMatrix.m44;
 							depths[i] = z/w;
 							faces[i] = i;
 						}
-						var depthsort = function(i,j) { return depths[j] - depths[i] };
+						var depthsort = function(i,j) { return depths[j] - depths[i]; };
 						faces.sort(depthsort);
 
 						if (type !== "spheres") {
@@ -728,7 +725,7 @@ rglClass = function() {
 				}
 				subids = this.opaque[id];
 				for (i = 0; subids && i < subids.length; i++) {
-				  this.drawObj(subids[i]], clipids);
+				  this.drawObj(subids[i], clipids);
 				}
 				subids = this.transparent[id];
 				if (subids) {
@@ -747,4 +744,126 @@ rglClass = function() {
 			}
 	  };
 
+    this.relMouseCoords = function(event) {
+		  var totalOffsetX = 0,
+		  totalOffsetY = 0,
+		  currentElement = this.canvas;
+
+		  do {
+		    totalOffsetX += currentElement.offsetLeft;
+		    totalOffsetY += currentElement.offsetTop;
+		    currentElement = currentElement.offsetParent;
+		  }
+		  while(currentElement);
+
+		  var canvasX = event.pageX - totalOffsetX,
+		      canvasY = event.pageY - totalOffsetY;
+
+		  return {x:canvasX, y:canvasY};
+		};
+
+    this.setMouseHandlers = function() {
+		  this.canvas.onmousedown = function ( ev ){
+		    if (!ev.which) // Use w3c defns in preference to MS
+		    switch (ev.button) {
+		      case 0: ev.which = 1; break;
+		      case 1:
+		      case 4: ev.which = 2; break;
+		      case 2: ev.which = 3;
+		    }
+		    this.drag = ev.which;
+		    var f = this.mousedown[drag-1];
+		    if (f) {
+		      var coords = this.relMouseCoords(ev);
+		      coords.y = height-coords.y;
+		      activeSubscene = this.whichSubscene(coords);
+		      coords = this.translateCoords(activeSubscene, coords);
+		      f(coords.x, coords.y);
+		      ev.preventDefault();
+		    }
+		  };
+
+		  this.canvas.onmouseup = function ( ev ){
+		    if ( this.drag === 0 ) return;
+		    var f = this.mouseend[drag-1];
+		    if (f)
+		      f();
+		    this.drag = 0;
+		  };
+
+		  this.canvas.onmouseout = canvas.onmouseup;
+
+		  this.canvas.onmousemove = function ( ev ) {
+		    if ( this.drag === 0 ) return;
+		    var f = this.mousemove[drag-1];
+		    if (f) {
+		      var coords = this.relMouseCoords(ev);
+		      coords.y = height - coords.y;
+		      coords = this.translateCoords(activeSubscene, coords);
+		      f(coords.x, coords.y);
+		    }
+		  };
+
+		  var wheelHandler = function(ev) {
+		    var del = 1.1, i;
+		    if (ev.shiftKey) del = 1.01;
+		    var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
+		    l = this.listeners[activeProjection[activeSubscene]];
+		    for (i = 0; i < l.length; i++) {
+		      this.zoom[l[i]] *= ds;
+		    }
+		    this.drawScene();
+		    ev.preventDefault();
+		  };
+
+		  this.canvas.addEventListener("DOMMouseScroll", wheelHandler, false);
+		  this.canvas.addEventListener("mousewheel", wheelHandler, false);
+		};
+
+		this.initialize = function(el, x) {
+	    this.normMatrix = new CanvasMatrix4();
+	    this.saveMat = {};
+	    this.distance = null;
+	    this.posLoc = 0;
+	    this.colLoc = 1;
+		  for (i = 0; i < this.ids.length; i++) {
+		    this.initObj(this.ids[i]);
+		  }
+		}
+
+		this.drawInstance = function(el) {
+	    this.canvas = document.getElementById(el.id);
+	    if (!window.WebGLRenderingContext){
+	      alert("%snapshotimg2% Your browser does not support WebGL. See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
+	      return;
+	    }
+	    try {
+	     // Try to grab the standard context. If it fails, fallback to experimental.
+	      this.gl = this.canvas.getContext("webgl") ||
+	               this.canvas.getContext("experimental-webgl");
+	    }
+	    catch(e) {}
+	    if ( !this.gl ) {
+	      alert("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
+	      return;
+	    }
+	    this.id = el.id;
+	    this.canvas.width = this.width;
+	    this.canvas.height = this.height;
+
+		  this.gl.enable(gl.DEPTH_TEST);
+	    this.gl.depthFunc(gl.LEQUAL);
+	    this.gl.clearDepth(1.0);
+	    this.gl.clearColor(1,1,1,1);
+	    this.drag  = 0;
+      this.drawScene();
+		}
+
+    this.drawScene = function() {
+			gl.depthMask(true);
+			gl.disable(gl.BLEND);
+			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			this.drawSubscene(this.rootid);
+			gl.flush();
+		}
 }).call(rglClass.prototype);

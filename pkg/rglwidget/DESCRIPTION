@@ -9,4 +9,4 @@ Description: Provides an 'htmlwidgets' framework for the 'rgl' package.
 License: GPL2
 LazyData: TRUE
 Depends: rgl
-Imports: htmlwidgets
+Imports: htmlwidgets, htmltools
