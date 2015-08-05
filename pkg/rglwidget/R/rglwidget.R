@@ -30,3 +30,8 @@ renderRglwidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
+
+rglwidget_html <- function(id, style, class, ...) {
+  htmltools::tags$canvas(id = id, class = class)
+}
+}
