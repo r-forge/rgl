@@ -1,7 +1,1 @@
 dependencies:
-  - rglClass:
-     src: htmlwidgets/lib/rglClass
-     script: rglClass.src.js
-  - CanvasMatrix:
-     src: htmlwidgets/lib/CanvasMatrix
-     script: CanvasMatrix.js

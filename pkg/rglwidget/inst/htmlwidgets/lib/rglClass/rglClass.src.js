@@ -762,6 +762,96 @@ rglClass = function() {
 		  return {x:canvasX, y:canvasY};
 		};
 
+		this.trackballdown = function(x,y) {
+			var i, l = this.listeners[this.activeModel[this.activeSubscene]];
+			this.rotBase = screenToVector(x, y);
+			this.saveMat = [];
+			for (i = 0; i < l.length; i++) {
+			  saveMat[l[i]] = new CanvasMatrix4(this.userMatrix[l[i]]);
+			}
+		};
+
+		this.trackballmove = function(x,y) {
+			var rotCurrent = this.screenToVector(x,y),
+				dot = this.rotBase[0]*rotCurrent[0] +
+						  this.rotBase[1]*rotCurrent[1] +
+			  	   	this.rotBase[2]*rotCurrent[2],
+				angle = acos( dot/this.vlen(rotBase)/this.vlen(rotCurrent) )*180.0/PI,
+				axis = this.xprod(rotBase, rotCurrent),
+				l = this.listeners[activeModel[activeSubscene]],
+				i;
+		  for (i = 0; i < l.length; i++) {
+			  this.userMatrix[l[i]].load(this.saveMat[l[i]]);
+				this.userMatrix[l[i]].rotate(angle, axis[0], axis[1], axis[2]);
+			}
+			this.drawScene();
+		};
+		this.trackballend = 0;
+
+		this.xAxis = [1.0, 0.0, 0.0];
+		this.yAxis = [0.0, 1.0, 0.0];
+		this.zAxis = [0.0, 0.0, 1.0];
+    this.axisdown = function(x,y) {
+		  this.rotBase = this.screenToVector(x, this.height/2);
+			var i, l = this.listeners[this.activeModel[this.activeSubscene]];
+			this.saveMat = [];
+			for (i = 0; i < l.length; i++) {
+			  saveMat[l[i]] = new CanvasMatrix4(this.userMatrix[l[i]]);
+			}
+		};
+
+		this.axismove = function(x,y) {
+		  var rotCurrent = this.screenToVector(x,this.height/2),
+					angle = (rotCurrent[0] - rotBase[0])*180/PI,
+			    rotMat = new CanvasMatrix4();
+			rotMat.rotate(angle, this.axis[0], this.axis[1], this.axis[2]);
+			var i, l = this.listeners[activeModel[activeSubscene]];
+			for (i = 0; i < l.length; i++) {
+			  this.userMatrix[l[i]].load(saveMat[l[i]]);
+			  this.userMatrix[l[i]].multLeft(rotMat);
+			}
+			this.drawScene();
+		};
+    this.axisend = 0;
+
+    this.y0zoom = 0;
+		this.zoom0 = 0;
+		this.zoomdown = function(x, y) {
+		  this.y0zoom = y;
+			this.zoom0 = [];
+			var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
+			for (i = 0; i < l.length; i++) {
+			  this.zoom0[l[i]] = log(this.zoom[l[i]]);
+			}
+		};
+    this.zoommove = function(x, y) {
+		  var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
+			for (i = 0; i < l.length; i++) {
+			  this.zoom[l[i]] = exp(this.zoom0[l[i]] + (y-this.y0zoom)/this.height);
+			}
+				this.drawScene();
+		  };
+    this.zoomend = 0;
+
+    this.y0fov = 0;
+		this.fov0 = 0;
+		this.fovdown = function(x, y) {
+			  this.y0fov = y;
+				this.fov0 = [];
+				var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
+				for (i = 0; i < l.length; i++) {
+				  this.fov0[l[i]] = this.FOV[l[i]];
+				}
+			};
+    this.fovmove = function(x, y) {
+			  var i, l = this.listeners[this.activeProjection[this.activeSubscene]];
+				for (i = 0; i < l.length; i++) {
+				  this.FOV[l[i]] = max(1, min(179, this.fov0[l[i]] + 180*(y-this.y0fov)/this.height));
+				}
+				this.drawScene();
+			};
+    this.fovend = 0;
+
     this.setMouseHandlers = function() {
 		  this.canvas.onmousedown = function ( ev ){
 		    if (!ev.which) // Use w3c defns in preference to MS
@@ -820,6 +910,78 @@ rglClass = function() {
 		  this.canvas.addEventListener("mousewheel", wheelHandler, false);
 		};
 
+		this.useid = function(subsceneid, type) {
+		  if (this.embeddings[subsceneid][type] === "inherit")
+		    return(this.useid(this.parents[subsceneid], type));
+		  else
+		    return subsceneid;
+		};
+
+		this.inViewport = function(coords, subsceneid) {
+		  var viewport = this.viewport[subsceneid],
+		    x0 = coords.x - viewport[0],
+		    y0 = coords.y - viewport[1];
+		  return 0 <= x0 && x0 <= viewport[2] &&
+		         0 <= y0 && y0 <= viewport[3];
+		}
+
+    this.whichSubscene = function(coords) {
+      var self = this,
+          recurse = function(subsceneid) {
+            var subscenes = self.subscenes[subsceneid], i, id;
+            for (i=0; i < subscenes.length; i++) {
+              id = recurse(subscenes[i]);
+              if (typeof(id) !== "undefined")
+                return(id);
+            }
+            if (self.inViewport(coords, subsceneid))
+              return(subsceneid)
+            else
+              return undefined;
+          },
+          rootid = this.rootid,
+          result = recurse(rootid);
+      if (typeof(result) === "undefined")
+        result = rootid;
+      return result;
+    };
+
+    this.translateCoords = function(subsceneid, coords) {
+      var viewport = this.viewport[subsceneid];
+      return {x: coords.x - viewport[0], y: coords.y - viewport[1]};
+    };
+
+    this.vlen = function(v) {
+		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		};
+
+		this.xprod = function(a, b) {
+			return [a[1]*b[2] - a[2]*b[1],
+			    a[2]*b[0] - a[0]*b[2],
+			    a[0]*b[1] - a[1]*b[0]];
+		};
+
+		this.screenToVector = function(x, y) {
+		  var width = this.viewport[this.activeSubscene][2],
+			  height = this.viewport[this.activeSubscene][3],
+			  radius = max(width, height)/2.0,
+			  cx = width/2.0,
+			  cy = height/2.0,
+			  px = (x-cx)/radius,
+			  py = (y-cy)/radius,
+			  plen = sqrt(px*px+py*py);
+			if (plen > 1.e-6) {
+			  px = px/plen;
+			  py = py/plen;
+			}
+			var angle = (SQRT2 - plen)/SQRT2*PI/2,
+			  z = sin(angle),
+			  zlen = sqrt(1.0 - z*z);
+			px = px * zlen;
+			py = py * zlen;
+			return [px, py, z];
+		};
+
 		this.initialize = function(el, x) {
 	    this.normMatrix = new CanvasMatrix4();
 	    this.saveMat = {};
@@ -829,7 +991,7 @@ rglClass = function() {
 		  for (i = 0; i < this.ids.length; i++) {
 		    this.initObj(this.ids[i]);
 		  }
-		}
+		};
 
 		this.drawInstance = function(el) {
 	    this.canvas = document.getElementById(el.id);
@@ -857,7 +1019,7 @@ rglClass = function() {
 	    this.gl.clearColor(1,1,1,1);
 	    this.drag  = 0;
       this.drawScene();
-		}
+		};
 
     this.drawScene = function() {
 			gl.depthMask(true);
@@ -865,5 +1027,7 @@ rglClass = function() {
 			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this.drawSubscene(this.rootid);
 			gl.flush();
-		}
+		};
+
+
 }).call(rglClass.prototype);
