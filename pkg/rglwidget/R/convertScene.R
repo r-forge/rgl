@@ -18,7 +18,7 @@ convertBBox <- function(id) {
 	text <- rgl.attrib(id, "text")
 	if (!length(text))
 		text <- rep("", NROW(verts))
-	mat <- rgl.getmaterial(id = id)
+	mat <- rgl:::rgl.getmaterial(id = id)
 	if (length(mat$color) > 1)
 		mat$color <- mat$color[2] # We ignore the "box" colour
 
@@ -108,7 +108,7 @@ convertScene <- function(width, height, reuse = NULL) {
 
 	shaders <- function(id, type, flags) {
 		if (type == "clipplanes" || flags["reuse"]) return(NULL)
-		mat <- rgl.getmaterial(id=id)
+		mat <- rgl:::rgl.getmaterial(id=id)
 		is_lit <- flags["is_lit"]
 		is_smooth <- flags["is_smooth"]
 		has_texture <- flags["has_texture"]
@@ -344,14 +344,14 @@ convertScene <- function(width, height, reuse = NULL) {
 						textureColor = vec4(lighteffect.rgb*luminance, lighteffect.a*textureColor.a);'),
 
 			if (has_texture)
-				'	  gl_FragColor = textureColor;'
+			  '	  gl_FragColor = textureColor;'
 			else if (type == "text")
-				'	  if (textureColor.a < 0.1)
+			  '	  if (textureColor.a < 0.1)
 			discard;
 			else
 			gl_FragColor = textureColor;'
 			else
-				'	  gl_FragColor = lighteffect;',
+			  '	  gl_FragColor = lighteffect;',
 
 			'	}'     )
 		list(vertex = vertex, fragment = fragment)
@@ -375,7 +375,7 @@ convertScene <- function(width, height, reuse = NULL) {
 			info <- subsceneInfo(id)
 			result$types[id] <- "subscene"
 			result$flags[id] <- numericFlags(getSubsceneFlags(id))
-			result$embeddings[id] <- info$embeddings
+			result$embeddings[[id]] <- info$embeddings
 			if (info$embeddings["projection"] != "inherit") {
 				result$zooms[id] <- par3d("zoom")
 			  result$FOVs[id] <- max(1, min(179, par3d("FOV")))
@@ -402,7 +402,7 @@ convertScene <- function(width, height, reuse = NULL) {
 
 	initObj <- function(id, type, flags) {
 		is_indexed <- flags["is_indexed"]
-		mat <- rgl.getmaterial(id=id)
+		mat <- rgl:::rgl.getmaterial(id=id)
 		is_lit <- flags["is_lit"]
 		has_texture <- flags["has_texture"]
 		fixed_quads <- flags["fixed_quads"]
@@ -628,76 +628,68 @@ convertScene <- function(width, height, reuse = NULL) {
 	mouseHandlers <- function() {
 		save <- currentSubscene3d()
 		on.exit(useSubscene3d(save))
-
-		x0 <- y0 <- widths <- heights <- tests <- models <-
-			projections <- listeners <- character(0)
-
-		useid <- function(id, type="model") {
-			info <- subsceneInfo(id)
-			if (info$embeddings[type] == "inherit")
-				useid(info$parent, type)
-			else
-				id
-		}
-
-		rects <- function(parent) {
-			useSubscene3d(parent)
-			info <- subsceneInfo(parent)
-			for (id in rev(info$children))
-				rects(id)
-
-			viewport <- par3d("viewport")*c(wfactor, hfactor)
-			x0 <<- c(x0, subst("%id%: %x0%", id=parent, x0=viewport[1]))
-			y0 <<- c(y0, subst("%id%: %y0%", id=parent, y0=viewport[2]))
-			widths <<- c(widths, subst("%id%: %width%", id=parent, width=viewport[3]))
-			heights <<- c(heights, subst("%id%: %height%", id=parent, height=viewport[4]))
-
-			tests <<- c(tests, subst(
-				'         if (%x0% <= coords.x && coords.x <= %x1% && %y0% <= coords.y && coords.y <= %y1%) return(%id%);',
-				id=parent, x0=viewport[1], y0=viewport[2], x1=viewport[1]+viewport[3],
-				y1=viewport[2]+viewport[4]))
-			models <<- c(models, subst("%id%: %model%", id=parent, model=useid(parent, "model")))
-			projections <<- c(projections, subst("%id%: %projection%", id=parent, projection=useid(parent, "projection")))
-			l <- par3d("listeners", subscene=parent)
-			listeners <<- c(listeners, subst("%id%: [ %ids% ]", id = parent,
-							 ids = paste(unique(l), collapse=",")))
-		}
-
-		rootid <- rootSubscene()
-		rects(rootid)
-
-		result <- c(
-			'  	   var vpx0 = {',
-			inRows(x0, perrow=6, "          "),
-			'  	     };
-			var vpy0 = {',
-			inRows(y0, perrow=6, "          "),
-			'  	     };
-			var vpWidths = {',
-			inRows(widths, perrow=6, "         "),
-			'  	     };
-			var vpHeights = {',
-			inRows(heights, perrow=6, "          "),
-			'  	     };
-			var activeModel = {',
-			inRows(models, perrow=6, "         "),
-			'  	     };
-			var activeProjection = {',
-			inRows(projections, perrow=6, "         "), subst(
-				'  	     };
-				%prefix%rgl.listeners = {', prefix),
-			inRows(listeners, perrow=2, "         "),
-			'  	     };
-			',
-			'  	   var whichSubscene = function(coords){',
-			tests, subst(
-				'         return(%id%);
-				};
-				',	id=rootid)
-			)
+#
+# 		x0 <- y0 <- widths <- heights <- tests <- models <-
+# 			projections <- listeners <- character(0)
+#
+# 		rects <- function(parent) {
+# 			useSubscene3d(parent)
+# 			info <- subsceneInfo(parent)
+# 			for (id in rev(info$children))
+# 				rects(id)
+#
+# 			viewport <- par3d("viewport")*c(wfactor, hfactor)
+# 			x0 <<- c(x0, subst("%id%: %x0%", id=parent, x0=viewport[1]))
+# 			y0 <<- c(y0, subst("%id%: %y0%", id=parent, y0=viewport[2]))
+# 			widths <<- c(widths, subst("%id%: %width%", id=parent, width=viewport[3]))
+# 			heights <<- c(heights, subst("%id%: %height%", id=parent, height=viewport[4]))
+#
+# 			tests <<- c(tests, subst(
+# 				'         if (%x0% <= coords.x && coords.x <= %x1% && %y0% <= coords.y && coords.y <= %y1%) return(%id%);',
+# 				id=parent, x0=viewport[1], y0=viewport[2], x1=viewport[1]+viewport[3],
+# 				y1=viewport[2]+viewport[4]))
+# 			models <<- c(models, subst("%id%: %model%", id=parent, model=useid(parent, "model")))
+# 			projections <<- c(projections, subst("%id%: %projection%", id=parent, projection=useid(parent, "projection")))
+# 			l <- par3d("listeners", subscene=parent)
+# 			listeners <<- c(listeners, subst("%id%: [ %ids% ]", id = parent,
+# 							 ids = paste(unique(l), collapse=",")))
+# 		}
+#
+# 		rootid <- rootSubscene()
+# 		rects(rootid)
+#
+# 		result <- c(
+# 			'  	   var vpx0 = {',
+# 			inRows(x0, perrow=6, "          "),
+# 			'  	     };
+# 			var vpy0 = {',
+# 			inRows(y0, perrow=6, "          "),
+# 			'  	     };
+# 			var vpWidths = {',
+# 			inRows(widths, perrow=6, "         "),
+# 			'  	     };
+# 			var vpHeights = {',
+# 			inRows(heights, perrow=6, "          "),
+# 			'  	     };
+# 			var activeModel = {',
+# 			inRows(models, perrow=6, "         "),
+# 			'  	     };
+# 			var activeProjection = {',
+# 			inRows(projections, perrow=6, "         "), subst(
+# 				'  	     };
+# 				%prefix%rgl.listeners = {', prefix),
+# 			inRows(listeners, perrow=2, "         "),
+# 			'  	     };
+# 			',
+# 			'  	   var whichSubscene = function(coords){',
+# 			tests, subst(
+# 				'         return(%id%);
+# 				};
+# 				',	id=rootid)
+# 			)
 
 		handlers <- par3d("mouseMode")
-		if (any(notdone <- handlers %in% c("polar", "selecting"))) {
+		if (any(notdone <- handlers %in% c("polar", "selecting", "user"))) {
 			warning(gettextf("Mouse mode(s) %s not supported.  'trackball' used",
 					 paste(sQuote(handlers[notdone]), collapse = ", ")),
 				domain = NA)
@@ -705,6 +697,7 @@ convertScene <- function(width, height, reuse = NULL) {
 		}
 
 		# User handlers are different than others, so do them first
+		# But not yet; get others working first.
 		for (i in which(handlers == "user")) {
 			handlers[i] <- paste0("user", i)
 			handlerfns <- rgl.getMouseCallbacks(i)
@@ -714,168 +707,21 @@ convertScene <- function(width, height, reuse = NULL) {
 				if (!is.null(handlerfns[[j]])) {
 					fn <- attr(handlerfns[[j]], "javascript")
 					if (!is.null(fn)) {
-						result <- c(result, subst(
-							'           var %handler%%action% = %fn%;',
-							handler = handlers[i], action = actions[j], fn = fn))
+# 						result <- c(result, subst(
+# 							'           var %handler%%action% = %fn%;',
+# 							handler = handlers[i], action = actions[j], fn = fn))
 					} else if (!is.null(name <- attr(handlerfns[[j]], "jsName"))) {
-						result <- c(result, subst(
-							'           var %handler%%action% = function(x, y) {
-							%javascript%(activeSubscene%args%)
-					};', handler = handlers[i], action = actions[j], javascript = name,
-                          args = if (j < 3) ", x, y" else ""))
+# 						result <- c(result, subst(
+# 							'           var %handler%%action% = function(x, y) {
+# 							%javascript%(activeSubscene%args%)
+# 					};', handler = handlers[i], action = actions[j], javascript = name,
+#                           args = if (j < 3) ", x, y" else ""))
 				} else {
 					warning("No \"javascript\" or \"jsName\" attribute found on user handler.  Default used instead.")
 					handlers[i] <- defaults[i]
 					}
 				}
 		}
-		uhandlers <- setdiff(unique(handlers), "none")
-		result <- c(result,
-			    '       var translateCoords = function(subsceneid, coords){
-			    return {x:coords.x - vpx0[subsceneid], y:coords.y - vpy0[subsceneid]};
-		};
-
-			    var vlen = function(v) {
-			    return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-			    };
-
-			    var xprod = function(a, b) {
-			    return [a[1]*b[2] - a[2]*b[1],
-			    a[2]*b[0] - a[0]*b[2],
-			    a[0]*b[1] - a[1]*b[0]];
-			    };
-
-			    var screenToVector = function(x, y) {
-			    var width = vpWidths[activeSubscene],
-			    height = vpHeights[activeSubscene],
-			    radius = max(width, height)/2.0,
-			    cx = width/2.0,
-			    cy = height/2.0,
-			    px = (x-cx)/radius,
-			    py = (y-cy)/radius,
-			    plen = sqrt(px*px+py*py);
-			    if (plen > 1.e-6) {
-			    px = px/plen;
-			    py = py/plen;
-			    }
-
-			    var angle = (SQRT2 - plen)/SQRT2*PI/2,
-			    z = sin(angle),
-			    zlen = sqrt(1.0 - z*z);
-			    px = px * zlen;
-			    py = py * zlen;
-			    return [px, py, z];
-			    };
-
-			    var rotBase;
-			    ')
-
-		for (i in seq_along(uhandlers)) {
-			h <- uhandlers[i]
-			result <- c(result, switch(h,
-						   trackball = subst(
-						   	'	   var trackballdown = function(x,y) {
-						   	rotBase = screenToVector(x, y);
-						   	var l = %prefix%rgl.listeners[activeModel[activeSubscene]];
-						   	saveMat = {};
-						   	for (var i = 0; i < l.length; i++)
-						   	saveMat[l[i]] = new CanvasMatrix4(%prefix%rgl.userMatrix[l[i]]);
-		};
-
-						   	var trackballmove = function(x,y) {
-						   	var rotCurrent = screenToVector(x,y),
-						   	dot = rotBase[0]*rotCurrent[0] +
-						   	rotBase[1]*rotCurrent[1] +
-						   	rotBase[2]*rotCurrent[2],
-						   	angle = acos( dot/vlen(rotBase)/vlen(rotCurrent) )*180.0/PI,
-						   	axis = xprod(rotBase, rotCurrent),
-						   	l = %prefix%rgl.listeners[activeModel[activeSubscene]],
-						   	i;
-						   	for (i = 0; i < l.length; i++) {
-						   	%prefix%rgl.userMatrix[l[i]].load(saveMat[l[i]]);
-						   	%prefix%rgl.userMatrix[l[i]].rotate(angle, axis[0], axis[1], axis[2]);
-						   	}
-						   	%prefix%rgl.drawScene();
-						   	};
-						   	var trackballend = 0;
-						   	', prefix),
-
-						   xAxis =,
-						   yAxis =,
-						   zAxis = c(
-						   	if (h == "xAxis")
-						   		'	   var xAxis = [1.0, 0.0, 0.0];'
-						   	else if (h == "yAxis")
-						   		'	   var yAxis = [0.0, 1.0, 0.0];'
-						   	else
-						   		'	   var zAxis = [0.0, 0.0, 1.0];',
-						   	subst(
-						   		'
-						   		var %h%down = function(x,y) {
-						   		rotBase = screenToVector(x, height/2);
-						   		var l = %prefix%rgl.listeners[activeModel[activeSubscene]];
-						   		saveMat = {};
-						   		for (var i = 0; i < l.length; i++)
-						   		saveMat[l[i]] = new CanvasMatrix4(%prefix%rgl.userMatrix[l[i]]);
-						   		};
-
-						   		var %h%move = function(x,y) {
-						   		var rotCurrent = screenToVector(x,height/2),
-						   		angle = (rotCurrent[0] - rotBase[0])*180/PI,
-						   		rotMat = new CanvasMatrix4(),
-						   		i;
-						   		rotMat.rotate(angle, %h%[0], %h%[1], %h%[2]);
-						   		var l = %prefix%rgl.listeners[activeModel[activeSubscene]];
-						   		for (i = 0; i < l.length; i++) {
-						   		%prefix%rgl.userMatrix[l[i]].load(saveMat[l[i]]);
-						   		%prefix%rgl.userMatrix[l[i]].multLeft(rotMat);
-						   		}
-						   		%prefix%rgl.drawScene();
-						   		};
-
-						   		var %h%end = 0;
-
-						   		',           h, prefix)),
-						   zoom = subst(
-						   	'	   var y0zoom = 0;
-						   	var zoom0 = 0;
-						   	var zoomdown = function(x, y) {
-						   	y0zoom = y;
-						   	zoom0 = {};
-						   	l = %prefix%rgl.listeners[activeProjection[activeSubscene]];
-						   	for (var i = 0; i < l.length; i++)
-						   	zoom0[l[i]] = log(%prefix%rgl.zoom[l[i]]);
-						   	};
-
-						   	var zoommove = function(x, y) {
-						   	l = %prefix%rgl.listeners[activeProjection[activeSubscene]];
-						   	for (var i = 0; i < l.length; i++)
-						   	%prefix%rgl.zoom[l[i]] = exp(zoom0[l[i]] + (y-y0zoom)/height);
-						   	%prefix%rgl.drawScene();
-						   	};
-
-						   	var zoomend = 0;
-						   	',      prefix),
-						   fov = subst(
-						   	'	   var y0fov = 0;
-						   	var fov0 = 0;
-						   	var fovdown = function(x, y) {
-						   	y0fov = y;
-						   	fov0 = {};
-						   	l = %prefix%rgl.listeners[activeProjection[activeSubscene]];
-						   	for (i = 0; i < l.length; i++)
-						   	fov0[l[i]] = %prefix%rgl.FOV[l[i]];
-						   	};
-
-						   	var fovmove = function(x, y) {
-						   	l = %prefix%rgl.listeners[activeProjection[activeSubscene]];
-						   	for (i = 0; i < l.length; i++)
-						   	%prefix%rgl.FOV[l[i]] = max(1, min(179, fov0[l[i]] + 180*(y-y0fov)/height));
-						   	%prefix%rgl.drawScene();
-						   	};
-
-						   	var fovend = 0;
-						   	',      prefix)))  }
 
 		down <- paste(handlers, "down", sep="")
 		move <- paste(handlers, "move", sep="")
@@ -884,12 +730,12 @@ convertScene <- function(width, height, reuse = NULL) {
 		down[none] <- "0"
 		move[none] <- "0"
 		end[none] <- "0"
-		c(result, subst(
-			'	   var mousedown = [%d1%, %d2%, %d3%];
-			var mousemove = [%m1%, %m2%, %m3%];
-			var mouseend = [%e1%, %e2%, %e3%];
-			',    d1=down[1], d2=down[2], d3=down[3], m1=move[1], m2=move[2], m3=move[3],
-			e1=end[1],  e2=end[2],  e3=end[3]))
+# 		c(result, subst(
+# 			'	   var mousedown = [%d1%, %d2%, %d3%];
+# 			var mousemove = [%m1%, %m2%, %m3%];
+# 			var mouseend = [%e1%, %e2%, %e3%];
+# 			',    d1=down[1], d2=down[2], d3=down[3], m1=move[1], m2=move[2], m3=move[3],
+# 			e1=end[1],  e2=end[2],  e3=end[3]))
 		}
 
 # 	scriptEnd <- subst(
@@ -911,7 +757,7 @@ convertScene <- function(width, height, reuse = NULL) {
 			return(result)
 		}
 
-		mat <- rgl.getmaterial(id=id)
+		mat <- rgl:::rgl.getmaterial(id=id)
 		result["is_lit"] <- mat$lit && type %in% c("triangles", "quads", "surface", "planes",
 							   "spheres", "sprites")
 
@@ -958,7 +804,6 @@ convertScene <- function(width, height, reuse = NULL) {
 
 	#  Execution starts here!
 
-
 	# Do a few checks first
 
 	if (is.null(reuse) || isTRUE(reuse))
@@ -975,20 +820,20 @@ convertScene <- function(width, height, reuse = NULL) {
 	rwidth <- rect[3] - rect[1] + 1
 	rheight <- rect[4] - rect[2] + 1
 	if (missing(width)) {
-		if (missing(height)) {
-			wfactor <- hfactor <- 1  # width = wfactor*rwidth, height = hfactor*rheight
-		} else
-			wfactor <- hfactor <- height/rheight
+	  if (missing(height)) {
+	    wfactor <- hfactor <- 1  # width = wfactor*rwidth, height = hfactor*rheight
+	  } else
+	    wfactor <- hfactor <- height/rheight
 	} else {
-		if (missing(height)) {
-			wfactor <- hfactor <- width/rwidth
-		} else {
-			wfactor <- width/rwidth
-			hfactor <- height/rheight
-		}
+	  if (missing(height)) {
+	    wfactor <- hfactor <- width/rwidth
+	  } else {
+	    wfactor <- width/rwidth;
+	    hfactor <- height/rheight;
+	  }
 	}
-	width <- wfactor*rwidth
-	height <- hfactor*rheight
+	width <- wfactor*rwidth;
+	height <- hfactor*rheight;
 
 	result <- initResult()
 
@@ -1040,6 +885,8 @@ convertScene <- function(width, height, reuse = NULL) {
 
 	result$subscenes <- rgl.ids("subscene", subscene = 0)$id
 
+
+
 	result <- c(result, drawEnd, mouseHandlers(), scriptEnd, footer(),
 		    if (!is.null(template))
 		    	templatelines[replace + seq_len(length(templatelines)-replace)]
@@ -1054,3 +901,4 @@ convertScene <- function(width, height, reuse = NULL) {
 	}
 	invisible(filename)
 	}
+

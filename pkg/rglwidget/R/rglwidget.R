@@ -1,15 +1,17 @@
 
-rglwidget <- function(message, width = NULL, height = NULL) {
+rglwidget <- function(scene, width = NULL, height = NULL) {
 
-  # forward options using x
-  x = list(
-    message = message
-  )
+  makeList <- function(x) {
+    if (is.list(x)) x <- lapply(x, makeList)
+    if (length(names(x))) x <- as.list(x)
+    x
+  }
+  scene <- makeList(scene)
 
   # create widget
   htmlwidgets::createWidget(
     name = 'rglwidget',
-    x,
+    scene,
     width = width,
     height = height,
     package = 'rglwidget'
@@ -31,7 +33,6 @@ renderRglwidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
 
-rglwidget_html <- function(id, style, class, ...) {
-  htmltools::tags$canvas(id = id, class = class)
-}
-}
+# rglwidget_html <- function(id, style, class, ...) {
+#   htmltools::tags$canvas(id = id, class = class)
+# }
