@@ -1,17 +1,10 @@
 
-rglwidget <- function(scene, width = NULL, height = NULL) {
-
-  makeList <- function(x) {
-    if (is.list(x)) x <- lapply(x, makeList)
-    if (length(names(x))) x <- as.list(x)
-    x
-  }
-  scene <- makeList(scene)
+rglwidget <- function(width = NULL, height = NULL) {
 
   # create widget
   htmlwidgets::createWidget(
     name = 'rglwidget',
-    scene,
+    x = convertScene(width, height),
     width = width,
     height = height,
     package = 'rglwidget'
