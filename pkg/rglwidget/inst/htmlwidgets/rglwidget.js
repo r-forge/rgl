@@ -14,9 +14,8 @@ HTMLWidgets.widget({
 
   renderValue: function(el, x, instance) {
 
-    el.innerText = ""; //Object.getOwnPropertyNames(x.objects["4"].type);
-    var names = Object.getOwnPropertyNames(x);
-    el.innerText = names + "\n";
+    var rgl = new rglClass();
+    rgl.initialize(el, x);
 
   },
 

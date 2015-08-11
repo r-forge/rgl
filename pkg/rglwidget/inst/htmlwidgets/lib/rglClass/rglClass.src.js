@@ -316,8 +316,9 @@ rglClass = function() {
 	   };
 
     this.initObj = function(id) {
-	    var flags = this.flags[id],
-	        type = this.types[id],
+	    var obj = this.scene.objects[id],
+	        flags = obj.flags,
+	        type = obj.type,
 	        is_indexed = flags & this.f_is_indexed,
           is_lit = flags & this.f_is_lit,
 		      has_texture = flags & this.f_has_texture,
@@ -330,60 +331,59 @@ rglClass = function() {
 		      gl = this.gl,
           texinfo, drawtype, f;
 
-		if (!sprites_3d && !is_clipplanes) {
-			this.prog[id] = gl.createProgram();
-			gl.attachShader(this.prog[id], this.getShader( gl, gl.VERTEX_SHADER,                       this.vshaders[id] ));
-			gl.attachShader(this.prog[id], this.getShader( gl, gl.FRAGMENT_SHADE,
-			                this.fshaders[id] ));
-			//  Force aPos to location 0, aCol to location 1
-			gl.bindAttribLocation(this.prog[id], 0, "aPos");
-			gl.bindAttribLocation(this.prog[id], 1, "aCol");
-			gl.linkProgram(this.prog[id]);
-		}
+    if (type === "subscene" || type === "clipplanes" || type === "background" || type === "light")
+      return;
 
-		if (type === "clipplanes") {
-			return();
+		if (!sprites_3d && !is_clipplanes) {
+			obj.prog = gl.createProgram();
+			gl.attachShader(obj.prog, this.getShader( gl, gl.VERTEX_SHADER,                       obj.vshader ));
+			gl.attachShader(obj.prog, this.getShader( gl, gl.FRAGMENT_SHADER,
+			                obj.fshader ));
+			//  Force aPos to location 0, aCol to location 1
+			gl.bindAttribLocation(obj.prog, 0, "aPos");
+			gl.bindAttribLocation(obj.prog, 1, "aCol");
+			gl.linkProgram(obj.prog);
 		}
 
 		if (type === "text") {
-      texinfo = drawTextToCanvas(texts, this.cexs[id]);
+      texinfo = drawTextToCanvas(texts, obj.cex);
 		}
 
 		if (fixed_quads && !sprites_3d) {
-		  this.ofsLoc[id] = gl.getAttribLocation(this.prog[id], "aOfs");
+		  obj.ofsLoc = gl.getAttribLocation(obj.prog, "aOfs");
 		}
 
 		if (sprite_3d) {
-			this.origLoc[id] = gl.getUniformLocation(this.prog[id], "uOrig");
-			this.sizeLoc[id] = gl.getUniformLocation(this.prog[id], "uSize");
-			this.usermatLoc[id] = gl.getUniformLocation(this.prog[id], "usermat");
+			obj.origLoc = gl.getUniformLocation(obj.prog, "uOrig");
+			obj.sizeLoc = gl.getUniformLocation(obj.prog, "uSize");
+			obj.usermatLoc = gl.getUniformLocation(obj.prog, "usermat");
 		}
 
 		if (load_texture || type == "text") {
-		  this.texture[id] = gl.createTexture();
-			this.texLoc[id] = gl.getAttribLocation(this.prog[id], "aTexcoord");
-			this.sampler[id] = gl.getUniformLocation(this.prog[id],"uSampler");
+		  obj.texture = gl.createTexture();
+			obj.texLoc = gl.getAttribLocation(obj.prog, "aTexcoord");
+			obj.sampler = gl.getUniformLocation(obj.prog, "uSampler");
 		}
 
 		if (load_texture) {
-			this.loadImageToTexture(this.textureFile[id], this.texture[id]);
+			this.loadImageToTexture(obj.textureFile, obj.texture);
 		} else if (has_texture) {
-			this.texture[id] = this.texture[texid];
+			obj.texture = this.texture[texid];
 		}
 
 		if (type === "text") {
-		  handleLoadedTexture(this.texture[id],
+		  handleLoadedTexture(obj.texture,
 		    document.getElementById("prefixtextureCanvas"));
 		}
 
     if (sprites_3d) {
-			this.userMatrix[id] = new CanvasMatrix4(this.userMatrix[id]);
+			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
     }
 
 		if (type === "text" && !reuse) {
-			for (i=0; i < this.texts[id].length; i++)
+			for (i=0; i < obj.texts.length; i++)
 			  for (j=0; j<4; j++) {
-			    ind = this.offsets[id].stride*(4*i + j) + this.offsets[id].tofs;
+			    ind = obj.offsets.stride*(4*i + j) + obj.offsets.tofs;
 			    	v[ind+2] = 2*(v[ind]-v[ind+2])*texinfo.widths[i];
 			    	v[ind+3] = 2*(v[ind+1]-v[ind+3])*texinfo.textHeight;
 			    	v[ind] *= texinfo.widths[i]/texinfo.canvasX;
@@ -393,59 +393,60 @@ rglClass = function() {
 		}
 
 		if (!sprites_3d && !reuse) {
-			 this.values[id] = v;
+			 obj.values = v;
 		}
 
 		if (!sprites_3d && reuse) {
-			 this.values[id] = thisprefixrgl.values[id];
+			 obj.values = thisprefixrgl.objects[id].values;
 		}
 
     if (is_lit && !fixed_quads && !sprites_3d) {
-			 this.normLoc[id] = gl.getAttribLocation(this.prog[id], "aNorm");
+			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
 
 		if (clipplanes && !sprites_3d) {
-		  this.clipLoc[id] = [];
+		  obj.clipLoc = [];
 		  for (i=0; i < clipplanes; i++)
-        this.clipLoc[id][i] = gl.getUniformLocation(this.prog[id],                                       "vClipplane" + (i+1));
+        obj.clipLoc[i] = gl.getUniformLocation(obj.prog,                                       "vClipplane" + (i+1));
 		}
 
 		if (is_indexed) {
 			if (depth_sort) {
-				this.f[id] = new Uint16Array([this.f[id]]);
+				obj.f = new Uint16Array([obj.f]);
 				drawtype = "DYNAMIC_DRAW";
-				f = this.f[id];
+				f = obj.f;
 			} else {
-				f = new Uint16Array([this.f[id]]);
+				f = new Uint16Array([obj.f]);
 				drawtype = "STATIC_DRAW";
 			}
 		}
 
 		if (type !== "spheres" && !sprites_3d) {
-		  this.buf[id] = gl.createBuffer();
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.buf[id]);
-			gl.bufferData(gl.ARRAY_BUFFER, this.values[id], gl.STATIC_DRAW);
+		  obj.buf = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
+			gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW);
 		}
 
 		if (is_indexed && type !== "spheres" && !sprites_3d) {
-			this.ibuf[id] = gl.createBuffer();
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibuf[id]);
+			obj.ibuf = gl.createBuffer();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.ibuf);
 			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, f, gl[drawtype]);
 		}
 
 		if (!sprites_3d && !is_clipplanes) {
-			this.mvMatLoc[id] = gl.getUniformLocation(this.prog[id], "mvMatrix");
-			this.prMatLoc[id] = gl.getUniformLocation(this.prog[id], "prMatrix");
+			obj.mvMatLoc = gl.getUniformLocation(obj.prog, "mvMatrix");
+			obj.prMatLoc = gl.getUniformLocation(obj.prog, "prMatrix");
 		}
 
 		if (type === "text") {
-			this.textScaleLoc[id] = gl.getUniformLocation(this.prog[id], "textScale");
+			obj.textScaleLoc = gl.getUniformLocation(obj.prog, "textScale");
 		}
 
 		if (is_lit && !sprites_3d) {
-			this.normMatLoc[id] = gl.getUniformLocation(this.prog[id], "normMatrix");
+			obj.normMatLoc = gl.getUniformLocation(obj.prog, "normMatrix");
 		}
 
+    this.scene.objects[id] = obj;
   };
 
 	  this.mode4type = {points : "POINTS",
@@ -488,7 +489,7 @@ rglClass = function() {
     	    }
 	    	  return(count1 + count2);
 		    };
-      return();
+      return;
 			}
 
       if (sprites_3d) {
@@ -984,32 +985,44 @@ rglClass = function() {
 		};
 
 		this.initialize = function(el, x) {
+		  this.canvas = el;
+		  this.initGL0();
+		  this.scene = x;
 	    this.normMatrix = new CanvasMatrix4();
 	    this.saveMat = {};
 	    this.distance = null;
 	    this.posLoc = 0;
 	    this.colLoc = 1;
-		  for (i = 0; i < this.ids.length; i++) {
-		    this.initObj(this.ids[i]);
-		  }
+	    var objs = this.scene.objects,
+	        self = this;
+	    Object.keys(objs).forEach(function(key){
+		    self.initObj(key);
+		  });
 		};
 
-		this.drawInstance = function(el) {
-	    this.canvas = document.getElementById(el.id);
+    this.initGL0 = function() {
 	    if (!window.WebGLRenderingContext){
 	      alert("%snapshotimg2% Your browser does not support WebGL. See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
 	      return;
 	    }
 	    try {
-	     // Try to grab the standard context. If it fails, fallback to experimental.
-	      this.gl = this.canvas.getContext("webgl") ||
-	               this.canvas.getContext("experimental-webgl");
+	      this.initGL();
 	    }
 	    catch(e) {}
 	    if ( !this.gl ) {
 	      alert("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
 	      return;
 	    }
+    }
+
+    this.initGL = function() {
+	   this.gl = this.canvas.getContext("webgl") ||
+	               this.canvas.getContext("experimental-webgl");
+	 }
+
+		this.drawInstance = function(el) {
+	    this.canvas = el;
+	    this.initGL();
 	    this.id = el.id;
 	    this.canvas.width = this.width;
 	    this.canvas.height = this.height;
