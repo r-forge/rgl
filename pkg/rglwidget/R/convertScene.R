@@ -13,6 +13,15 @@ subst <- function(strings, ..., digits=7) {
   strings
 }
 
+addDP <- function(value, digits=7) {
+  if (is.numeric(value)) {
+    value <- formatC(value, digits=digits, width=1)
+    noDP <- !grepl("[.]", value)
+    value[noDP] <- paste(value[noDP], ".", sep="")
+  }
+  value
+}
+
 convertBBox <- function(id) {
 	verts <- rgl.attrib(id, "vertices")
 	text <- rgl.attrib(id, "text")
@@ -93,9 +102,18 @@ countClipplanes <- function(id, minValue = getOption("rgl.minClipplanes", 0)) {
 	max(minValue, recurse(rootSubscene()))
 }
 
-convertScene <- function(width, height, reuse = NULL) {
+convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 
 	# Lots of utility functions and constants defined first; execution starts way down there...
+
+  veclen <- function(v) sqrt(sum(v^2))
+
+  normalize <- function(v) v/veclen(v)
+
+  vec2vec3 <- function(vec) {
+    vec <- addDP(vec)
+    sprintf("vec3(%s, %s, %s)", vec[1], vec[2], vec[3])
+  }
 
 	col2rgba <- function(col) as.numeric(col2rgb(col, alpha=TRUE))/255
 
@@ -218,13 +236,11 @@ convertScene <- function(width, height, reuse = NULL) {
 			'	/* ****** %type% object %id% fragment shader ****** */',
 			type, id),
 
-			subst(
 				'	#ifdef GL_ES
 				precision highp float;
 				#endif
 				varying vec4 vCol; // carries alpha
 				varying vec4 vPosition;',
-				prefix, id),
 
 			if (has_texture || type == "text")
 				'	varying vec2 vTexcoord;
@@ -357,390 +373,30 @@ convertScene <- function(width, height, reuse = NULL) {
 		list(vertex = vertex, fragment = fragment)
 	}
 
+	makeList <- function(x) {
+	  if (is.list(x)) x <- lapply(x, makeList)
+	  if (length(names(x))) x <- as.list(x)
+	  x
+	}
+
 	initResult <- function() {
-		subsceneids <- rgl.ids("subscene", subscene = 0)$id
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
+    result <- makeList(scene3d())
 
-		result <- list(activeSubscene = rootSubscene(),
-		               types = character(), flags = numeric(),
-		               zoom = numeric(), FOV = numeric(), viewport = list(),
-		               userMatrix = list(), clipplanes = list(),
-		               opaque = list(), transparent = list(),
-		               subscenes = list(), embeddings = list(),
-		               norigs = numeric(), origsize = list())
-
-		for (id in subsceneids) {
-			useSubscene3d(id)
-			info <- subsceneInfo(id)
-			result$types[id] <- "subscene"
-			result$flags[id] <- numericFlags(getSubsceneFlags(id))
-			result$embeddings[[id]] <- info$embeddings
-			if (info$embeddings["projection"] != "inherit") {
-				result$zooms[id] <- par3d("zoom")
-			  result$FOVs[id] <- max(1, min(179, par3d("FOV")))
-			}
-			viewport <- par3d("viewport")*c(wfactor, hfactor)
-			result$viewport[[id]] <- viewport
-			result$observers[[id]] <- par3d("observer")
-			if (info$embeddings["model"] != "inherit")
-				result$userMatrix[[id]] <- par3d("userMatrix")
-
-			clipplanes <- getClipplanes(id)
-			subids <- which( ids %in% rgl.ids()$id )
-			opaque <- ids[subids[!flags[subids,"sprite_3d"] & !flags[subids,"is_transparent"] & types[subids] != "clipplanes"]]
-			transparent <- ids[subids[!flags[subids,"sprite_3d"] & flags[subids,"is_transparent"] & types[subids] != "clipplanes"]]
-			subscenes <- as.integer(info$children)
-
-			result$clipplanes[[id]] <- clipplanes
-			result$opaque[[id]] <- opaque
-			result$transparent[[id]] <- transparent
-			result$subscenes[[id]] <- subscenes
-		}
+    recurse <- function(subscene) {
+      subscenes <- subscene$subscenes
+      for (i in seq_along(subscenes)) {
+        subscenes[[i]]$parent <- subscene$id
+        subscenes[[i]] <- recurse(subscenes[[i]])
+      }
+      subscene$subscenes <- unlist(subscenes)
+      id <- as.character(subscene$id)
+      result$objects[[id]] <<- subscene
+      subscene$id
+    }
+    result$rootSubscene <- recurse(result$rootSubscene)
 		result
 	}
 
-	initObj <- function(id, type, flags) {
-		is_indexed <- flags["is_indexed"]
-		mat <- rgl:::rgl.getmaterial(id=id)
-		is_lit <- flags["is_lit"]
-		has_texture <- flags["has_texture"]
-		fixed_quads <- flags["fixed_quads"]
-		depth_sort <- flags["depth_sort"]
-		sprites_3d <- flags["sprites_3d"]
-		sprite_3d <- flags["sprite_3d"]
-		is_clipplanes <- type == "clipplanes"
-		clipplanes <- countClipplanes(id)
-		thisprefix <- getPrefix(id)
-
-		if (!flags["reuse"]) {
-			shaders <- shaders(id, type, flags)
-			vshader <- paste(gsub("\n", "\\\\n", shaders$vertex, fixed = TRUE),
-					 collapse = "\\\\n")
-			fshader <- paste(gsub("\n", "\\\\n", shaders$fragment, fixed = TRUE),
-					 collapse = "\\\\n")
-		}
-		result$types[id] <<- type
-		result$flags[id] <<- numericFlags(flags)
-
-		if (!sprites_3d && !is_clipplanes)
-			if (!flags["reuse"]) {
-			  result$vshaders[id] <<- vshader
-			  result$fshaders[id] <<- fshader
-			}
-
-		nv <- rgl.attrib.count(id, "vertices")
-		if (nv)
-			values <- rgl.attrib(id, "vertices")
-		else
-			values <- NULL
-		if (nv > 65535)
-			warning(gettextf("Object %s has %s vertices.  Some browsers support only 65535", id, nv),
-				domain = NA)
-		result$vertexCount[id] <<- nv
-
-		nc <- rgl.attrib.count(id, "colors")
-		colors <- rgl.attrib(id, "colors")
-		if (nc > 1) {
-			if (nc != nv) {
-				rows <- rep(seq_len(nc), length.out=nv)
-				colors <- colors[rows,,drop=FALSE]
-			}
-			values <- cbind(values, colors)
-		}
-		result$colorCount[id] <<- nc
-
-		nn <- rgl.attrib.count(id, "normals")
-		if (nn > 0) {
-			normals <- rgl.attrib(id, "normals")
-			values <- cbind(values, normals)
-		}
-		result$normalCount[id] <<- nn
-
-		if (type == "spheres") {
-			radii <- rgl.attrib(id, "radii")
-			if (length(radii) == 1)
-				radii <- rep(radii, NROW(values))
-			values <- cbind(values, radii)
-		}
-
-		if (type == "clipplanes") {
-			offsets <- rgl.attrib(id, "offsets")
-			stopifnot(NCOL(values) == 3)
-			values <- cbind(values, offsets)
-			result$vClipplane[id] <<- values
-			return(result)
-		}
-
-		if (type == "surface") { # Compute indices of triangles
-			dim <- rgl.attrib(id, "dim")
-			nx <- dim[1]
-			nz <- dim[2]
-			f <- NULL
-			for (j in seq_len(nx-1)-1) {
-				v1 <- j + nx*(seq_len(nz) - 1)
-				v2 <- v1 + 1
-				f <- cbind(f, rbind(v1[-nz],
-						    v1[-1],
-						    v2[-1],
-						    v1[-nz],
-						    v2[-1],
-						    v2[-nz]))
-			}
-			frowsize <- 6
-		}
-
-		if (type == "text") {
-			adj <- rgl.attrib(id, "adj") # Should query scene...
-			texts <- rgl.attrib(id, "texts")
-			cex <- rgl.attrib(id, "cex")
-			if (min(cex) < max(cex))
-				warning("Only the first value of cex used")
-
-			values <- values[rep(seq_len(nv), each=4),]
-
-			# String heights and widths need to be multiplied in here
-			texcoords <- matrix(rep(c(0,-0.5,1,-0.5,1,1.5,0,1.5),nv), 4*nv, 2, byrow=TRUE)
-			refs <- matrix(adj, 4*nv, 2, byrow=TRUE)
-			tofs <- NCOL(values)
-			values <- cbind(values, texcoords)
-			oofs <- NCOL(values)
-			values <- cbind(values, refs)
-			nv <- nv*4
-			result$texts[id] <<- texts
-			result$cexs[id] <<- cex
-		}
-
-		if (type == "sprites") {
-			oofs <- NCOL(values)
-			if (sprites_3d)
-				values <- cbind(values, rep(rgl.attrib(id, "radii")/2, len=nv))
-			else {
-				size <- rep(rgl.attrib(id, "radii"), len=4*nv)
-				values <- values[rep(seq_len(nv), each=4),]
-				texcoords <- matrix(rep(c(0,0,1,0,1,1,0,1),nv), 4*nv, 2, byrow=TRUE)
-				values <- cbind(values, (texcoords - 0.5)*size)
-				nv <- nv*4
-			}
-		}
-
-		if (has_texture) {
-			tofs <- NCOL(values)
-			if (type != "sprites")
-				texcoords <- rgl.attrib(id, "texcoords")
-			if (!sprites_3d)
-				values <- cbind(values, texcoords)
-			if (mat$texture %in% prefixes$texture) {
-				i <- which(mat$texture == prefixes$texture)[1]
-				texprefix <- prefixes$prefix[i]
-				texid <- prefixes$id[i]
-			} else {
-				texprefix <- prefix
-				texid <- id
-				file.copy(mat$texture, file.path(dir, paste(texprefix, "texture", texid, ".png", sep="")))
-			}
-			i <- which(prefixes$id == id & prefixes$prefix == prefix)
-			prefixes$texture[i] <<- mat$texture
-			i <- which(mat$texture == prefixes$texture & prefix == prefixes$prefix)
-			load_texture <- length(i) < 2 # first time loaded in this scene
-			if (!load_texture)
-				texid <- prefixes$id[i[1]]
-		} else
-			load_texture <- FALSE
-
-		stride <- 3
-		nc <- rgl.attrib.count(id, "colors")
-		if (nc > 1) {
-			cofs <- stride
-			stride <- stride + 4
-		} else
-			cofs <- -1
-
-		nn <- rgl.attrib.count(id, "normals")
-		if (nn > 0) {
-			nofs <- stride
-			stride <- stride + 3
-		} else
-			nofs <- -1
-
-		if (type == "spheres") {
-			radofs <- stride
-			stride <- stride + 1
-		} else
-			radofs <- -1
-
-		if (type == "sprites" && !sprites_3d) {
-			oofs <- stride
-			stride <- stride + 2
-		} else
-			oofs <- -1
-
-		if (has_texture || type == "text") {
-			tofs <- stride
-			stride <- stride + 2
-		} else
-			tofs <- -1
-
-		if (type == "text") {
-			oofs <- stride
-			stride <- stride + 2
-		}
-
-		stopifnot(stride == NCOL(values))
-
-		result$offsets[id] = c(vofs=0, cofs=cofs, nofs=nofs, radofs=radofs, oofs=oofs, tofs=tofs, stride=stride)
-
-		if (sprites_3d && !reuse) {
-		  result$norigs[id] <<- NROW(values)
-      result$origsize[id] <<- values
-		} else if (!flags["reuse"])
-		  result$values[id] <<- values
-		if (sprites_3d)
-      result$userMatrix[id] <<- rgl.attrib(id, "usermatrix")
-
-		if (is_indexed) {
-			if (type %in% c("quads", "text", "sprites") && !sprites_3d) {
-				v1 <- 4*(seq_len(nv/4) - 1)
-				v2 <- v1 + 1
-				v3 <- v2 + 1
-				v4 <- v3 + 1
-				f <- rbind(v1, v2, v3, v1, v3, v4)
-				frowsize <- 6
-			} else if (type == "triangles") {
-				v1 <- 3*(seq_len(nv/3) - 1)
-				v2 <- v1 + 1
-				v3 <- v2 + 1
-				f <- rbind(v1, v2, v3)
-				frowsize <- 3
-			} else if (type == "spheres") {
-				f <- seq_len(nv)-1
-				frowsize <- 8 # not used for depth sorting, just for display
-			}
-
-			if (depth_sort) {
-				result$centers[id] <<- rgl.attrib(id, "centers")
-        result$f[id] <<- f
-			}
-		}
-
-	}
-
-	mouseHandlers <- function() {
-		save <- currentSubscene3d()
-		on.exit(useSubscene3d(save))
-#
-# 		x0 <- y0 <- widths <- heights <- tests <- models <-
-# 			projections <- listeners <- character(0)
-#
-# 		rects <- function(parent) {
-# 			useSubscene3d(parent)
-# 			info <- subsceneInfo(parent)
-# 			for (id in rev(info$children))
-# 				rects(id)
-#
-# 			viewport <- par3d("viewport")*c(wfactor, hfactor)
-# 			x0 <<- c(x0, subst("%id%: %x0%", id=parent, x0=viewport[1]))
-# 			y0 <<- c(y0, subst("%id%: %y0%", id=parent, y0=viewport[2]))
-# 			widths <<- c(widths, subst("%id%: %width%", id=parent, width=viewport[3]))
-# 			heights <<- c(heights, subst("%id%: %height%", id=parent, height=viewport[4]))
-#
-# 			tests <<- c(tests, subst(
-# 				'         if (%x0% <= coords.x && coords.x <= %x1% && %y0% <= coords.y && coords.y <= %y1%) return(%id%);',
-# 				id=parent, x0=viewport[1], y0=viewport[2], x1=viewport[1]+viewport[3],
-# 				y1=viewport[2]+viewport[4]))
-# 			models <<- c(models, subst("%id%: %model%", id=parent, model=useid(parent, "model")))
-# 			projections <<- c(projections, subst("%id%: %projection%", id=parent, projection=useid(parent, "projection")))
-# 			l <- par3d("listeners", subscene=parent)
-# 			listeners <<- c(listeners, subst("%id%: [ %ids% ]", id = parent,
-# 							 ids = paste(unique(l), collapse=",")))
-# 		}
-#
-# 		rootid <- rootSubscene()
-# 		rects(rootid)
-#
-# 		result <- c(
-# 			'  	   var vpx0 = {',
-# 			inRows(x0, perrow=6, "          "),
-# 			'  	     };
-# 			var vpy0 = {',
-# 			inRows(y0, perrow=6, "          "),
-# 			'  	     };
-# 			var vpWidths = {',
-# 			inRows(widths, perrow=6, "         "),
-# 			'  	     };
-# 			var vpHeights = {',
-# 			inRows(heights, perrow=6, "          "),
-# 			'  	     };
-# 			var activeModel = {',
-# 			inRows(models, perrow=6, "         "),
-# 			'  	     };
-# 			var activeProjection = {',
-# 			inRows(projections, perrow=6, "         "), subst(
-# 				'  	     };
-# 				%prefix%rgl.listeners = {', prefix),
-# 			inRows(listeners, perrow=2, "         "),
-# 			'  	     };
-# 			',
-# 			'  	   var whichSubscene = function(coords){',
-# 			tests, subst(
-# 				'         return(%id%);
-# 				};
-# 				',	id=rootid)
-# 			)
-
-		handlers <- par3d("mouseMode")
-		if (any(notdone <- handlers %in% c("polar", "selecting", "user"))) {
-			warning(gettextf("Mouse mode(s) %s not supported.  'trackball' used",
-					 paste(sQuote(handlers[notdone]), collapse = ", ")),
-				domain = NA)
-			handlers[notdone] <- "trackball"
-		}
-
-		# User handlers are different than others, so do them first
-		# But not yet; get others working first.
-		for (i in which(handlers == "user")) {
-			handlers[i] <- paste0("user", i)
-			handlerfns <- rgl.getMouseCallbacks(i)
-			actions <- c("down", "move", "end")
-			defaults <- c("trackball", "zoom", "fov")
-			for (j in 1:3)
-				if (!is.null(handlerfns[[j]])) {
-					fn <- attr(handlerfns[[j]], "javascript")
-					if (!is.null(fn)) {
-# 						result <- c(result, subst(
-# 							'           var %handler%%action% = %fn%;',
-# 							handler = handlers[i], action = actions[j], fn = fn))
-					} else if (!is.null(name <- attr(handlerfns[[j]], "jsName"))) {
-# 						result <- c(result, subst(
-# 							'           var %handler%%action% = function(x, y) {
-# 							%javascript%(activeSubscene%args%)
-# 					};', handler = handlers[i], action = actions[j], javascript = name,
-#                           args = if (j < 3) ", x, y" else ""))
-				} else {
-					warning("No \"javascript\" or \"jsName\" attribute found on user handler.  Default used instead.")
-					handlers[i] <- defaults[i]
-					}
-				}
-		}
-
-		down <- paste(handlers, "down", sep="")
-		move <- paste(handlers, "move", sep="")
-		end <-  paste(handlers, "end", sep="")
-		none <- handlers == "none"
-		down[none] <- "0"
-		move[none] <- "0"
-		end[none] <- "0"
-# 		c(result, subst(
-# 			'	   var mousedown = [%d1%, %d2%, %d3%];
-# 			var mousemove = [%m1%, %m2%, %m3%];
-# 			var mouseend = [%e1%, %e2%, %e3%];
-# 			',    d1=down[1], d2=down[2], d3=down[3], m1=move[1], m2=move[2], m3=move[3],
-# 			e1=end[1],  e2=end[2],  e3=end[3]))
-		}
-
-# 	scriptEnd <- subst(
-# 		'	   (mouse handlers)
-# 		</script>', prefix)
 
 	flagnames <- c("is_lit", "is_smooth", "has_texture", "is_indexed",
 		       "depth_sort", "fixed_quads", "is_transparent",
@@ -748,6 +404,7 @@ convertScene <- function(width, height, reuse = NULL) {
 		       "is_subscene", "is_clipplanes", "reuse")
 
 	getFlags <- function(id, type) {
+
 		if (type == "subscene")
 			return(getSubsceneFlags(id))
 
@@ -756,6 +413,11 @@ convertScene <- function(width, height, reuse = NULL) {
 			result["is_clipplanes"] <- TRUE
 			return(result)
 		}
+
+		if (type %in% c("light", "bboxdeco", "background"))
+		  return(result)
+
+
 
 		mat <- rgl:::rgl.getmaterial(id=id)
 		result["is_lit"] <- mat$lit && type %in% c("triangles", "quads", "surface", "planes",
@@ -786,7 +448,7 @@ convertScene <- function(width, height, reuse = NULL) {
 		result["is_subscene"] <- TRUE
 		subs <- rgl.ids(subscene = id)
 		for (i in seq_len(nrow(subs)))
-			result <- result | getFlags(subs[i, "id"], subs[i, "type"])
+			result <- result | getFlags(subs[i, "id"], as.character(subs[i, "type"]))
 		return(result)
 	}
 
@@ -795,12 +457,24 @@ convertScene <- function(width, height, reuse = NULL) {
 			n <- ncol(flags)
 		else
 			n <- length(flags)
-		flags %*% 2^(seq_len(n)-1)
+		unname(flags %*% 2^(seq_len(n)-1))
+	}
+
+	expandFlags <- function(numericflags) {
+	  result <- matrix(FALSE, nrow = length(numericflags),
+	                          ncol = length(flagnames),
+	                   dimnames = list(names(numericflags), flagnames))
+    for (i in seq_along(flagnames)) {
+      result[,i] <- numericflags %% 2 == 1
+      numericflags <- numericflags %/% 2
+    }
+	  result
 	}
 
 		knowntypes <- c("points", "linestrip", "lines", "triangles", "quads",
 				"surface", "text", "abclines", "planes", "spheres",
-				"sprites", "clipplanes")
+				"sprites", "clipplanes", "light", "background", "bboxdeco",
+				"subscene")
 
 	#  Execution starts here!
 
@@ -819,13 +493,13 @@ convertScene <- function(width, height, reuse = NULL) {
 	rect <- par3d("windowRect")
 	rwidth <- rect[3] - rect[1] + 1
 	rheight <- rect[4] - rect[2] + 1
-	if (missing(width)) {
-	  if (missing(height)) {
+	if (is.null(width)) {
+	  if (is.null(height)) {
 	    wfactor <- hfactor <- 1  # width = wfactor*rwidth, height = hfactor*rheight
 	  } else
 	    wfactor <- hfactor <- height/rheight
 	} else {
-	  if (missing(height)) {
+	  if (is.null(height)) {
 	    wfactor <- hfactor <- width/rwidth
 	  } else {
 	    wfactor <- width/rwidth;
@@ -835,70 +509,56 @@ convertScene <- function(width, height, reuse = NULL) {
 	width <- wfactor*rwidth;
 	height <- hfactor*rheight;
 
-	result <- initResult()
-
 	if (NROW(rgl.ids("bboxdeco", subscene = 0))) {
 		saveredraw <- par3d(skipRedraw = TRUE)
 		temp <- convertBBoxes(rootSubscene())
 		on.exit({ rgl.pop(id=temp); par3d(saveredraw) })
 	}
 
-	ids <- rgl.ids(subscene = 0)
-	types <- as.character(ids$type)
-	ids <- ids$id
-	flags <- matrix(FALSE, nrow = length(ids), ncol=length(flagnames),
-			dimnames = list(NULL, flagnames))
+	result <- initResult()
 
-	i <- 0
-	while (i < length(ids)) {
-		i <- i + 1
-		flags[i,] <- getFlags(ids[i], types[i])
-		if (flags[i, "sprites_3d"]) {
-			subids <- rgl.attrib(ids[i], "ids")
-			flags[ids %in% subids, "sprite_3d"] <- TRUE
-		}
-	}
-	flags[ids %in% prefixes$id, "reuse"] <- TRUE
+	ids <- vapply(result$objects, function(x) x$id, integer(1))
+	types <- vapply(result$objects, function(x) x$type, character(1))
+  flags <- vapply(result$objects, function(obj) numericFlags(getFlags(obj$id, obj$type)),
+                                 numeric(1), USE.NAMES = FALSE)
+
+# 	i <- 0
+# 	while (i < length(ids)) {
+# 		i <- i + 1
+# 		flags[i,] <- getFlags(ids[i], types[i])
+# 		if (flags[i, "sprites_3d"]) {
+# 			subids <- rgl.attrib(ids[i], "ids")
+# 			flags[ids %in% subids, "sprite_3d"] <- TRUE
+# 		}
+# 	}
+# 	flags[ids %in% prefixes$id, "reuse"] <- TRUE
 
 	unknowntypes <- setdiff(types, knowntypes)
 	if (length(unknowntypes))
 		warning(gettextf("Object type(s) %s not handled",
 				 paste("'", unknowntypes, "'", sep="", collapse=", ")), domain = NA)
 
-	keep <- types %in% knowntypes
+	keep <- types %in% setdiff(knowntypes, c("light", "background", "bboxdeco"))
 	ids <- ids[keep]
-	flags <- flags[keep,,drop=FALSE]
+	cids <- as.character(ids)
+	nflags <- flags[keep]
 	types <- types[keep]
+	flags <- expandFlags(nflags)
 
-	if (length(ids))
-		prefixes <- rbind(prefixes, data.frame(id = ids,
-						       prefix = "this", texture = "",
-						       stringsAsFactors = FALSE))
-
-	texnums <- -1
-
-	scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])
-	scene_needs_sorting <- any(flags[,"depth_sort"])
-
-	result$ids <- ids
-	result$rootid <- rootSubscene();
-
-	result$subscenes <- rgl.ids("subscene", subscene = 0)$id
-
-
-
-	result <- c(result, drawEnd, mouseHandlers(), scriptEnd, footer(),
-		    if (!is.null(template))
-		    	templatelines[replace + seq_len(length(templatelines)-replace)]
-		    else
-		    	subst("<script>%prefix%rgl.start();</script>", prefix = prefix)
-	)
-
-	cat(result, file=filename, sep="\n")
-	if (!is.null(reuse)) {
-		prefixes <- prefixes[!duplicated(prefixes$id),]
-		attr(filename, "reuse") <- prefixes
+	for (i in seq_along(ids)) {
+	  obj <- result$objects[[cids[i]]]
+	  obj$flags <- nflags[i]
+	  if (obj$type != "subscene") {
+	    shade <- shaders(ids[i], types[i], flags[i,])
+	    obj$vshader <- shade$vertex
+	    obj$fshader <- shade$fragment
+	  }
+	  result$objects[[cids[i]]] <- obj
 	}
-	invisible(filename)
-	}
+
+	result$scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])
+	result$scene_needs_sorting <- any(flags[,"depth_sort"])
+
+	result
+}
 

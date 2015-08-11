@@ -63,6 +63,7 @@ rglClass = function() {
     this.prmvMatrix = null;
     this.origs = null;
     this.gl = null;
+    this.scene = null;
 };
 
 (function() {
