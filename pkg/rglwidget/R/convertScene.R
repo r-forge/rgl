@@ -388,7 +388,10 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
         subscenes[[i]]$parent <- subscene$id
         subscenes[[i]] <- recurse(subscenes[[i]])
       }
-      subscene$subscenes <- unlist(subscenes)
+      if (length(subscenes))
+        subscene$subscenes <- unlist(subscenes)
+      else
+        subscene$subscenes <- integer(0)
       id <- as.character(subscene$id)
       result$objects[[id]] <<- subscene
       subscene$id
@@ -550,8 +553,8 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	  obj$flags <- nflags[i]
 	  if (obj$type != "subscene") {
 	    shade <- shaders(ids[i], types[i], flags[i,])
-	    obj$vshader <- shade$vertex
-	    obj$fshader <- shade$fragment
+	    obj$vshader <- paste(shade$vertex, collapse = "\n")
+	    obj$fshader <- paste(shade$fragment, collapse = "\n")
 	  }
 	  result$objects[[cids[i]]] <- obj
 	}

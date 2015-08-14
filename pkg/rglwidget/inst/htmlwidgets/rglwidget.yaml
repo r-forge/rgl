@@ -6,4 +6,4 @@ dependencies:
   -  name: CanvasMatrix4
      version: 2009
      src: htmlwidgets/lib/CanvasMatrix
-     script: CanvasMatrix.js
+     script: CanvasMatrix.src.js
