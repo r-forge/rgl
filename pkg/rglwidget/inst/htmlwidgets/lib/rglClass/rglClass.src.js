@@ -265,7 +265,7 @@ rglClass = function() {
 	                    (bbox[4]+bbox[5])/2];
 	       this.mvMatrix.translate(-center[0], -center[1], -center[2]);
 	       this.mvMatrix.scale(scale[0], scale[1], scale[2]);
-	       this.mvMatrix.multRight( subscene.userMatrix );
+	       this.mvMatrix.multRight( subscene.par3d.userMatrix );
 	     }
 	     if (embedding !== "replace")
 	       this.setmodelMatrix(subscene.parent);
@@ -279,7 +279,7 @@ rglClass = function() {
          if (embedding !== "inherit") {
            var scale = sub.scales;
            self.normMatrix.scale(scale[0], scale[1], scale[2]);
-           self.normMatrix.multRight(sub.userMatrix);
+           self.normMatrix.multRight(sub.par3d.userMatrix);
          }
          if (embedding !== "replace")
            recurse(sub.parent);
@@ -327,6 +327,22 @@ rglClass = function() {
       return recurse(scene.rootSubscene);
     };
 
+    this.initSubscene = function(id) {
+      var sub = this.scene.objects[id],
+          i, obj;
+      if (typeof sub.subscenes === "undefined")
+        sub.subscenes = [];
+      sub.clipplanes = [];
+      for (i=0; i < sub.objects.length; i++) {
+        obj = this.scene.objects[sub.objects[i]];
+        if (obj.type === "clipplanes")
+          sub.clipplanes.push(obj.id);
+        else if (obj.type === "background")
+          sub.backgroundId = obj.id;
+      }
+      this.scene.objects[id] = sub;
+    };
+
     this.initObj = function(id) {
 	    var obj = this.scene.objects[id],
 	        flags = obj.flags,
@@ -344,8 +360,13 @@ rglClass = function() {
 		      gl = this.gl,
           texinfo, drawtype, f;
 
-    if (type === "subscene" || type === "clipplanes" || type === "background" || type === "light")
+    if (type === "clipplanes" || type === "background" || type === "light")
       return;
+
+    if (type === "subscene") {
+      this.initSubscene(id);
+      return;
+    }
 
 		if (!sprites_3d && !is_clipplanes) {
 			obj.prog = gl.createProgram();
@@ -458,7 +479,7 @@ rglClass = function() {
 		}
 
 		if (!sprites_3d && !reuse) {
-			 obj.values = v;
+			 obj.values = v;   // FIXME:  we already did this?
 		}
 
 		if (!sprites_3d && reuse) {
@@ -489,7 +510,7 @@ rglClass = function() {
 		if (type !== "spheres" && !sprites_3d) {
 		  obj.buf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
-			gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW);
+			gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW); // FIXME:  does obj.values need to be flattened?
 		}
 
 		if (is_indexed && type !== "spheres" && !sprites_3d) {
@@ -767,11 +788,11 @@ rglClass = function() {
 		    subscene_needs_sorting |= (flags & this.f_depth_sort);
 		  }
 
-		  var bgid = obj.backgroundObj,
+		  var bgid = obj.backgroundId,
 		      bg;
 
       if (typeof bgid === "undefined" || !objects[bgid].colors.length)
-			  bg = [1,1,1,1];
+			  bg = [1,0,0,1];
 			else
 			  bg = objects[bgid].colors[0];
 
@@ -860,8 +881,8 @@ rglClass = function() {
 				l = activeSub.listeners,
 				i;
 		  for (i = 0; i < l.length; i++) {
-			  this.scene.objects[l[i]].userMatrix.load(objects[l[i]].saveMat);
-				this.scene.objects[l[i]].userMatrix.rotate(angle, axis[0], axis[1], axis[2]);
+			  this.scene.objects[l[i]].par3d.userMatrix.load(objects[l[i]].saveMat);
+				this.scene.objects[l[i]].par3d.userMatrix.rotate(angle, axis[0], axis[1], axis[2]);
 			}
 			this.drawScene();
 		};
@@ -878,7 +899,7 @@ rglClass = function() {
 			    l = activeSub.listeners;
 			for (i = 0; i < l.length; i++) {
 			  activeSub = objects[l[i]];
-			  this.scene.objects[l[i]].saveMat = new CanvasMatrix4(activeSub.userMatrix);
+			  this.scene.objects[l[i]].saveMat = new CanvasMatrix4(activeSub.par3d.userMatrix);
 			}
 		};
 
@@ -892,8 +913,8 @@ rglClass = function() {
 				l = activeSub.listeners;
 			for (i = 0; i < l.length; i++) {
 			  activeSub = objects[l[i]];
-			  this.scene.objects[l[i]].userMatrix.load(activeSub.saveMat);
-			  this.scene.objects[l[i]].userMatrix.multLeft(rotMat);
+			  this.scene.objects[l[i]].par3d.userMatrix.load(activeSub.saveMat);
+			  this.scene.objects[l[i]].par3d.userMatrix.multLeft(rotMat);
 			}
 			this.drawScene();
 		};
