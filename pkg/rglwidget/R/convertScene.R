@@ -420,8 +420,6 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 		if (type %in% c("light", "bboxdeco", "background"))
 		  return(result)
 
-
-
 		mat <- rgl:::rgl.getmaterial(id=id)
 		result["is_lit"] <- mat$lit && type %in% c("triangles", "quads", "surface", "planes",
 							   "spheres", "sprites")
