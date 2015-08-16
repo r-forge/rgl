@@ -7,7 +7,8 @@ var min = Math.min,
     SQRT2 = Math.SQRT2,
     PI = Math.PI,
     log = Math.log,
-    exp = Math.exp;
+    exp = Math.exp,
+    floor = Math.floor;
 
 debug = false;
 
@@ -403,7 +404,7 @@ rglClass = function() {
 		      clipplanes = this.countClipplanes(id),
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
-          texinfo, drawtype, f;
+          texinfo, drawtype, f, frowsize, nrows;
 
     if (type === "clipplanes" || type === "background" || type === "light")
       return;
@@ -541,12 +542,38 @@ rglClass = function() {
 		}
 
 		if (is_indexed) {
+      if ((type === "quads" || type === "text" ||
+           type === "sprites") && !sprites_3d) {
+        nrows = floor(obj.vertexCount/4);
+        f = Array(6*nrows);
+        for (i=0; i < nrows; i++) {
+          f[6*i] = 4*i;
+          f[6*i+1] = 4*i + 1;
+          f[6*i+2] = 4*i + 2;
+          f[6*i+3] = 4*i;
+          f[6*i+4] = 4*i + 2;
+          f[6*i+5] = 4*i + 3;
+        }
+        frowsize = 6;
+      } else if (type === "triangles") {
+        nrows = floor(obj.vertexCount/3);
+        f = Array(3*nrows);
+        for (i=0; i < f.length; i++) {
+          f[i] = i;
+        }
+        frowsize = 3;
+      } else if (type == "spheres") {
+        nrows = obj.vertexCount;
+        f = Array(nrows);
+        for (i=0; i < f.length; i++) {
+          f[i] = i;
+        }
+        frowsize = 1;
+      }
+		  obj.f = new Uint16Array(f);
 			if (depth_sort) {
-				obj.f = new Uint16Array(obj.f);
 				drawtype = "DYNAMIC_DRAW";
-				f = obj.f;
 			} else {
-				f = new Uint16Array(obj.f);
 				drawtype = "STATIC_DRAW";
 			}
 		}
@@ -560,7 +587,7 @@ rglClass = function() {
 		if (is_indexed && type !== "spheres" && !sprites_3d) {
 			obj.ibuf = gl.createBuffer();
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.ibuf);
-			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, f, gl[drawtype]);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, obj.f, gl[drawtype]);
 		}
 
 		if (!sprites_3d && !is_clipplanes) {
