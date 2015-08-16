@@ -9,6 +9,32 @@ var min = Math.min,
     log = Math.log,
     exp = Math.exp;
 
+function logGLCall(functionName, args) {
+   console.log("gl." + functionName + "(" +
+      WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+}
+
+function validateNoneOfTheArgsAreUndefined(functionName, args) {
+  for (var ii = 0; ii < args.length; ++ii) {
+    if (args[ii] === undefined) {
+      console.error("undefined passed to gl." + functionName + "(" +
+                     WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
+    }
+  }
+}
+
+function throwOnGLError(err, funcName, args) {
+  throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName;
+};
+
+function logAndValidate(functionName, args) {
+   logGLCall(functionName, args);
+   validateNoneOfTheArgsAreUndefined (functionName, args);
+}
+
+
+
+
 rglClass = function() {
     this.canvas = null;
     this.userMatrix = new CanvasMatrix4();
@@ -46,6 +72,10 @@ rglClass = function() {
     this.cbind = function(a, b) {
       return a.map(function(currentValue, index, array)
               currentValue.concat(b[index]));
+    }
+
+    this.flatten = function(a) {
+      return a.reduce(function(x, y) x.concat(y));
     }
 
     this.sumsq = function(x) {
@@ -104,13 +134,15 @@ rglClass = function() {
       }
     };
 
-    this.setSubsceneEntries = function(ids, subscene) {
-      this.scene.objects[subscene].subscenes = [];
-      this.scene.objects[subscene].clipplanes = [];
-      this.scene.objects[subscene].transparent = [];
-      this.scene.objects[subscene].opaque = [];
-      for (var i = 0; i < ids.length; i++)
-        this.addToSubscene(ids[i], subscene);
+    this.setSubsceneEntries = function(ids, subsceneid) {
+      var sub = this.scene.objects[subsceneid], i;
+      sub.subscenes = [];
+      sub.clipplanes = [];
+      sub.transparent = [];
+      sub.opaque = [];
+      this.scene.objects[subsceneid] = sub;
+      for (i = 0; i < ids.length; i++)
+        this.addToSubscene(ids[i], subsceneid);
     };
 
     this.getSubsceneEntries = function(subscene) {
@@ -235,8 +267,8 @@ rglClass = function() {
 	         near = distance - radius,
 	         far = distance + radius,
 	         hlen = t*near,
-	         aspect = this.vp[1]/this.vp[2],
-	         z = subscene.zoom;
+	         aspect = this.vp.width/this.vp.height,
+	         z = subscene.par3d.zoom;
 	     if (aspect > 1)
 	       this.prMatrix.frustum(-hlen*aspect*z, hlen*aspect*z,
 	                        -hlen*z, hlen*z, near, far);
@@ -330,15 +362,18 @@ rglClass = function() {
     this.initSubscene = function(id) {
       var sub = this.scene.objects[id],
           i, obj;
-      if (typeof sub.subscenes === "undefined")
-        sub.subscenes = [];
+      sub.par3d.userMatrix = new CanvasMatrix4(sub.par3d.userMatrix);
+      sub.subscenes = [];
+      sub.clipplanes = [];
+      sub.transparent = [];
+      sub.opaque = [];
       sub.clipplanes = [];
       for (i=0; i < sub.objects.length; i++) {
         obj = this.scene.objects[sub.objects[i]];
-        if (obj.type === "clipplanes")
-          sub.clipplanes.push(obj.id);
-        else if (obj.type === "background")
+        if (obj.type === "background")
           sub.backgroundId = obj.id;
+        else
+          sub[this.whichList(obj.id)].push(obj.id);
       }
       this.scene.objects[id] = sub;
     };
@@ -413,16 +448,19 @@ rglClass = function() {
 		}
 
     v = obj.vertices;
+    obj.vertexCount = v.length;
 
     var stride = 3, nc, cofs, nofs, radofs, oofs, tofs;
 
-    nc = obj.colors.length;
+    nc = obj.colorCount = obj.colors.length;
     if (nc > 1) {
     	cofs = stride;
     	stride = stride + 4;
     	v = this.cbind(v, obj.colors);
-    } else
+    } else {
     	cofs = -1;
+    	obj.colors = this.flatten(obj.colors);
+    }
 
     if (typeof obj.normals !== "undefined") {
     	nofs = stride;
@@ -460,7 +498,7 @@ rglClass = function() {
 
     obj.offsets = {vofs:0, cofs:cofs, nofs:nofs, radofs:radofs, oofs:oofs, tofs:tofs, stride:stride};
 
-    obj.values = v;
+    obj.values = new Float32Array(this.flatten(v));
 
     if (sprites_3d) {
 			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
@@ -476,10 +514,6 @@ rglClass = function() {
 			    	v[ind+1] = 1.0-(texinfo.offset + i*texinfo.skip -
 			    	           v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
 			  }
-		}
-
-		if (!sprites_3d && !reuse) {
-			 obj.values = v;   // FIXME:  we already did this?
 		}
 
 		if (!sprites_3d && reuse) {
@@ -498,11 +532,11 @@ rglClass = function() {
 
 		if (is_indexed) {
 			if (depth_sort) {
-				obj.f = new Uint16Array([obj.f]);
+				obj.f = new Uint16Array(obj.f);
 				drawtype = "DYNAMIC_DRAW";
 				f = obj.f;
 			} else {
-				f = new Uint16Array([obj.f]);
+				f = new Uint16Array(obj.f);
 				drawtype = "STATIC_DRAW";
 			}
 		}
@@ -510,7 +544,7 @@ rglClass = function() {
 		if (type !== "spheres" && !sprites_3d) {
 		  obj.buf = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
-			gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW); // FIXME:  does obj.values need to be flattened?
+			gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW); //
 		}
 
 		if (is_indexed && type !== "spheres" && !sprites_3d) {
@@ -546,7 +580,11 @@ rglClass = function() {
 							       surface : "TRIANGLES",
 							       triangles : "TRIANGLES"};
 
-	  this.drawObj = function(id) {
+    this.getPrefix = function(id) {
+      return this;  // FIXME when this is worked out
+    };
+
+	  this.drawObj = function(id, clipplanes) {
 	    var obj = this.scene.objects[id],
 	        flags = obj.flags,
 	        type = obj.type,
@@ -557,11 +595,15 @@ rglClass = function() {
 		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
+		      is_lines = flags & this.f_is_lines,
 		      is_clipplanes = type === "clipplanes",
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
 		      sphereMV, baseofs, ofs, sscale, iOrig, i, count;
+
+      if (type === "light")
+        return;
 
 		  if (type === "clipplanes") {
 			  var count = obj.offsets.length,
@@ -633,10 +675,9 @@ rglClass = function() {
 				gl.uniform2f( obj.textScaleLoc, 0.75/this.vp[2], 0.75/this.vp[3]);
 			}
 
-			gl.enableVertexAttribArray( posLoc );
+			gl.enableVertexAttribArray( this.posLoc );
 
-			var nc = obj.colorCount,
-					nn = obj.normalCount;
+			var nc = obj.colorCount;
       count = obj.vertexCount;
 			if (depth_sort) {
 						var nfaces = obj.centers.length,
@@ -675,10 +716,10 @@ rglClass = function() {
 			if (type === "spheres") {
 				var scale = obj.scales,
 						scount = count;
-				gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
+				gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
 				gl.enableVertexAttribArray(obj.normLoc );
 				gl.vertexAttribPointer(obj.normLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
-				gl.disableVertexAttribArray( colLoc );
+				gl.disableVertexAttribArray( this.colLoc );
 				var sphereNorm = new CanvasMatrix4();
 				sphereNorm.scale(scale[0], scale[1], scale[2]);
 				sphereNorm.multRight(this.normMatrix);
@@ -686,7 +727,7 @@ rglClass = function() {
 
 
 			  if (nc == 1) {
-				  gl.vertexAttrib4fv( colLoc, obj.colors);
+				  gl.vertexAttrib4fv( this.colLoc, obj.colors);
 			  }
 
 			  for (i = 0; i < scount; i++) {
@@ -710,7 +751,7 @@ rglClass = function() {
 
 				  if (nc > 1) {
 				    ofs = baseofs + obj.offsets.cofs;
-					  gl.vertexAttrib4f( colLoc, obj.values[ofs],
+					  gl.vertexAttrib4f( this.colLoc, obj.values[ofs],
 					   		                       obj.values[ofs+1],
                                        obj.values[ofs+2],
 							                         obj.values[ofs+3] );
@@ -719,16 +760,16 @@ rglClass = function() {
 
 			  }
 			} else {
-				if (nc === 1) {
-					gl.disableVertexAttribArray( colLoc );
-				  gl.vertexAttrib4fv( colLoc, obj.colors);
+				if (obj.colorCount === 1) {
+					gl.disableVertexAttribArray( this.colLoc );
+				  gl.vertexAttrib4fv( this.colLoc, obj.colors);
 				} else {
-					gl.enableVertexAttribArray( colLoc );
-					gl.vertexAttribPointer(colLoc, 4, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.cofs);
+					gl.enableVertexAttribArray( this.colLoc );
+					gl.vertexAttribPointer(this.colLoc, 4, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.cofs);
 				}
       }
 
-			if (is_lit && nn > 0) {
+			if (is_lit && obj.offsets.nofs > 0) {
 				gl.enableVertexAttribArray( obj.normLoc );
 				gl.vertexAttribPointer(obj.normLoc, 3, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.nofs);
 			}
@@ -763,7 +804,7 @@ rglClass = function() {
 				gl.lineWidth( obj.lineWidth );
 			}
 
-			gl.vertexAttribPointer(posLoc,  3, gl.FLOAT, false, 4*obj.offsets.stride,  4*obj.offsets.vofs);
+			gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, 4*obj.offsets.stride,  4*obj.offsets.vofs);
 
 			if (is_indexed) {
 			  gl.drawElements(gl[mode], count, gl.UNSIGNED_SHORT, 0);
@@ -792,7 +833,7 @@ rglClass = function() {
 		      bg;
 
       if (typeof bgid === "undefined" || !objects[bgid].colors.length)
-			  bg = [1,0,0,1];
+			  bg = [1,1,1,1];
 			else
 			  bg = objects[bgid].colors[0];
 
@@ -1126,6 +1167,7 @@ rglClass = function() {
     this.initGL = function() {
 	   this.gl = this.canvas.getContext("webgl") ||
 	               this.canvas.getContext("experimental-webgl");
+	   this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logGLCall);
 	 }
 
 		this.drawInstance = function(el) {
