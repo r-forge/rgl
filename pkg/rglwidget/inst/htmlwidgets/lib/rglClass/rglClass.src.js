@@ -9,6 +9,8 @@ var min = Math.min,
     log = Math.log,
     exp = Math.exp;
 
+debug = false;
+
 function logGLCall(functionName, args) {
    console.log("gl." + functionName + "(" +
       WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
@@ -672,7 +674,7 @@ rglClass = function() {
 			}
 
 			if (is_lit && !sprite_3d) {
-			  gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(normMatrix.getAsArray()) );
+			  gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(this.normMatrix.getAsArray()) );
 			}
 
 			if (is_lit && sprite_3d) {
@@ -1175,7 +1177,8 @@ rglClass = function() {
     this.initGL = function() {
 	   this.gl = this.canvas.getContext("webgl") ||
 	               this.canvas.getContext("experimental-webgl");
-	   this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
+	   if (debug)
+	     this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
 	 }
 
 		this.drawInstance = function(el) {
