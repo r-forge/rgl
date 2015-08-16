@@ -16,7 +16,7 @@ function logGLCall(functionName, args) {
 
 function validateNoneOfTheArgsAreUndefined(functionName, args) {
   for (var ii = 0; ii < args.length; ++ii) {
-    if (args[ii] === undefined) {
+    if (typeof args[ii] === "undefined") {
       console.error("undefined passed to gl." + functionName + "(" +
                      WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
     }
@@ -25,7 +25,7 @@ function validateNoneOfTheArgsAreUndefined(functionName, args) {
 
 function throwOnGLError(err, funcName, args) {
   throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName;
-};
+}
 
 function logAndValidate(functionName, args) {
    logGLCall(functionName, args);
@@ -72,18 +72,18 @@ rglClass = function() {
     this.cbind = function(a, b) {
       return a.map(function(currentValue, index, array)
               currentValue.concat(b[index]));
-    }
+    };
 
     this.flatten = function(a) {
       return a.reduce(function(x, y) x.concat(y));
-    }
+    };
 
     this.sumsq = function(x) {
       var result = 0, i;
       for (i=0; i < x.length; i++)
         result += x[i]^2;
       return result;
-    }
+    };
 
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
@@ -108,6 +108,14 @@ rglClass = function() {
         else if (flags & this.f_is_transparent)
             return "transparent";
         else return "opaque";
+    };
+
+    this.getMaterial = function(id, property) {
+      var obj = this.scene.objects[id],
+          mat = obj.material[property];
+      if (typeof mat === "undefined")
+          mat = this.scene.material[property];
+      return mat;
     };
 
     this.inSubscene = function(id, subscene) {
@@ -801,7 +809,7 @@ rglClass = function() {
       }
 
 			if (is_lines) {
-				gl.lineWidth( obj.lineWidth );
+				gl.lineWidth( this.getMaterial(id, "lwd") );
 			}
 
 			gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, 4*obj.offsets.stride,  4*obj.offsets.vofs);
@@ -1167,7 +1175,7 @@ rglClass = function() {
     this.initGL = function() {
 	   this.gl = this.canvas.getContext("webgl") ||
 	               this.canvas.getContext("experimental-webgl");
-	   this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logGLCall);
+	   this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
 	 }
 
 		this.drawInstance = function(el) {
