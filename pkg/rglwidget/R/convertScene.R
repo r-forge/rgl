@@ -564,6 +564,7 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	x <- subdivision3d(octahedron3d(),2)
 	r <- sqrt(x$vb[1,]^2 + x$vb[2,]^2 + x$vb[3,]^2)
 	x$vb <- x$vb[1:3,]/r
+	x$it <- x$it - 1
   result$sphereVerts <- x
 	result
 }
