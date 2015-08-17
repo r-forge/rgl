@@ -560,6 +560,11 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	result$scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])
 	result$scene_needs_sorting <- any(flags[,"depth_sort"])
 
+	# Make model sphere
+	x <- subdivision3d(octahedron3d(),2)
+	r <- sqrt(x$vb[1,]^2 + x$vb[2,]^2 + x$vb[3,]^2)
+	x$vb <- x$vb[1:3,]/r
+  result$sphereVerts <- x
 	result
 }
 

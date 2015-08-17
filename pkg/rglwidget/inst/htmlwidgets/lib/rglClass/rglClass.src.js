@@ -72,6 +72,16 @@ rglClass = function() {
                ];
     };
 
+    this.vlen = function(v) {
+		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		};
+
+		this.xprod = function(a, b) {
+			return [a[1]*b[2] - a[2]*b[1],
+			    a[2]*b[0] - a[0]*b[2],
+			    a[0]*b[1] - a[1]*b[0]];
+		};
+
     this.cbind = function(a, b) {
       return a.map(function(currentValue, index, array)
               currentValue.concat(b[index]));
@@ -79,6 +89,23 @@ rglClass = function() {
 
     this.flatten = function(a) {
       return a.reduce(function(x, y) x.concat(y));
+    };
+
+    this.transpose = function(a) {
+      var newArray = [],
+          n = a.length,
+          m = a[0].length,
+          i;
+      for(i = 0; i < m; i++){
+        newArray.push([]);
+      };
+
+      for(i = 0; i < n; i++){
+        for(var j = 0; j < m; j++){
+          newArray[j].push(a[i][j]);
+        };
+      };
+      return newArray;
     };
 
     this.sumsq = function(x) {
@@ -401,7 +428,7 @@ rglClass = function() {
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
 		      is_clipplanes = type === "clipplanes",
-		      clipplanes = this.countClipplanes(id),
+		      nclipplanes = this.countClipplanes(id),
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
           texinfo, drawtype, f, frowsize, nrows;
@@ -528,16 +555,16 @@ rglClass = function() {
 		}
 
 		if (!sprites_3d && reuse) {
-			 obj.values = thisprefixrgl.objects[id].values;
+			 obj.values = thisprefix.scene.objects[id].values;
 		}
 
     if (is_lit && !fixed_quads && !sprites_3d) {
 			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
 
-		if (clipplanes && !sprites_3d) {
+		if (nclipplanes && !sprites_3d) {
 		  obj.clipLoc = [];
-		  for (i=0; i < clipplanes; i++)
+		  for (i=0; i < nclipplanes; i++)
         obj.clipLoc[i] = gl.getUniformLocation(obj.prog,                                       "vClipplane" + (i+1));
 		}
 
@@ -621,7 +648,7 @@ rglClass = function() {
       return this;  // FIXME when this is worked out
     };
 
-	  this.drawObj = function(id, clipplanes) {
+	  this.drawObj = function(id, subsceneid) {
 	    var obj = this.scene.objects[id],
 	        flags = obj.flags,
 	        type = obj.type,
@@ -666,7 +693,7 @@ rglClass = function() {
 				this.usermat = obj.userMatrix;
 				for (iOrig=0; iOrig < norigs; iOrig++) {
 			    for (i=0; i < obj.spriteids.length; i++) {
-					  this.drawObj(obj.spriteids[i], clipplanes);
+					  this.drawObj(obj.spriteids[i], subsceneid);
 					}
 				}
 			} else {
@@ -682,7 +709,7 @@ rglClass = function() {
 			}
 
 			if (type === "spheres") {
-			  gl.bindBuffer(gl.ARRAY_BUFFER, sphereBuf);
+			  gl.bindBuffer(gl.ARRAY_BUFFER, this.sphere.buf);
 			} else {
 				gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
 			}
@@ -690,14 +717,16 @@ rglClass = function() {
 			if (is_indexed && type !== "spheres") {
 			  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.ibuf);
 			} else if (type === "spheres") {
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphereIbuf);
+				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sphere.ibuf);
 			}
 
 			gl.uniformMatrix4fv( obj.prMatLoc, false, new Float32Array(this.prMatrix.getAsArray()) );
 			gl.uniformMatrix4fv( obj.mvMatLoc, false, new Float32Array(this.mvMatrix.getAsArray()) );
-      var clipcheck = 0;
+      var clipcheck = 0,
+          subscene = this.scene.objects[subsceneid],
+          clipplanes = subscene.clipplanes;
 			for (i=0; i < clipplanes.length; i++) {
-			  clipcheck = this.clipFns[clipplanes[i]].call(this, clipplanes[i], id, clipcheck);
+			  clipcheck = this.clipFns[clipplanes[i]].call(this, clipplanes[i], id, clipcheck); // FIXME clipFns?
 			}
 
 			if (is_lit && !sprite_3d) {
@@ -751,17 +780,17 @@ rglClass = function() {
 					}
 
 			if (type === "spheres") {
-				var scale = obj.scales,
+				var subscene = this.scene.objects[subsceneid],
+				    scale = subscene.par3d.scale,
 						scount = count;
-				gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
+				gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, this.sphere.sphereStride,  0);
 				gl.enableVertexAttribArray(obj.normLoc );
-				gl.vertexAttribPointer(obj.normLoc,  3, gl.FLOAT, false, this.sphereStride,  0);
+				gl.vertexAttribPointer(obj.normLoc,  3, gl.FLOAT, false, this.sphere.sphereStride,  0);
 				gl.disableVertexAttribArray( this.colLoc );
 				var sphereNorm = new CanvasMatrix4();
 				sphereNorm.scale(scale[0], scale[1], scale[2]);
 				sphereNorm.multRight(this.normMatrix);
 				gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(sphereNorm.getAsArray()) );
-
 
 			  if (nc == 1) {
 				  gl.vertexAttrib4fv( this.colLoc, obj.colors);
@@ -771,9 +800,9 @@ rglClass = function() {
 			    sphereMV = new CanvasMatrix4();
 
 			  	if (depth_sort) {
-				    baseofs = faces[i]*thisprefixrgl.objects[id].offsets.stride;
+				    baseofs = faces[i]*thisprefix.scene.objects[id].offsets.stride;
 				  } else {
-				    baseofs = i*thisprefixrgl.objects[id].offsets.stride;
+				    baseofs = i*thisprefix.scene.objects[id].offsets.stride;
 				  }
 
           ofs = baseofs + obj.offsets.radofs;
@@ -793,7 +822,7 @@ rglClass = function() {
                                        obj.values[ofs+2],
 							                         obj.values[ofs+3] );
 				  }
-				  gl.drawElements(gl.TRIANGLES, sphereCount, gl.UNSIGNED_SHORT, 0);
+				  gl.drawElements(gl.TRIANGLES, this.sphere.sphereCount, gl.UNSIGNED_SHORT, 0);
 
 			  }
 			} else {
@@ -897,7 +926,7 @@ rglClass = function() {
 				}
 				subids = obj.opaque;
 				for (i = 0; subids && i < subids.length; i++) {
-				  this.drawObj(subids[i], clipids);
+				  this.drawObj(subids[i], subsceneid);
 				}
 				subids = obj.transparent;
 				if (subids) {
@@ -906,12 +935,12 @@ rglClass = function() {
 				                       gl.ONE, gl.ONE);
 				  gl.enable(gl.BLEND);
 				  for (i = 0; i < subids.length; i++) {
-				    this.drawObj(subids[i], clipids);
+				    this.drawObj(subids[i], subsceneid);
 				  }
 				}
 				subids = obj.subscenes;
 				for (i = 0; subids && i < subids.length; i++) {
-				  this.drawFns[subids[i]].call(this, subids[i]);
+				  this.drawFns[subids[i]].call(this, subids[i]); // FIXME
 				}
 			}
 	  };
@@ -1137,16 +1166,6 @@ rglClass = function() {
       return {x: coords.x - viewport.x, y: coords.y - viewport.y};
     };
 
-    this.vlen = function(v) {
-		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-		};
-
-		this.xprod = function(a, b) {
-			return [a[1]*b[2] - a[2]*b[1],
-			    a[2]*b[0] - a[0]*b[2],
-			    a[0]*b[1] - a[1]*b[0]];
-		};
-
 		this.screenToVector = function(x, y) {
 		  var viewport = this.scene.objects[this.activeSubscene].par3d.viewport,
 		    width = viewport.width,
@@ -1169,6 +1188,22 @@ rglClass = function() {
 			return [px, py, z];
 		};
 
+    this.initSphere = function(verts) {
+      var gl = this.gl;
+      result = {vb: new Float32Array(this.flatten(this.transpose(verts.vb))),
+              it: new Uint16Array(this.flatten(this.transpose(verts.it))),
+              sphereStride: 12}
+      result.sphereCount = result.it.length;
+	    result.buf = gl.createBuffer();
+	    gl.bindBuffer(gl.ARRAY_BUFFER, result.buf);
+	    gl.bufferData(gl.ARRAY_BUFFER, result.vb, gl.STATIC_DRAW);
+	    result.ibuf = gl.createBuffer();
+	    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, result.ibuf);
+	    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, result.it, gl.STATIC_DRAW);
+
+      return result;
+    };
+
 		this.initialize = function(el, x) {
 		  this.canvas = el;
 		  this.initGL0();
@@ -1180,6 +1215,7 @@ rglClass = function() {
 	    this.colLoc = 1;
 	    var objs = this.scene.objects,
 	        self = this;
+	    this.sphere = this.initSphere(x.sphereVerts);
 	    Object.keys(objs).forEach(function(key){
 		    self.initObj(key);
 		  });
