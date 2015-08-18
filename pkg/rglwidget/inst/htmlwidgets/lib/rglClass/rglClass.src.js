@@ -255,8 +255,8 @@ rglClass = function() {
 	         skip = 2*textHeight;   // skip between baselines
 	     canvasY = this.getPowerOfTwo(offset + text.length*skip);
 
-	     this.canvas.width = canvasX;
-	     this.canvas.height = canvasY;
+	     canvas.width = canvasX;
+	     canvas.height = canvasY;
 
 	     ctx.fillStyle = backgroundColour;
 	     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -278,8 +278,12 @@ rglClass = function() {
 
     this.setViewport = function(id) {
 	     this.vp = this.scene.objects[id].par3d.viewport;
-	     this.gl.viewport(this.vp.x, this.vp.y, this.vp.width, this.vp.height);
-	     this.gl.scissor(this.vp.x, this.vp.y, this.vp.width, this.vp.height);
+	     var x = this.vp.x*this.canvas.width,
+	         y = this.vp.y*this.canvas.height,
+	         width = this.vp.width*this.canvas.width,
+	         height = this.vp.height*this.canvas.height;
+	     this.gl.viewport(x, y, width, height);
+	     this.gl.scissor(x, y, width, height);
 	   };
 
 	  this.setprMatrix = function(id) {
@@ -738,7 +742,7 @@ rglClass = function() {
 			}
 
 			if (type === "text") {
-				gl.uniform2f( obj.textScaleLoc, 0.75/this.vp[2], 0.75/this.vp[3]);
+				gl.uniform2f( obj.textScaleLoc, 0.75/this.vp.width/canvas.width, 0.75/this.vp.height/canvas.height);
 			}
 
 			gl.enableVertexAttribArray( this.posLoc );
@@ -1134,10 +1138,10 @@ rglClass = function() {
 
 		this.inViewport = function(coords, subsceneid) {
 		  var viewport = this.scene.objects[subsceneid].par3d.viewport,
-		    x0 = coords.x - viewport.x,
-		    y0 = coords.y - viewport.y;
-		  return 0 <= x0 && x0 <= viewport.width &&
-		         0 <= y0 && y0 <= viewport.height;
+		    x0 = coords.x - viewport.x*this.canvas.width,
+		    y0 = coords.y - viewport.y*this.canvas.height;
+		  return 0 <= x0 && x0 <= viewport.width*this.canvas.width &&
+		         0 <= y0 && y0 <= viewport.height*this.canvas.height;
 		}
 
     this.whichSubscene = function(coords) {
@@ -1168,8 +1172,8 @@ rglClass = function() {
 
 		this.screenToVector = function(x, y) {
 		  var viewport = this.scene.objects[this.activeSubscene].par3d.viewport,
-		    width = viewport.width,
-			  height = viewport.height,
+		    width = viewport.width*this.canvas.width,
+			  height = viewport.height*this.canvas.height,
 			  radius = max(width, height)/2.0,
 			  cx = width/2.0,
 			  cy = height/2.0,
@@ -1206,6 +1210,7 @@ rglClass = function() {
 
 		this.initialize = function(el, x) {
 		  this.canvas = el;
+		  this.resize();
 		  this.initGL0();
 		  this.scene = x;
 	    this.normMatrix = new CanvasMatrix4();
@@ -1244,12 +1249,17 @@ rglClass = function() {
 	     this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
 	 }
 
+    this.resize = function() {
+      if (this.gl !== null)
+        this.drawScene();
+    }
+
 		this.drawInstance = function(el) {
 	    this.canvas = el;
+	    this.resize();
+
 	    this.initGL();
 	    this.id = el.id;
-	    this.canvas.width = this.width;
-	    this.canvas.height = this.height;
 
 		  this.gl.enable(gl.DEPTH_TEST);
 	    this.gl.depthFunc(gl.LEQUAL);
