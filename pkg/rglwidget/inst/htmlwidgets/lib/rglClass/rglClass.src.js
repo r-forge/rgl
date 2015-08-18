@@ -1161,6 +1161,8 @@ rglClass = function() {
 		    var del = 1.1, i;
 		    if (ev.shiftKey) del = 1.01;
 		    var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
+		    if (typeof activeSubscene === "undefined")
+		      activeSubscene = self.scene.rootSubscene;
 			  var activeSub = self.getObj(activeSubscene),
 			      activeProjection = self.getObj(self.useid(activeSub.id, "projection")),
 			  i, l = activeProjection.par3d.listeners;
