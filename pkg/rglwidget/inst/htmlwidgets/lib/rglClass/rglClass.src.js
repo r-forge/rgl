@@ -130,7 +130,7 @@ rglClass = function() {
     this.f_reuse = 4096;
 
     this.whichList = function(id) {
-      var flags = this.scene.objects[id].flags;
+      var flags = this.getObj(id).flags;
         if (flags & this.f_is_subscene)
             return "subscenes";
         else if (flags & this.f_is_clipplanes)
@@ -140,8 +140,16 @@ rglClass = function() {
         else return "opaque";
     };
 
+    this.getObj = function(id) {
+      return this.scene.objects[id];
+    };
+
+    this.setObj = function(id, newval) {
+      this.scene.objects[id] = newval;
+    };
+
     this.getMaterial = function(id, property) {
-      var obj = this.scene.objects[id],
+      var obj = this.getObj(id),
           mat = obj.material[property];
       if (typeof mat === "undefined")
           mat = this.scene.material[property];
@@ -149,12 +157,12 @@ rglClass = function() {
     };
 
     this.inSubscene = function(id, subscene) {
-      var subscenes = this.scene.objects[subscene].subscenes;
+      var subscenes = this.getSubsceneEntries(subscene);
       return subscenes.indexOf(id) > -1;
     };
 
     this.addToSubscene = function(id, subscene) {
-      if (this.scene.objects[subscene].subscenes.indexOf(id) == -1) {
+      if (this.getSubsceneEntries(subscene).indexOf(id) == -1) {
         this.scene.objects[subscene].subscenes.push(id);
         var thelist = this.whichList(id);
         this.scene.objects[subscene][thelist].push(id);
@@ -163,28 +171,28 @@ rglClass = function() {
 
     this.delFromSubscene = function(id, subscene) {
       var thelist,
-        i = this.scene.objects[subscene].subscenes.indexOf(id);
+        i = this.getSubsceneEntries(subscene).indexOf(id);
       if (i > -1) {
-        this.scene.objects[subscene].subscenes.splice(i, 1);
+        this.getObj(subscene).subscenes.splice(i, 1);
         thelist = this.whichList(id);
-        i = this.scene.objects[subscene][thelist].indexOf(id);
-        this.scene.objects[subscene][thelist].splice(i, 1);
+        i = this.getObj(subscene)[thelist].indexOf(id);
+        this.getObj(subscene)[thelist].splice(i, 1);
       }
     };
 
     this.setSubsceneEntries = function(ids, subsceneid) {
-      var sub = this.scene.objects[subsceneid], i;
+      var sub = this.getObj(subsceneid), i;
       sub.subscenes = [];
       sub.clipplanes = [];
       sub.transparent = [];
       sub.opaque = [];
-      this.scene.objects[subsceneid] = sub;
+      this.setObj(subsceneid, sub);
       for (i = 0; i < ids.length; i++)
         this.addToSubscene(ids[i], subsceneid);
     };
 
     this.getSubsceneEntries = function(subscene) {
-      return this.scene.objects[subscene].subscenes;
+      return this.getObj(subscene).subscenes;
     };
 
     this.getPowerOfTwo = function(value) {
@@ -277,7 +285,7 @@ rglClass = function() {
 	   };
 
     this.setViewport = function(id) {
-	     this.vp = this.scene.objects[id].par3d.viewport;
+	     this.vp = this.getObj(id).par3d.viewport;
 	     var x = this.vp.x*this.canvas.width,
 	         y = this.vp.y*this.canvas.height,
 	         width = this.vp.width*this.canvas.width,
@@ -287,7 +295,7 @@ rglClass = function() {
 	   };
 
 	  this.setprMatrix = function(id) {
-       var subscene = this.scene.objects[id],
+       var subscene = this.getObj(id),
           embedding = subscene.embeddings.projection;
        if (embedding === "replace")
          this.prMatrix.makeIdentity();
@@ -321,7 +329,7 @@ rglClass = function() {
 	   };
 
 	  this.setmvMatrix = function(id) {
-	     var observer = this.scene.objects[id].par3d.observer;
+	     var observer = this.getObj(id).par3d.observer;
 	     this.mvMatrix.makeIdentity();
 	     this.setmodelMatrix(id);
 	     this.mvMatrix.translate(-observer[0], -observer[1], -observer[2]);
@@ -329,7 +337,7 @@ rglClass = function() {
 	   };
 
     this.setmodelMatrix = function(id) {
-	    var subscene = this.scene.objects[id],
+	    var subscene = this.getObj(id),
 	        embedding = subscene.embeddings.model;
 	    if (embedding !== "inherit") {
 	      var scale = subscene.par3d.scale,
@@ -402,26 +410,28 @@ rglClass = function() {
     };
 
     this.initSubscene = function(id) {
-      var sub = this.scene.objects[id],
+      var sub = this.getObj(id),
           i, obj;
       sub.par3d.userMatrix = new CanvasMatrix4(sub.par3d.userMatrix);
+      if (typeof sub.par3d.listeners !== "Array")
+        sub.par3d.listeners = [sub.par3d.listeners];
       sub.subscenes = [];
       sub.clipplanes = [];
       sub.transparent = [];
       sub.opaque = [];
       sub.clipplanes = [];
       for (i=0; i < sub.objects.length; i++) {
-        obj = this.scene.objects[sub.objects[i]];
+        obj = this.getObj(sub.objects[i]);
         if (obj.type === "background")
           sub.backgroundId = obj.id;
         else
           sub[this.whichList(obj.id)].push(obj.id);
       }
-      this.scene.objects[id] = sub;
+      this.setObj(id, sub);
     };
 
     this.initObj = function(id) {
-	    var obj = this.scene.objects[id],
+	    var obj = this.getObj(id),
 	        flags = obj.flags,
 	        type = obj.type,
 	        is_indexed = flags & this.f_is_indexed,
@@ -634,7 +644,7 @@ rglClass = function() {
 			obj.normMatLoc = gl.getUniformLocation(obj.prog, "normMatrix");
 		}
 
-    this.scene.objects[id] = obj;
+    this.setObj(id, obj);
   };
 
 	  this.mode4type = {points : "POINTS",
@@ -653,7 +663,7 @@ rglClass = function() {
     };
 
 	  this.drawObj = function(id, subsceneid) {
-	    var obj = this.scene.objects[id],
+	    var obj = this.getObj(id),
 	        flags = obj.flags,
 	        type = obj.type,
 	        is_indexed = flags & this.f_is_indexed,
@@ -679,9 +689,9 @@ rglClass = function() {
 			  for (i=0; i < count; i++) {
 				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane.slice(4*i, 4*(i+1)));
  			  }
- 			  this.scene.objects[id].IMVClip = obj.IMVClip = IMVClip;
-			  this.scene.objects[id].clipFn = obj.clipFn = function(id, objid, count1) {
-			    var obj = this.scene.objects[id],
+ 			  this.getObj(id).IMVClip = obj.IMVClip = IMVClip;
+			  this.getObj(id).clipFn = obj.clipFn = function(id, objid, count1) {
+			    var obj = this.getObj(id),
 			        count2 = obj.offsets.length;
     	    for (i=0; i<count2; i++) {
 	    	    gl.uniform4fv(obj.clipLoc[count1 + i], obj.IMVClip[i]);
@@ -727,7 +737,7 @@ rglClass = function() {
 			gl.uniformMatrix4fv( obj.prMatLoc, false, new Float32Array(this.prMatrix.getAsArray()) );
 			gl.uniformMatrix4fv( obj.mvMatLoc, false, new Float32Array(this.mvMatrix.getAsArray()) );
       var clipcheck = 0,
-          subscene = this.scene.objects[subsceneid],
+          subscene = this.getObj(subsceneid),
           clipplanes = subscene.clipplanes;
 			for (i=0; i < clipplanes.length; i++) {
 			  clipcheck = this.clipFns[clipplanes[i]].call(this, clipplanes[i], id, clipcheck); // FIXME clipFns?
@@ -784,7 +794,7 @@ rglClass = function() {
 					}
 
 			if (type === "spheres") {
-				var subscene = this.scene.objects[subsceneid],
+				var subscene = this.getObj(subsceneid),
 				    scale = subscene.par3d.scale,
 						scount = count;
 				gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, this.sphere.sphereStride,  0);
@@ -885,7 +895,7 @@ rglClass = function() {
 
 	  this.drawSubscene = function(subsceneid) {
 		  var gl = this.gl,
-		      obj = this.scene.objects[subsceneid],
+		      obj = this.getObj(subsceneid),
 		      objects = this.scene.objects,
 		      subids = obj.subscenes,
 		      subscene_has_faces = false,
@@ -967,211 +977,15 @@ rglClass = function() {
 		  return {x:canvasX, y:canvasY};
 		};
 
-		this.trackballdown = function(x,y) {
-			var objects = this.scene.objects,
-			    activeSub = objects[this.activeSubscene],
-			    activeModel = objects[activesub.activeModel],
-			  i, l = activeModel.par3d.listeners;
-			this.rotBase = screenToVector(x, y);
-			this.saveMat = [];
-			for (i = 0; i < l.length; i++) {
-			  activeSub = objects[l[i]];
-			  this.scene.objects[l[i]].saveMat = new CanvasMatrix4(activeSub.par3d.userMatrix);
-			}
-		};
-
-		this.trackballmove = function(x,y) {
-			var rotCurrent = this.screenToVector(x,y),
-				dot = this.rotBase[0]*rotCurrent[0] +
-						  this.rotBase[1]*rotCurrent[1] +
-			  	   	this.rotBase[2]*rotCurrent[2],
-				angle = acos( dot/this.vlen(rotBase)/this.vlen(rotCurrent) )*180.0/PI,
-				axis = this.xprod(rotBase, rotCurrent),
-				objects = this.scene.objects,
-				activeSub = this.scene.objects[this.activeSubscene],
-				l = activeSub.listeners,
-				i;
-		  for (i = 0; i < l.length; i++) {
-			  this.scene.objects[l[i]].par3d.userMatrix.load(objects[l[i]].saveMat);
-				this.scene.objects[l[i]].par3d.userMatrix.rotate(angle, axis[0], axis[1], axis[2]);
-			}
-			this.drawScene();
-		};
-		this.trackballend = 0;
-
-		this.xAxis = [1.0, 0.0, 0.0];
-		this.yAxis = [0.0, 1.0, 0.0];
-		this.zAxis = [0.0, 0.0, 1.0];
-
-    this.axisdown = function(x,y) {
-		  this.rotBase = this.screenToVector(x, this.height/2);
-			var i, objects = this.scene.objects,
-			    activeSub = objects[this.activeSubscene],
-			    l = activeSub.listeners;
-			for (i = 0; i < l.length; i++) {
-			  activeSub = objects[l[i]];
-			  this.scene.objects[l[i]].saveMat = new CanvasMatrix4(activeSub.par3d.userMatrix);
-			}
-		};
-
-		this.axismove = function(x,y) {
-		  var rotCurrent = this.screenToVector(x,this.height/2),
-					angle = (rotCurrent[0] - rotBase[0])*180/PI,
-			    rotMat = new CanvasMatrix4();
-			rotMat.rotate(angle, this.axis[0], this.axis[1], this.axis[2]);
-			var i, objects = this.scene.objects,
-				activeSub = this.scene.objects[this.activeSubscene],
-				l = activeSub.listeners;
-			for (i = 0; i < l.length; i++) {
-			  activeSub = objects[l[i]];
-			  this.scene.objects[l[i]].par3d.userMatrix.load(activeSub.saveMat);
-			  this.scene.objects[l[i]].par3d.userMatrix.multLeft(rotMat);
-			}
-			this.drawScene();
-		};
-    this.axisend = 0;
-
-    // FIXME - update other handlers
-
-    this.y0zoom = 0;
-		this.zoom0 = 0;
-		this.zoomdown = function(x, y) {
-		  this.y0zoom = y;
-			this.zoom0 = [];
-			var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
-			for (i = 0; i < l.length; i++) {
-			  this.zoom0[l[i]] = log(this.zoom[l[i]]);
-			}
-		};
-    this.zoommove = function(x, y) {
-		  var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
-			for (i = 0; i < l.length; i++) {
-			  this.zoom[l[i]] = exp(this.zoom0[l[i]] + (y-this.y0zoom)/this.height);
-			}
-				this.drawScene();
-		  };
-    this.zoomend = 0;
-
-    this.y0fov = 0;
-		this.fov0 = 0;
-		this.fovdown = function(x, y) {
-			  this.y0fov = y;
-				this.fov0 = [];
-				var i,l = this.listeners[this.activeProjection[this.activeSubscene]];
-				for (i = 0; i < l.length; i++) {
-				  this.fov0[l[i]] = this.scene.objects[l[i]].par3d.FOV;
-				}
-			};
-    this.fovmove = function(x, y) {
-			  var i, l = this.listeners[this.activeProjection[this.activeSubscene]];
-				for (i = 0; i < l.length; i++) {
-				  this.scene.objects[l[i]].FOV = max(1, min(179, this.fov0[l[i]] + 180*(y-this.y0fov)/this.height));
-				}
-				this.drawScene();
-			};
-    this.fovend = 0;
 
     this.setMouseHandlers = function() {
-		  this.canvas.onmousedown = function ( ev ){
-		    if (!ev.which) // Use w3c defns in preference to MS
-		    switch (ev.button) {
-		      case 0: ev.which = 1; break;
-		      case 1:
-		      case 4: ev.which = 2; break;
-		      case 2: ev.which = 3;
-		    }
-		    this.drag = ev.which;
-		    var f = this.mousedown[drag-1];
-		    if (f) {
-		      var coords = this.relMouseCoords(ev);
-		      coords.y = height-coords.y;
-		      activeSubscene = this.whichSubscene(coords);
-		      coords = this.translateCoords(activeSubscene, coords);
-		      f(coords.x, coords.y);
-		      ev.preventDefault();
-		    }
-		  };
+      var self = this, activeSubscene, handler,
+          handlers = {}, drag = 0;
 
-		  this.canvas.onmouseup = function ( ev ){
-		    if ( this.drag === 0 ) return;
-		    var f = this.mouseend[drag-1];
-		    if (f)
-		      f();
-		    this.drag = 0;
-		  };
-
-		  this.canvas.onmouseout = canvas.onmouseup;
-
-		  this.canvas.onmousemove = function ( ev ) {
-		    if ( this.drag === 0 ) return;
-		    var f = this.mousemove[drag-1];
-		    if (f) {
-		      var coords = this.relMouseCoords(ev);
-		      coords.y = height - coords.y;
-		      coords = this.translateCoords(activeSubscene, coords);
-		      f(coords.x, coords.y);
-		    }
-		  };
-
-		  var wheelHandler = function(ev) {
-		    var del = 1.1, i;
-		    if (ev.shiftKey) del = 1.01;
-		    var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
-		    l = this.listeners[activeProjection[activeSubscene]];
-		    for (i = 0; i < l.length; i++) {
-		      this.zoom[l[i]] *= ds;
-		    }
-		    this.drawScene();
-		    ev.preventDefault();
-		  };
-
-		  this.canvas.addEventListener("DOMMouseScroll", wheelHandler, false);
-		  this.canvas.addEventListener("mousewheel", wheelHandler, false);
-		};
-
-		this.useid = function(subsceneid, type) {
-		  if (this.embeddings[subsceneid][type] === "inherit")
-		    return(this.useid(this.parents[subsceneid], type));
-		  else
-		    return subsceneid;
-		};
-
-		this.inViewport = function(coords, subsceneid) {
-		  var viewport = this.scene.objects[subsceneid].par3d.viewport,
-		    x0 = coords.x - viewport.x*this.canvas.width,
-		    y0 = coords.y - viewport.y*this.canvas.height;
-		  return 0 <= x0 && x0 <= viewport.width*this.canvas.width &&
-		         0 <= y0 && y0 <= viewport.height*this.canvas.height;
-		}
-
-    this.whichSubscene = function(coords) {
-      var self = this,
-          recurse = function(subsceneid) {
-            var subscenes = self.subscenes[subsceneid], i, id;
-            for (i=0; i < subscenes.length; i++) {
-              id = recurse(subscenes[i]);
-              if (typeof(id) !== "undefined")
-                return(id);
-            }
-            if (self.inViewport(coords, subsceneid))
-              return(subsceneid)
-            else
-              return undefined;
-          },
-          rootid = this.rootid,
-          result = recurse(rootid);
-      if (typeof(result) === "undefined")
-        result = rootid;
-      return result;
-    };
-
-    this.translateCoords = function(subsceneid, coords) {
-      var viewport = this.scene.objects[subsceneid].par3d.viewport;
-      return {x: coords.x - viewport.x, y: coords.y - viewport.y};
-    };
+    handlers.rotBase = 0;
 
 		this.screenToVector = function(x, y) {
-		  var viewport = this.scene.objects[this.activeSubscene].par3d.viewport,
+		  var viewport = this.getObj(activeSubscene).par3d.viewport,
 		    width = viewport.width*this.canvas.width,
 			  height = viewport.height*this.canvas.height,
 			  radius = max(width, height)/2.0,
@@ -1192,6 +1006,215 @@ rglClass = function() {
 			return [px, py, z];
 		};
 
+		handlers.trackballdown = function(x,y) {
+			var objects = this.scene.objects,
+			    activeSub = objects[activeSubscene],
+			    activeModel = this.getObj(this.useid(activeSub.id, "model")),
+			  i, l = activeModel.par3d.listeners;
+			handlers.rotBase = this.screenToVector(x, y);
+			this.saveMat = [];
+			for (i = 0; i < l.length; i++) {
+			  activeSub = objects[l[i]];
+			  this.scene.objects[l[i]].saveMat = new CanvasMatrix4(activeSub.par3d.userMatrix);
+			}
+		};
+
+		handlers.trackballmove = function(x,y) {
+			var rotCurrent = this.screenToVector(x,y),
+			    rotBase = handlers.rotBase,
+				dot = rotBase[0]*rotCurrent[0] +
+						  rotBase[1]*rotCurrent[1] +
+			  	   	rotBase[2]*rotCurrent[2],
+				angle = acos( dot/this.vlen(rotBase)/this.vlen(rotCurrent) )*180.0/PI,
+				axis = this.xprod(rotBase, rotCurrent),
+				objects = this.scene.objects,
+				activeSub = this.getObj(activeSubscene),
+				l = activeSub.par3d.listeners,
+				i;
+		  for (i = 0; i < l.length; i++) {
+			  this.getObj(l[i]).par3d.userMatrix.load(objects[l[i]].saveMat);
+				this.getObj(l[i]).par3d.userMatrix.rotate(angle, axis[0], axis[1], axis[2]);
+			}
+			this.drawScene();
+		};
+		handlers.trackballend = 0;
+
+		handlers.xAxis = [1.0, 0.0, 0.0];
+		handlers.yAxis = [0.0, 1.0, 0.0];
+		handlers.zAxis = [0.0, 0.0, 1.0];
+
+    handlers.axisdown = function(x,y) {
+		  handlers.rotBase = this.screenToVector(x, this.height/2);
+			var i, objects = this.scene.objects,
+			    activeSub = objects[activeSubscene],
+			    l = activeSub.listeners;
+			for (i = 0; i < l.length; i++) {
+			  activeSub = objects[l[i]];
+			  activeSub.saveMat = new CanvasMatrix4(activeSub.par3d.userMatrix);
+			}
+		};
+
+		handlers.axismove = function(x,y) {
+		  var rotCurrent = this.screenToVector(x,this.height/2),
+		      rotBase = handlers.rotBase,
+					angle = (rotCurrent[0] - rotBase[0])*180/PI,
+			    rotMat = new CanvasMatrix4();
+			rotMat.rotate(angle, this.axis[0], this.axis[1], this.axis[2]);
+			var i, objects = this.scene.objects,
+				activeSub = this.getObj(activeSubscene),
+				l = activeSub.listeners;
+			for (i = 0; i < l.length; i++) {
+			  activeSub = objects[l[i]];
+			  activeSub.par3d.userMatrix.load(activeSub.saveMat);
+			  activeSub.par3d.userMatrix.multLeft(rotMat);
+			  this.setObj(l[i], activeSub);
+			}
+			this.drawScene();
+		};
+    handlers.axisend = 0;
+
+    // FIXME - update other handlers
+
+    handlers.y0zoom = 0;
+		handlers.zoom0 = 0;
+		handlers.zoomdown = function(x, y) {
+		  this.y0zoom = y;
+			this.zoom0 = [];
+			var i,l = this.listeners[this.activeProjection[activeSubscene]];
+			for (i = 0; i < l.length; i++) {
+			  this.zoom0[l[i]] = log(this.zoom[l[i]]);
+			}
+		};
+    handlers.zoommove = function(x, y) {
+		  var i,l = this.listeners[this.activeProjection[activeSubscene]];
+			for (i = 0; i < l.length; i++) {
+			  this.zoom[l[i]] = exp(this.zoom0[l[i]] + (y-this.y0zoom)/this.height);
+			}
+				this.drawScene();
+		  };
+    handlers.zoomend = 0;
+
+    handlers.y0fov = 0;
+		handlers.fov0 = 0;
+		handlers.fovdown = function(x, y) {
+			  this.y0fov = y;
+				this.fov0 = [];
+				var i,l = this.listeners[this.activeProjection[activeSubscene]];
+				for (i = 0; i < l.length; i++) {
+				  this.fov0[l[i]] = this.getObj(l[i]).par3d.FOV;
+				}
+			};
+    handlers.fovmove = function(x, y) {
+			  var i, l = this.listeners[this.activeProjection[activeSubscene]];
+				for (i = 0; i < l.length; i++) {
+				  this.getObj(l[i]).FOV = max(1, min(179, this.fov0[l[i]] + 180*(y-this.y0fov)/this.height));
+				}
+				this.drawScene();
+			};
+    handlers.fovend = 0;
+
+		  this.canvas.onmousedown = function ( ev ){
+		    if (!ev.which) // Use w3c defns in preference to MS
+		    switch (ev.button) {
+		      case 0: ev.which = 1; break;
+		      case 1:
+		      case 4: ev.which = 2; break;
+		      case 2: ev.which = 3;
+		    }
+		    drag = ["left", "middle", "right"][ev.which-1];
+		    var coords = self.relMouseCoords(ev);
+		    coords.y = self.canvas.height-coords.y;
+		    activeSubscene = self.whichSubscene(coords);
+		    var sub = self.getObj(activeSubscene), f;
+		    handler = sub.par3d.mouseMode[drag];
+		    f = handlers[handler + "down"];
+		    if (f) {
+		      coords = self.translateCoords(activeSubscene, coords);
+		      f.call(self, coords.x, coords.y);
+		      ev.preventDefault();
+		    }
+		  };
+
+		  this.canvas.onmouseup = function ( ev ){
+		    if ( drag === 0 ) return;
+		    var f = handlers[handler + "up"];
+		    if (f)
+		      f();
+		    drag = 0;
+		  };
+
+		  this.canvas.onmouseout = this.canvas.onmouseup;
+
+		  this.canvas.onmousemove = function ( ev ) {
+		    if ( drag === 0 ) return;
+		    var f = handlers[handler + "move"];
+		    if (f) {
+		      var coords = self.relMouseCoords(ev);
+		      coords.y = self.canvas.height - coords.y;
+		      coords = self.translateCoords(activeSubscene, coords);
+		      f.call(self, coords.x, coords.y);
+		    }
+		  };
+
+		  this.wheelHandler = function(ev) {
+		    var del = 1.1, i;
+		    if (ev.shiftKey) del = 1.01;
+		    var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
+		    l = this.listeners[activeProjection[activeSubscene]];
+		    for (i = 0; i < l.length; i++) {
+		      self.zoom[l[i]] *= ds;
+		    }
+		    self.drawScene();
+		    ev.preventDefault();
+		  };
+
+		  this.canvas.addEventListener("DOMMouseScroll", wheelHandler, false);
+		  this.canvas.addEventListener("mousewheel", wheelHandler, false);
+		};
+
+		this.useid = function(subsceneid, type) {
+		  var sub = this.getObj(subsceneid);
+		  if (sub.embeddings[type] === "inherit")
+		    return(this.useid(sub.parent, type));
+		  else
+		    return subsceneid;
+		};
+
+		this.inViewport = function(coords, subsceneid) {
+		  var viewport = this.getObj(subsceneid).par3d.viewport,
+		    x0 = coords.x - viewport.x*this.canvas.width,
+		    y0 = coords.y - viewport.y*this.canvas.height;
+		  return 0 <= x0 && x0 <= viewport.width*this.canvas.width &&
+		         0 <= y0 && y0 <= viewport.height*this.canvas.height;
+		}
+
+    this.whichSubscene = function(coords) {
+      var self = this,
+          recurse = function(subsceneid) {
+            var subscenes = self.getSubsceneEntries(subsceneid), i, id;
+            for (i=0; i < subscenes.length; i++) {
+              id = recurse(subscenes[i]);
+              if (typeof(id) !== "undefined")
+                return(id);
+            }
+            if (self.inViewport(coords, subsceneid))
+              return(subsceneid)
+            else
+              return undefined;
+          },
+          rootid = this.scene.rootSubscene,
+          result = recurse(rootid);
+      if (typeof(result) === "undefined")
+        result = rootid;
+      return result;
+    };
+
+    this.translateCoords = function(subsceneid, coords) {
+      var viewport = this.getObj(subsceneid).par3d.viewport;
+      return {x: coords.x - viewport.x*this.canvas.width,
+              y: coords.y - viewport.y*this.canvas.height};
+    };
+
     this.initSphere = function(verts) {
       var gl = this.gl;
       result = {vb: new Float32Array(this.flatten(this.transpose(verts.vb))),
@@ -1210,6 +1233,7 @@ rglClass = function() {
 
 		this.initialize = function(el, x) {
 		  this.canvas = el;
+		  this.canvas.rglinstance = this;
 		  this.resize();
 		  this.initGL0();
 		  this.scene = x;
@@ -1225,6 +1249,7 @@ rglClass = function() {
 		    self.initObj(key);
 		  });
 		  this.drawScene();
+		  this.setMouseHandlers();
 		};
 
     this.initGL0 = function() {
