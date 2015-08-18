@@ -1066,16 +1066,21 @@ rglClass = function() {
 		handlers.zoomdown = function(x, y) {
 		  var activeSub = this.getObj(activeSubscene);
 		  handlers.y0zoom = y;
-			handlers.zoom0 = [];
-			var i,l = activeSub.listeners[this.activeProjection[activeSubscene]];
+			var activeSub = this.getObj(activeSubscene),
+			    activeProjection = this.getObj(this.useid(activeSub.id, "projection")),
+			  i, l = activeProjection.par3d.listeners;
 			for (i = 0; i < l.length; i++) {
-			  this.zoom0[l[i]] = log(this.zoom[l[i]]);
+			  activeSub = this.getObj(l[i]);
+			  activeSub.zoom0 = log(activeSub.par3d.zoom);
 			}
 		};
     handlers.zoommove = function(x, y) {
-		  var i,l = this.listeners;
+			var activeSub = this.getObj(activeSubscene),
+			    activeProjection = this.getObj(this.useid(activeSub.id, "projection")),
+			  i, l = activeProjection.par3d.listeners;
 			for (i = 0; i < l.length; i++) {
-			  this.zoom[l[i]] = exp(this.zoom0[l[i]] + (y-this.y0zoom)/this.canvas.height);
+			  activeSub = this.getObj(l[i]);
+			  activeSub.par3d.zoom = exp(activeSub.zoom0 + (y-handlers.y0zoom)/this.canvas.height);
 			}
 				this.drawScene();
 		  };
