@@ -15,11 +15,11 @@ HTMLWidgets.widget({
 
     var rgl = new rglClass();
     rgl.initialize(el, x);
-    instance.rgl = rgl;
   },
 
   resize: function(el, width, height, instance) {
-    instance.rgl.resize();
+    if (typeof instance.resize === "function")
+      instance.resize();
   }
 
 });
