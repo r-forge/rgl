@@ -545,6 +545,7 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	nflags <- flags[keep]
 	types <- types[keep]
 	flags <- expandFlags(nflags)
+	fullviewport <- result$objects[[as.character(result$rootSubscene)]]$par3d$viewport
 
 	for (i in seq_along(ids)) {
 	  obj <- result$objects[[cids[i]]]
@@ -553,6 +554,11 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	    shade <- shaders(ids[i], types[i], flags[i,])
 	    obj$vshader <- paste(shade$vertex, collapse = "\n")
 	    obj$fshader <- paste(shade$fragment, collapse = "\n")
+	  } else if (obj$type == "subscene") {
+	    obj$par3d$viewport$x <- obj$par3d$viewport$x/fullviewport$width
+	    obj$par3d$viewport$width <- obj$par3d$viewport$width/fullviewport$width
+	    obj$par3d$viewport$y <- obj$par3d$viewport$y/fullviewport$height
+	    obj$par3d$viewport$height <- obj$par3d$viewport$height/fullviewport$height
 	  }
 	  result$objects[[cids[i]]] <- obj
 	}
