@@ -27,5 +27,5 @@ renderRglwidget <- function(expr, env = parent.frame(), quoted = FALSE) {
 }
 
 rglwidget_html <- function(id, style, class, ...) {
-  htmltools::tags$canvas(id = id, class = class)
+  htmltools::tags$canvas(id = id, class = class, ...)
 }
