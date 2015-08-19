@@ -15,6 +15,7 @@ HTMLWidgets.widget({
 
     var rgl = new rglClass();
     rgl.initialize(el, x);
+    rgl.drawInstance();
   },
 
   resize: function(el, width, height, instance) {

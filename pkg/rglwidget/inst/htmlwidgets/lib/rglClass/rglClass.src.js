@@ -287,13 +287,15 @@ rglClass = function() {
 	   };
 
     this.setViewport = function(id) {
-	     this.vp = this.getObj(id).par3d.viewport;
-	     var x = this.vp.x*this.canvas.width,
-	         y = this.vp.y*this.canvas.height,
-	         width = this.vp.width*this.canvas.width,
-	         height = this.vp.height*this.canvas.height;
-	     this.gl.viewport(x, y, width, height);
-	     this.gl.scissor(x, y, width, height);
+	     var gl = this.gl,
+	       vp = this.getObj(id).par3d.viewport,
+	       x = vp.x*this.canvas.width,
+	       y = vp.y*this.canvas.height,
+	       width = vp.width*this.canvas.width,
+	       height = vp.height*this.canvas.height;
+	     this.vp = {x:x, y:y, width:width, height:height};
+	     gl.viewport(x, y, width, height);
+	     gl.scissor(x, y, width, height);
 	   };
 
 	  this.setprMatrix = function(id) {
@@ -750,7 +752,7 @@ rglClass = function() {
 			}
 
 			if (type === "text") {
-				gl.uniform2f( obj.textScaleLoc, 0.75/this.vp.width/canvas.width, 0.75/this.vp.height/canvas.height);
+				gl.uniform2f( obj.textScaleLoc, 0.75/this.vp.width, 0.75/this.vp.height);
 			}
 
 			gl.enableVertexAttribArray( this.posLoc );
@@ -937,11 +939,12 @@ rglClass = function() {
 				    this.drawFns[clipids[i]].call(this, clipids[i]);
 				}
 				subids = obj.opaque;
+				gl.depthMask(true);
 				for (i = 0; subids && i < subids.length; i++) {
 				  this.drawObj(subids[i], subsceneid);
 				}
 				subids = obj.transparent;
-				if (subids) {
+				if (subids.length > 0) {
 				  gl.depthMask(false);
 				  gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
 				                       gl.ONE, gl.ONE);
@@ -1258,7 +1261,6 @@ rglClass = function() {
 		this.initialize = function(el, x) {
 		  this.canvas = el;
 		  this.canvas.rglinstance = this;
-		  this.resize();
 		  this.initGL0();
 		  this.scene = x;
 	    this.normMatrix = new CanvasMatrix4();
@@ -1272,7 +1274,6 @@ rglClass = function() {
 	    Object.keys(objs).forEach(function(key){
 		    self.initObj(key);
 		  });
-		  this.drawScene();
 		  this.setMouseHandlers();
 		};
 
@@ -1303,26 +1304,19 @@ rglClass = function() {
         this.drawScene();
     }
 
-		this.drawInstance = function(el) {
-	    this.canvas = el;
-	    this.resize();
-
-	    this.initGL();
-	    this.id = el.id;
-
-		  this.gl.enable(gl.DEPTH_TEST);
-	    this.gl.depthFunc(gl.LEQUAL);
-	    this.gl.clearDepth(1.0);
-	    this.gl.clearColor(1,1,1,1);
+		this.drawInstance = function() {
+	    var gl = this.gl;
+		  gl.enable(gl.DEPTH_TEST);
+	    gl.depthFunc(gl.LEQUAL);
+	    gl.clearDepth(1.0);
+	    gl.clearColor(1,1,1,1);
 	    this.drag  = 0;
       this.drawScene();
 		};
 
     this.drawScene = function() {
       var gl = this.gl;
-			gl.depthMask(true);
 			gl.disable(gl.BLEND);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this.drawSubscene(this.scene.rootSubscene);
 			gl.flush();
 		};
