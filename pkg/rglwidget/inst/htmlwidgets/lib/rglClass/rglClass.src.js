@@ -914,7 +914,7 @@ rglClass = function() {
 		      subids = obj.objects,
 		      subscene_has_faces = false,
 		      subscene_needs_sorting = false,
-		      flags;
+		      flags, i;
 
 		  for (i=0; i < subids.length; i++) {
 		    flags = objects[subids[i]].flags;
@@ -926,14 +926,12 @@ rglClass = function() {
 		  var bgid = obj.backgroundId,
 		      bg;
 
-      if (typeof bgid === "undefined" || !objects[bgid].colors.length)
-			  bg = [1,1,1,1];
-			else
+      this.setViewport(subsceneid);
+      if (typeof bgid !== "undefined" && objects[bgid].colors.length) {
 			  bg = objects[bgid].colors[0];
-
-			this.setViewport(subsceneid);
-			gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
-			gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+			  gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
+			  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      }
 
 			if (subids.length) {
 			  this.setprMatrix(subsceneid);
