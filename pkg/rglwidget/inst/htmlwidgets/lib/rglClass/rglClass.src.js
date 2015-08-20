@@ -219,7 +219,7 @@ rglClass = function() {
 	  };
 
 	  this.loadImageToTexture = function(filename, texture) {
-	    var canvas = alert("texture canvas not set up"),
+	    var canvas = this.textureCanvas,
 	        ctx = canvas.getContext("2d"),
 	        image = new Image(),
 	        self = this;
@@ -247,7 +247,7 @@ rglClass = function() {
 	         textColour = "white",
 
 	         backgroundColour = "rgba(0,0,0,0)",
-           canvas = alert("texture canvas not set up"),
+           canvas = this.textureCanvas,
 	         ctx = canvas.getContext("2d"),
            i;
 
@@ -449,7 +449,7 @@ rglClass = function() {
 		      gl = this.gl,
           texinfo, drawtype, f, frowsize, nrows;
 
-    if (type === "clipplanes" || type === "background" || type === "light")
+    if (type === "clipplanes" || type === "background" || type === "light" || type === "bboxdeco")
       return;
 
     if (type === "subscene") {
@@ -469,7 +469,7 @@ rglClass = function() {
 		}
 
 		if (type === "text") {
-      texinfo = drawTextToCanvas(texts, obj.cex);
+      texinfo = this.drawTextToCanvas(obj.texts, obj.cex);
 		}
 
 		if (fixed_quads && !sprites_3d) {
@@ -497,8 +497,8 @@ rglClass = function() {
 		}
 
 		if (type === "text") {
-		  handleLoadedTexture(obj.texture,
-		    document.getElementById("prefixtextureCanvas"));
+		  this.handleLoadedTexture(obj.texture,
+		    this.textureCanvas);
 		}
 
     v = obj.vertices;
@@ -536,16 +536,35 @@ rglClass = function() {
     } else
     	oofs = -1;
 
-    if (false && (has_texture || type == "text")) {
+    if (type === "text") {
+      tofs = stride;
+      stride += 2;
+      oofs = stride;
+      stride += 2;
+      var i, j, vnew = new Array(4*v.length), v1;
+      for (i=0; i < v.length; i++) {
+        vnew[4*i]  = v[i].concat([0,-0.5]).concat(obj.adj[0]);
+        vnew[4*i+1]= v[i].concat([1,-0.5]).concat(obj.adj[0]);
+        vnew[4*i+2]= v[i].concat([1, 1.5]).concat(obj.adj[0]);
+        vnew[4*i+3]= v[i].concat([0, 1.5]).concat(obj.adj[0]);
+        for (j=0; j < 4; j++) {
+          v1 = vnew[4*i+j];
+          v1[tofs+2] = 2*(v1[tofs]-v1[tofs+2])*texinfo.widths[i];
+	        v1[tofs+3] = 2*(v1[tofs+1]-v1[tofs+3])*texinfo.textHeight;
+	        v1[tofs] *= texinfo.widths[i]/texinfo.canvasX;
+	        v1[tofs+1] = 1.0-(texinfo.offset + i*texinfo.skip -
+	            v1[tofs+1]*texinfo.textHeight)/texinfo.canvasY;
+	        vnew[4*i+j] = v1;
+        }
+      }
+      v = vnew;
+      obj.vertexCount = v.length;
+    } else if (has_texture) {
     	tofs = stride;
-    	stride = stride + 2;
+    	stride += 2;
+    	v = this.cbind(v, texcoords);
     } else
     	tofs = -1;
-
-    if (false && type == "text") {
-    	oofs = stride;
-    	stride = stride + 2;
-    }
 
     if (stride !== v[0].length)
       alert("problem in stride calculation");
@@ -557,18 +576,6 @@ rglClass = function() {
     if (sprites_3d) {
 			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
     }
-
-		if (type === "text" && !reuse) {
-			for (i=0; i < obj.texts.length; i++)
-			  for (j=0; j<4; j++) {
-			    ind = obj.offsets.stride*(4*i + j) + obj.offsets.tofs;
-			    	v[ind+2] = 2*(v[ind]-v[ind+2])*texinfo.widths[i];
-			    	v[ind+3] = 2*(v[ind+1]-v[ind+3])*texinfo.textHeight;
-			    	v[ind] *= texinfo.widths[i]/texinfo.canvasX;
-			    	v[ind+1] = 1.0-(texinfo.offset + i*texinfo.skip -
-			    	           v[ind+1]*texinfo.textHeight)/texinfo.canvasY;
-			  }
-		}
 
 		if (!sprites_3d && reuse) {
 			 obj.values = thisprefix.scene.objects[id].values;
@@ -680,7 +687,7 @@ rglClass = function() {
 		      thisprefix = this.getPrefix(id),
 		      sphereMV, baseofs, ofs, sscale, iOrig, i, count;
 
-      if (type === "light")
+      if (type === "light" || type === "bboxdeco")
         return;
 
 		  if (type === "clipplanes") {
@@ -869,9 +876,7 @@ rglClass = function() {
 
 			var mode = this.mode4type[type];
 
-      if (type === "sprites" || type === "text") {
-        count = count*6;
-      } else if (type === "quads") {
+      if (type === "sprites" || type === "text" || type === "quads") {
         count = count * 6/4;
       } else if (type === "surface") {
 				var dim = obj.dims,
@@ -1260,6 +1265,8 @@ rglClass = function() {
 
 		this.initialize = function(el, x) {
 		  this.canvas = el;
+		  this.textureCanvas = document.createElement("canvas");
+		  this.textureCanvas.style.display = "none";
 		  this.canvas.rglinstance = this;
 		  this.initGL0();
 		  this.scene = x;
