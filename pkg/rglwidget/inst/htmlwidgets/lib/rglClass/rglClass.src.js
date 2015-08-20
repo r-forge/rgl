@@ -829,15 +829,15 @@ rglClass = function() {
 			    sphereMV = new CanvasMatrix4();
 
 			  	if (depth_sort) {
-				    baseofs = faces[i]*thisprefix.scene.objects[id].offsets.stride;
+				    baseofs = faces[i]*obj.offsets.stride;
 				  } else {
-				    baseofs = i*thisprefix.scene.objects[id].offsets.stride;
+				    baseofs = i*obj.offsets.stride;
 				  }
 
           ofs = baseofs + obj.offsets.radofs;
 				  sscale = obj.values[ofs];
 
-				  sphereMV.scale(sscale*scale[0], sscale*scale[1], sscale*scale[2]);
+				  sphereMV.scale(sscale/scale[0], sscale/scale[1], sscale/scale[2]);
 				  sphereMV.translate(obj.values[baseofs],
 				                     obj.values[baseofs+1],
 				                     obj.values[baseofs+2]);
