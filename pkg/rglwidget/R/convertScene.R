@@ -388,9 +388,10 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
         subscenes[[i]]$parent <- subscene$id
         subscenes[[i]] <- recurse(subscenes[[i]])
       }
-      if (length(subscenes))
+      if (length(subscenes)) {
         subscene$subscenes <- unlist(subscenes)
-      else
+        subscene$objects <- c(subscene$objects, subscene$subscenes)
+      } else
         subscene$subscenes <- integer(0)
       id <- as.character(subscene$id)
       result$objects[[id]] <<- subscene
@@ -569,8 +570,8 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	# Make model sphere
 	x <- subdivision3d(octahedron3d(),2)
 	r <- sqrt(x$vb[1,]^2 + x$vb[2,]^2 + x$vb[3,]^2)
-	x$vb <- x$vb[1:3,]/r
-	x$it <- x$it - 1
+	x$vb <- t(t(x$vb[1:3,])/r)
+	x$it <- x$it-1
   result$sphereVerts <- x
 	result
 }
