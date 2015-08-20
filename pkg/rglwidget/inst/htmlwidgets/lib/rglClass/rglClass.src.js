@@ -111,7 +111,7 @@ rglClass = function() {
     this.sumsq = function(x) {
       var result = 0, i;
       for (i=0; i < x.length; i++)
-        result += x[i]^2;
+        result += x[i]*x[i];
       return result;
     };
 
