@@ -42,8 +42,6 @@ rglClass = function() {
     this.canvas = null;
     this.userMatrix = new CanvasMatrix4();
     this.types = [];
-    this.drawFns = [];
-    this.clipFns = [];
     this.prMatrix = new CanvasMatrix4();
     this.mvMatrix = new CanvasMatrix4();
     this.vp = null;
@@ -380,37 +378,41 @@ rglClass = function() {
 	   };
 
     this.countClipplanes = function(id) {
-      var scene = this.scene,
-          bound = 0,
+      var self = this,
+          bound = 0, obj,
         recurse = function(subscene) {
         var result = 0,
-          subids = scene.objects[subscene].objects,
+          subscene = self.getObj(subscene),
+          subids = subscene.objects,
           i;
         for (i = 0; i < subids.length; i++) {
-          if (scene.objects[subids[i]].type == "sprites")
-            subids.concat(scene.objects[subids[i]].objects);
-          if (subids[i] === id) {
-            clipids = scene.getClipplanes(subscene);
-            for (j=0; j < clipids.length; j++)
-              result = result + scene.objects[clipids[j]].offsets.length;
+          obj = self.getObj(subids[i]);
+          if (obj.type == "sprites")
+            subids.concat(obj.objects);
+        }
+        i = subids.indexOf(parseInt(id, 10));
+        if (i >= 0) {
+          var clipids = subscene.clipplanes;
+          for (j=0; j < clipids.length; j++) {
+            obj = self.getObj(clipids[j]);
+            result = result + obj.offsets.length;
           }
         }
-        for (i = 0; i < subids.length; i++) {
+        for (i = 0; i < subscene.subscenes.length; i++) {
           if (result >= bound)
             break;
-          if (scene.objects[subids[i]].type == "subscene")
-            result = max(result, recurse(subids[i]));
+          result = max(result, recurse(subscene.subscenes[i]));
         }
         return result;
       };
-      Object.keys(scene.objects).forEach(
+      Object.keys(this.scene.objects).forEach(
         function(key) {
-          if (scene.objects[key].type === "clipplanes")
+          if (self.getObj(key).type === "clipplanes")
             bound = bound + 1;
         });
       if (bound <= 0)
         return 0;
-      return recurse(scene.rootSubscene);
+      return recurse(self.scene.rootSubscene);
     };
 
     this.initSubscene = function(id) {
@@ -444,16 +446,20 @@ rglClass = function() {
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
 		      is_clipplanes = type === "clipplanes",
-		      nclipplanes = this.countClipplanes(id),
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
-          texinfo, drawtype, f, frowsize, nrows;
+          texinfo, drawtype, nclipplanes, f, frowsize, nrows;
 
-    if (type === "clipplanes" || type === "background" || type === "light" || type === "bboxdeco")
+    if (type === "background" || type === "light" || type === "bboxdeco")
       return;
 
     if (type === "subscene") {
       this.initSubscene(id);
+      return;
+    }
+
+    if (type === "clipplanes") {
+      obj.vClipplane = this.cbind(obj.normals, obj.offsets);
       return;
     }
 
@@ -526,7 +532,11 @@ rglClass = function() {
     if (typeof obj.radii !== "undefined") {
     	radofs = stride;
     	stride = stride + 1;
-    	v = this.cbind(v, obj.radii);
+    	if (obj.radii.length === v.length) {
+    	  v = this.cbind(v, obj.radii);
+    	} else if (obj.radii.length === 1) {
+    	  v = v.map(function(row, i, arr) row.concat(obj.radii));
+    	}
     } else
     	radofs = -1;
 
@@ -585,6 +595,7 @@ rglClass = function() {
 			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
 
+    nclipplanes = this.countClipplanes(id);
 		if (nclipplanes && !sprites_3d) {
 		  obj.clipLoc = [];
 		  for (i=0; i < nclipplanes; i++)
@@ -694,18 +705,10 @@ rglClass = function() {
 			  var count = obj.offsets.length,
 			      IMVClip = [];
 			  for (i=0; i < count; i++) {
-				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane.slice(4*i, 4*(i+1)));
+				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane[i]);
  			  }
- 			  this.getObj(id).IMVClip = obj.IMVClip = IMVClip;
-			  this.getObj(id).clipFn = obj.clipFn = function(id, objid, count1) {
-			    var obj = this.getObj(id),
-			        count2 = obj.offsets.length;
-    	    for (i=0; i<count2; i++) {
-	    	    gl.uniform4fv(obj.clipLoc[count1 + i], obj.IMVClip[i]);
-    	    }
-	    	  return(count1 + count2);
-		    };
-      return;
+ 			  obj.IMVClip = IMVClip;
+        return;
 			}
 
       if (sprites_3d) {
@@ -745,9 +748,14 @@ rglClass = function() {
 			gl.uniformMatrix4fv( obj.mvMatLoc, false, new Float32Array(this.mvMatrix.getAsArray()) );
       var clipcheck = 0,
           subscene = this.getObj(subsceneid),
-          clipplanes = subscene.clipplanes;
-			for (i=0; i < clipplanes.length; i++) {
-			  clipcheck = this.clipFns[clipplanes[i]].call(this, clipplanes[i], id, clipcheck); // FIXME clipFns?
+          clipplaneids = subscene.clipplanes,
+          clip, j;
+			for (i=0; i < clipplaneids.length; i++) {
+			  clip = this.getObj(clipplaneids[i]);
+			  for (j=0; j < clip.offsets.length; j++) {
+			    gl.uniform4fv(obj.clipLoc[clipcheck + j], clip.IMVClip[j]);
+			  }
+			  clipcheck += clip.offsets.length;
 			}
 
 			if (is_lit && !sprite_3d) {
@@ -846,6 +854,7 @@ rglClass = function() {
 				  gl.drawElements(gl.TRIANGLES, this.sphere.sphereCount, gl.UNSIGNED_SHORT, 0);
 
 			  }
+			  return;
 			} else {
 				if (obj.colorCount === 1) {
 					gl.disableVertexAttribArray( this.colLoc );
@@ -941,7 +950,7 @@ rglClass = function() {
 				  this.invMatrix = new CanvasMatrix4(this.mvMatrix);
 				  this.invMatrix.invert();
 				  for (i = 0; i < obj.clipplanes.length; i++)
-				    this.drawFns[clipids[i]].call(this, clipids[i]);
+				    this.drawObj(clipids[i]);
 				}
 				subids = obj.opaque;
 				gl.depthMask(true);
@@ -959,8 +968,8 @@ rglClass = function() {
 				  }
 				}
 				subids = obj.subscenes;
-				for (i = 0; subids && i < subids.length; i++) {
-				  this.drawFns[subids[i]].call(this, subids[i]); // FIXME
+				for (i = 0; i < subids.length; i++) {
+				  this.drawSubscene(subids[i]);
 				}
 			}
 	  };
