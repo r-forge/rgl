@@ -225,8 +225,8 @@ rglClass = function() {
 	     image.onload = function() {
 	       var w = image.width,
 	           h = image.height,
-	           canvasX = getPowerOfTwo(w),
-	           canvasY = getPowerOfTwo(h);
+	           canvasX = self.getPowerOfTwo(w),
+	           canvasY = self.getPowerOfTwo(h);
 	       canvas.width = canvasX;
 	       canvas.height = canvasY;
 	       ctx.imageSmoothingEnabled = true;
@@ -448,7 +448,8 @@ rglClass = function() {
 		      is_clipplanes = type === "clipplanes",
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
-          texinfo, drawtype, nclipplanes, f, frowsize, nrows;
+          texinfo, drawtype, nclipplanes, f, frowsize, nrows,
+          i,j,v;
 
     if (type === "background" || type === "light" || type === "bboxdeco")
       return;
@@ -488,23 +489,18 @@ rglClass = function() {
 			obj.usermatLoc = gl.getUniformLocation(obj.prog, "usermat");
 		}
 
-		load_texture = false; // FIXME
-
-		if (load_texture || type == "text") {
+		if (has_texture || type == "text") {
 		  obj.texture = gl.createTexture();
 			obj.texLoc = gl.getAttribLocation(obj.prog, "aTexcoord");
 			obj.sampler = gl.getUniformLocation(obj.prog, "uSampler");
 		}
 
-		if (load_texture) {
-			this.loadImageToTexture(obj.textureFile, obj.texture);
-		} else if (has_texture) {
-			obj.texture = this.texture[texid];
+		if (has_texture) {
+			this.loadImageToTexture(obj.material.texture, obj.texture);
 		}
 
 		if (type === "text") {
-		  this.handleLoadedTexture(obj.texture,
-		    this.textureCanvas);
+		  this.handleLoadedTexture(obj.texture, this.textureCanvas);
 		}
 
     v = obj.vertices;
@@ -551,7 +547,7 @@ rglClass = function() {
       stride += 2;
       oofs = stride;
       stride += 2;
-      var i, j, vnew = new Array(4*v.length), v1;
+      var vnew = new Array(4*v.length), v1;
       for (i=0; i < v.length; i++) {
         vnew[4*i]  = v[i].concat([0,-0.5]).concat(obj.adj[0]);
         vnew[4*i+1]= v[i].concat([1,-0.5]).concat(obj.adj[0]);
@@ -569,10 +565,10 @@ rglClass = function() {
       }
       v = vnew;
       obj.vertexCount = v.length;
-    } else if (has_texture) {
+    } else if (typeof obj.texcoords !== "undefined") {
     	tofs = stride;
     	stride += 2;
-    	v = this.cbind(v, texcoords);
+    	v = this.cbind(v, obj.texcoords);
     } else
     	tofs = -1;
 
@@ -623,13 +619,29 @@ rglClass = function() {
           f[i] = i;
         }
         frowsize = 3;
-      } else if (type == "spheres") {
+      } else if (type === "spheres") {
         nrows = obj.vertexCount;
         f = Array(nrows);
         for (i=0; i < f.length; i++) {
           f[i] = i;
         }
         frowsize = 1;
+      } else if (type === "surface") {
+        var dim = obj.dim[0],
+            nx = dim[0],
+            nz = dim[1];
+        f = [];
+        for (j=0; j<nx-1; j++) {
+          for (i=0; i<nz-1; i++) {
+            f.push(j + nx*i,
+                   j + nx*(i+1),
+                   j + 1 + nx*(i+1),
+                   j + nx*i,
+                   j + 1 + nx*(i+1),
+                   j + 1 + nx*i);
+          }
+        }
+        frowsize <- 6
       }
 		  obj.f = new Uint16Array(f);
 			if (depth_sort) {
@@ -888,10 +900,7 @@ rglClass = function() {
       if (type === "sprites" || type === "text" || type === "quads") {
         count = count * 6/4;
       } else if (type === "surface") {
-				var dim = obj.dims,
-						nx = dim[0],
-						nz = dim[1];
-				count = (nx - 1)*(nz - 1)*6;
+				count = obj.f.length;
       }
 
 			if (is_lines) {
