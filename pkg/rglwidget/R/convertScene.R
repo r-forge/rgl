@@ -561,6 +561,11 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	    obj$par3d$viewport$y <- obj$par3d$viewport$y/fullviewport$height
 	    obj$par3d$viewport$height <- obj$par3d$viewport$height/fullviewport$height
 	  }
+	  # FIXME:  could reuse the texture
+	  if (!is.null(obj$material) && !is.null(obj$material$texture))
+	    obj$material$uri <- knitr::image_uri(obj$material$texture)
+	  if (flags[i, "depth_sort"])
+	    obj$centers <- rgl.attrib(ids[i], "centers")
 	  result$objects[[cids[i]]] <- obj
 	}
 
