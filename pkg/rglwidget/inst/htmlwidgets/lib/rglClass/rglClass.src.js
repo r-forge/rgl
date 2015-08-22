@@ -216,7 +216,7 @@ rglClass = function() {
 	    gl.bindTexture(gl.TEXTURE_2D, null);
 	  };
 
-	  this.loadImageToTexture = function(filename, texture) {
+	  this.loadImageToTexture = function(uri, texture) {
 	    var canvas = this.textureCanvas,
 	        ctx = canvas.getContext("2d"),
 	        image = new Image(),
@@ -234,7 +234,7 @@ rglClass = function() {
 	       self.handleLoadedTexture(texture, canvas);
 	       self.drawScene();
 	     };
-	     image.src = filename;
+	     image.src = uri;
 	   };
 
     this.drawTextToCanvas = function(text, cex, fontFamily) {
@@ -388,7 +388,7 @@ rglClass = function() {
         for (i = 0; i < subids.length; i++) {
           obj = self.getObj(subids[i]);
           if (obj.type == "sprites")
-            subids.concat(obj.objects);
+            subids = subids.concat(obj.objects);
         }
         i = subids.indexOf(parseInt(id, 10));
         if (i >= 0) {
@@ -496,7 +496,7 @@ rglClass = function() {
 		}
 
 		if (has_texture) {
-			this.loadImageToTexture(obj.material.texture, obj.texture);
+			this.loadImageToTexture(obj.material.uri, obj.texture);
 		}
 
 		if (type === "text") {
@@ -531,18 +531,29 @@ rglClass = function() {
     	if (obj.radii.length === v.length) {
     	  v = this.cbind(v, obj.radii);
     	} else if (obj.radii.length === 1) {
-    	  v = v.map(function(row, i, arr) row.concat(obj.radii));
+    	  v = v.map(function(row, i, arr) row.concat(obj.radii[0]));
     	}
     } else
     	radofs = -1;
 
-    if (false && type == "sprites" && !sprites_3d) { // FIXME
+    if (type == "sprites" && !sprites_3d) {
+      tofs = stride;
+      stride += 2;
     	oofs = stride;
-    	stride = stride + 2;
-    } else
-    	oofs = -1;
-
-    if (type === "text") {
+    	stride += 2;
+      var vnew = new Array(4*v.length), v1,
+          size = obj.radii, s = size[0]/2;
+      for (i=0; i < v.length; i++) {
+        if (size.length > 1)
+          s = size[i]/2;
+        vnew[4*i]  = v[i].concat([0,0,-s,-s]);
+        vnew[4*i+1]= v[i].concat([1,0, s,-s]);
+        vnew[4*i+2]= v[i].concat([1,1, s, s]);
+        vnew[4*i+3]= v[i].concat([0,1,-s, s]);
+      }
+      v = vnew;
+      obj.vertexCount = v.length;
+    } else if (type === "text") {
       tofs = stride;
       stride += 2;
       oofs = stride;
@@ -568,9 +579,12 @@ rglClass = function() {
     } else if (typeof obj.texcoords !== "undefined") {
     	tofs = stride;
     	stride += 2;
+    	oofs = -1;
     	v = this.cbind(v, obj.texcoords);
-    } else
-    	tofs = -1;
+    } else {
+     	tofs = -1;
+      oofs = -1;
+    }
 
     if (stride !== v[0].length)
       alert("problem in stride calculation");
@@ -1089,8 +1103,6 @@ rglClass = function() {
 			this.drawScene();
 		};
     handlers.axisend = 0;
-
-    // FIXME - update other handlers
 
     handlers.y0zoom = 0;
 		handlers.zoom0 = 0;
