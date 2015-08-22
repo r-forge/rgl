@@ -319,7 +319,7 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 					'      vec4 lighteffect = vec4(emission, 0.);')
 				if (fixed_quads) {
 					res <- c(res,
-						 '	  vec3 n = vec3(0., 0., -1.);')
+						 '	  vec3 n = vec3(0., 0., 1.);')
 				}
 				else {
 					res <- c(res,
