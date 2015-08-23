@@ -708,6 +708,7 @@ rglClass = function() {
 
 	  this.drawObj = function(id, subsceneid) {
 	    var obj = this.getObj(id),
+	        subscene = this.getObj(subsceneid),
 	        flags = obj.flags,
 	        type = obj.type,
 	        is_indexed = flags & this.f_is_indexed,
@@ -722,7 +723,7 @@ rglClass = function() {
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
-		      sphereMV, baseofs, ofs, sscale, iOrig, i, count;
+		      sphereMV, baseofs, ofs, sscale, i, count;
 
       if (type === "light" || type === "bboxdeco")
         return;
@@ -738,23 +739,27 @@ rglClass = function() {
 			}
 
       if (sprites_3d) {
-			  var norigs = obj.norigs, spriteid;
-			  this.origs = obj.origsize;
-				this.usermat = obj.userMatrix;
-				for (iOrig=0; iOrig < norigs; iOrig++) {
-			    for (i=0; i < obj.spriteids.length; i++) {
-					  this.drawObj(obj.spriteids[i], subsceneid);
+			  var norigs = obj.vertices.length, spriteid;
+			  this.origs = obj.vertices;
+				this.usermat = new Float32Array(obj.userMatrix.getAsArray());
+				this.radii = obj.radii;
+				for (this.iOrig=0; this.iOrig < norigs; this.iOrig++) {
+			    for (i=0; i < obj.ids.length; i++) {
+					  this.drawObj(obj.ids[i], subsceneid);
 					}
 				}
+				return;
 			} else {
 				gl.useProgram(obj.prog);
 			}
 
 			if (sprite_3d) {
-			  gl.uniform3f(obj.origLoc, this.origs[4*iOrig],
-							       this.origs[4*iOrig+1],
-							       this.origs[4*iOrig+2]);
-				gl.uniform1f(obj.sizeLoc, this.origs[4*iOrig+3]);
+			  gl.uniform3fv(obj.origLoc, new Float32Array(this.origs[this.iOrig]));
+			  if (this.radii.length > 1) {
+				  gl.uniform1f(obj.sizeLoc, this.radii[this.iOrig][0]);
+			  } else {
+			    gl.uniform1f(obj.sizeLoc, this.radii[0][0]);
+			  }
 				gl.uniformMatrix4fv(obj.usermatLoc, false, this.usermat);
 			}
 
@@ -773,7 +778,6 @@ rglClass = function() {
 			gl.uniformMatrix4fv( obj.prMatLoc, false, new Float32Array(this.prMatrix.getAsArray()) );
 			gl.uniformMatrix4fv( obj.mvMatLoc, false, new Float32Array(this.mvMatrix.getAsArray()) );
       var clipcheck = 0,
-          subscene = this.getObj(subsceneid),
           clipplaneids = subscene.clipplanes,
           clip, j;
 			for (i=0; i < clipplaneids.length; i++) {
@@ -789,7 +793,7 @@ rglClass = function() {
 			}
 
 			if (is_lit && sprite_3d) {
-				gl.uniformMatrix4fv( obj.normMatLoc, false, this.usermat);
+				gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(subscene.spriteNormmat.getAsArray()));
 			}
 
 			if (type === "text") {
@@ -848,7 +852,7 @@ rglClass = function() {
 				gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(sphereNorm.getAsArray()) );
 
 			  if (nc == 1) {
-				  gl.vertexAttrib4fv( this.colLoc, obj.colors);
+				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.colors));
 			  }
 
 			  for (i = 0; i < scount; i++) {
@@ -884,7 +888,7 @@ rglClass = function() {
 			} else {
 				if (obj.colorCount === 1) {
 					gl.disableVertexAttribArray( this.colLoc );
-				  gl.vertexAttrib4fv( this.colLoc, obj.colors);
+				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.colors));
 				} else {
 					gl.enableVertexAttribArray( this.colLoc );
 					gl.vertexAttribPointer(this.colLoc, 4, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.cofs);
@@ -960,8 +964,13 @@ rglClass = function() {
 			  this.setprMatrix(subsceneid);
 			  this.setmvMatrix(subsceneid);
 
-				if (subscene_has_faces)
+				if (subscene_has_faces) {
 				  this.setnormMatrix(subsceneid);
+				  if ((obj.flags & this.f_sprites_3d)
+				      && typeof obj.spriteNormmat === "undefined") {
+				    obj.spriteNormmat = new CanvasMatrix4(this.normMatrix);
+				  }
+				}
 
 				if (subscene_needs_sorting)
 				  this.setprmvMatrix();

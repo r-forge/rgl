@@ -224,7 +224,7 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 			gl_Position = prMatrix*pos;',
 
 			if (sprite_3d)
-				'	  vNormal = normalize((vec4(aNorm, 1.)*normMatrix).xyz);
+				'	  vNormal = normalize((normMatrix * vec4(aNorm, 1.)).xyz);
 			vec4 pos = mvMatrix * vec4(uOrig, 1.);
 			vPosition = pos/pos.w + vec4(uSize*(vec4(aPos, 1.)*usermat).xyz,0.);
 			gl_Position = prMatrix * vPosition;',
@@ -518,22 +518,10 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	}
 
 	result <- initResult()
-
 	ids <- vapply(result$objects, function(x) x$id, integer(1))
 	types <- vapply(result$objects, function(x) x$type, character(1))
   flags <- vapply(result$objects, function(obj) numericFlags(getFlags(obj$id, obj$type)),
                                  numeric(1), USE.NAMES = FALSE)
-
-# 	i <- 0
-# 	while (i < length(ids)) {
-# 		i <- i + 1
-# 		flags[i,] <- getFlags(ids[i], types[i])
-# 		if (flags[i, "sprites_3d"]) {
-# 			subids <- rgl.attrib(ids[i], "ids")
-# 			flags[ids %in% subids, "sprite_3d"] <- TRUE
-# 		}
-# 	}
-# 	flags[ids %in% prefixes$id, "reuse"] <- TRUE
 
 	unknowntypes <- setdiff(types, knowntypes)
 	if (length(unknowntypes))
@@ -546,8 +534,21 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	nflags <- flags[keep]
 	types <- types[keep]
 	flags <- expandFlags(nflags)
+	rownames(flags) <- cids
 	fullviewport <- result$objects[[as.character(result$rootSubscene)]]$par3d$viewport
 
+	for (i in seq_along(ids)) {
+	  obj <- result$objects[[cids[i]]]
+	  if (obj$type == "sprites" && flags[i, "sprites_3d"]) {
+	    obj$objects <- NULL
+	    for (j in seq_along(obj$ids)) {
+	      objid <- as.character(obj$ids[j])
+	      k <- which(objid == cids)
+	      flags[k, "sprite_3d"] <- TRUE
+	      nflags[k] <- numericFlags(flags[k,])
+	    }
+	  }
+	}
 	for (i in seq_along(ids)) {
 	  obj <- result$objects[[cids[i]]]
 	  obj$flags <- nflags[i]
@@ -555,17 +556,18 @@ convertScene <- function(width = NULL, height = NULL, reuse = NULL) {
 	    shade <- shaders(ids[i], types[i], flags[i,])
 	    obj$vshader <- paste(shade$vertex, collapse = "\n")
 	    obj$fshader <- paste(shade$fragment, collapse = "\n")
+
+	    # FIXME:  could reuse the texture
+	    if (!is.null(obj$material) && !is.null(obj$material$texture))
+	      obj$material$uri <- knitr::image_uri(obj$material$texture)
+  	  if (flags[i, "depth_sort"])
+	      obj$centers <- rgl.attrib(ids[i], "centers")
 	  } else if (obj$type == "subscene") {
 	    obj$par3d$viewport$x <- obj$par3d$viewport$x/fullviewport$width
 	    obj$par3d$viewport$width <- obj$par3d$viewport$width/fullviewport$width
 	    obj$par3d$viewport$y <- obj$par3d$viewport$y/fullviewport$height
 	    obj$par3d$viewport$height <- obj$par3d$viewport$height/fullviewport$height
 	  }
-	  # FIXME:  could reuse the texture
-	  if (!is.null(obj$material) && !is.null(obj$material$texture))
-	    obj$material$uri <- knitr::image_uri(obj$material$texture)
-	  if (flags[i, "depth_sort"])
-	    obj$centers <- rgl.attrib(ids[i], "centers")
 	  result$objects[[cids[i]]] <- obj
 	}
 
