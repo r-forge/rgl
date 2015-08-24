@@ -739,15 +739,18 @@ rglClass = function() {
 			}
 
       if (sprites_3d) {
-			  var norigs = obj.vertices.length, spriteid;
+			  var norigs = obj.vertices.length, spriteid,
+			      savenorm = new CanvasMatrix4(this.normMatrix);
 			  this.origs = obj.vertices;
 				this.usermat = new Float32Array(obj.userMatrix.getAsArray());
 				this.radii = obj.radii;
+				this.normMatrix = subscene.spriteNormmat;
 				for (this.iOrig=0; this.iOrig < norigs; this.iOrig++) {
 			    for (i=0; i < obj.ids.length; i++) {
 					  this.drawObj(obj.ids[i], subsceneid);
 					}
 				}
+				this.normMatrix = savenorm;
 				return;
 			} else {
 				gl.useProgram(obj.prog);
@@ -788,12 +791,8 @@ rglClass = function() {
 			  clipcheck += clip.offsets.length;
 			}
 
-			if (is_lit && !sprite_3d) {
+			if (is_lit) {
 			  gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(this.normMatrix.getAsArray()) );
-			}
-
-			if (is_lit && sprite_3d) {
-				gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(subscene.spriteNormmat.getAsArray()));
 			}
 
 			if (type === "text") {
