@@ -1,10 +1,10 @@
 
-rglwidget <- function(width = NULL, height = NULL) {
+rglwidget <- function(x = scene3d(), width = NULL, height = NULL) {
 
   # create widget
   htmlwidgets::createWidget(
     name = 'rglwidget',
-    x = convertScene(width, height),
+    x = convertScene(x, width, height),
     width = width,
     height = height,
     package = 'rglwidget'
