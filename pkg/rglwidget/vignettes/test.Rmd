@@ -1,0 +1,16 @@
+---
+title: "test"
+author: "Duncan Murdoch"
+date: "August 9, 2015"
+output: html_document
+---
+
+This vignette is used for testing.
+
+```{r fig.height=6,fig.width=6}
+library(rglwidget)
+example(plot3d)
+
+par3d(mouseMode=c("trackball", "none", "none"))
+rglwidget()
+```
