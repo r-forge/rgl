@@ -22,57 +22,6 @@ addDP <- function(value, digits=7) {
   value
 }
 
-getMaterial <- function(x, id) {
-  default <- x$material
-  obj <- x$objects[[as.character(id)]]
-  result <- obj$material
-  missing <- setdiff(names(default), names(result))
-  result[missing] <- default[missing]
-  result
-}
-
-rootSubscene <- function() {
-	id <- currentSubscene3d()
-	repeat {
-		info <- subsceneInfo(id)
-		if (is.null(info$parent)) return(id)
-		else id <- info$parent
-	}
-}
-
-# This gets all the clipping planes in a particular subscene
-getClipplanes <- function(subscene) {
-	shapes <- rgl.ids(subscene=subscene)
-	shapes$id[shapes$type == "clipplanes"]
-}
-
-# This counts how many clipping planes might affect a particular object
-countClipplanes <- function(id, minValue = getOption("rgl.minClipplanes", 0)) {
-	recurse <- function(subscene) {
-		result <- 0
-		subids <- rgl.ids(c("shapes", "bboxdeco"), subscene=subscene)
-		ids <- subids$id
-		for (spriteid in ids[subids$type == "sprites"]) {
-			ids <- c(ids, rgl.attrib(spriteid, "ids"))
-		}
-		if (id %in% ids) {
-			clipids <- getClipplanes(subscene)
-			for (clipid in clipids)
-				result <- result + rgl.attrib.count(clipid, "offsets")
-		}
-		subscenes <- rgl.ids("subscene", subscene=subscene)$id
-		for (sub in subscenes) {
-			if (result >= bound)
-				break
-			result <- max(result, recurse(sub))
-		}
-		result
-	}
-	bound <- length(getClipplanes(0))
-	if (bound < minValue) return(minValue)
-	max(minValue, recurse(rootSubscene()))
-}
-
 convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NULL) {
 
 	# Lots of utility functions and constants defined first; execution starts way down there...
@@ -95,9 +44,64 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		sprintf("vec4(%s, %s, %s, %s)", vec[1], vec[2], vec[3], vec[4])
 	}
 
-	shaders <- function(x, id, type, flags) {
+	getObj <- function(id) {
+	  result$objects[[as.character(id)]]
+	}
+
+	setObj <- function(id, newval) {
+	  result$objects[[as.character(id)]] <<- newval
+	}
+
+	getIdsByType <- function(type, subscene = NULL) {
+	  if (is.null(subscene))
+	    ids <- vapply(result$objects, function(x)
+	                    if (x$type == type) x$id else NA, integer(1))
+	  else {
+	    ids <- vapply(getObj(subscene)$objects, function(x) {
+	                    obj <- getObj(x)
+	                    if (obj$type == type) obj$id
+	                    else NA
+	                  }, integer(1))
+	  }
+	  ids[!is.na(ids)]
+	}
+
+	getMaterial <- function(id) {
+	  default <- result$material
+	  obj <- getObj(id)
+	  mat <- obj$material
+	  missing <- setdiff(names(default), names(mat))
+	  mat[missing] <- default[missing]
+	  mat
+	}
+
+	# This counts how many clipping planes might affect a particular object
+	countClipplanes <- function(id, minValue = getOption("rgl.minClipplanes", 0)) {
+	  recurse <- function(subscene) {
+	    count <- 0
+	    ids <- getIdsByType("clipplanes", subscene)
+	    for (clipid in ids)
+	      count <- count + nrow(getObj(clipid)$normals)
+
+	    subscenes <- getIdsByType("subscene", subscene)
+	    for (sub in subscenes) {
+	      if (count >= bound)
+	        break
+	      count <- max(count, recurse(sub))
+	    }
+	    count
+	  }
+	  ids <- getIdsByType("clipplanes")
+	  bound <- 0
+	  for (i in seq_along(ids))
+	    bound <- bound + nrow(getObj(ids[i])$normals)
+	  if (bound < minValue) return(minValue)
+	  max(minValue, recurse(result$rootSubscene))
+	}
+
+	shaders <- function(id, type, flags) {
 		if (type == "clipplanes" || flags["reuse"]) return(NULL)
-		mat <- getMaterial(x, id)
+		mat <- getMaterial(id)
 		is_lit <- flags["is_lit"]
 		is_smooth <- flags["is_smooth"]
 		has_texture <- flags["has_texture"]
@@ -110,8 +114,8 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 			texture_format <- mat$textype
 
 		if (is_lit) {
-			lights <- rgl.ids("lights")
-			if (is.na(lights$id[1])) {
+			lights <- getIdsByType("light")
+			if (!length(lights)) {
 				# no lights
 				is_lit <- FALSE
 			}
@@ -120,16 +124,16 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 				lDiffuse <- list()
 				lSpecular <- list()
 				lightxyz <- list()
-				lighttype <- matrix(NA, length(lights$id), 2)
+				lighttype <- matrix(NA, length(lights), 2)
 				colnames(lighttype) <- c("viewpoint", "finite")
-				for (i in seq_along(lights$id)) {
-					lightid <- lights$id[[i]]
-					lightcols <- rgl.attrib(lightid, "colors")
+				for (i in seq_along(lights)) {
+					light <- getObj(lights[i])
+					lightcols <- light$colors
 					lAmbient[[i]] <- lightcols[1,]
 					lDiffuse[[i]] <- lightcols[2,]
 					lSpecular[[i]] <- lightcols[3,]
-					lightxyz[[i]] <- rgl.attrib(lightid, "vertices")
-					lighttype[i,] <- t(rgl.attrib(lightid, "flags"))
+					lightxyz[[i]] <- light$vertices
+					lighttype[i,] <- c(light$viewpoint, light$finite)
 				}
 			}
 		}
@@ -240,7 +244,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 					'	  const vec3 emission = %emission%;',
 					emission = vec2vec3(col2rgba(mat$emission)))
 
-				for (idn in seq_along(lights$id)) {
+				for (idn in seq_along(lights)) {
 					finite <- lighttype[idn,"finite"]
 					viewpoint <- lighttype[idn, "viewpoint"]
 					res <- c(res, subst(
@@ -297,7 +301,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 						 '	  vec3 n = normalize(vNormal);
 						 n = -faceforward(n, n, eye);')
 				}
-				for (idn in seq_along(lights$id)) {
+				for (idn in seq_along(lights)) {
 					res <- c(res, subst(
 						'	  vec3 col%idn% = ambient%idn%;
 						float nDotL%idn% = dot(n, lightDir%idn%);
@@ -351,7 +355,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	}
 
 	initResult <- function() {
-    result <- makeList(x)
+    result <<- makeList(x)
 
     recurse <- function(subscene) {
       subscenes <- subscene$subscenes
@@ -364,12 +368,10 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
         subscene$objects <- c(subscene$objects, subscene$subscenes)
       } else
         subscene$subscenes <- integer(0)
-      id <- as.character(subscene$id)
-      result$objects[[id]] <<- subscene
+      setObj(subscene$id, subscene)
       subscene$id
     }
-    result$rootSubscene <- recurse(result$rootSubscene)
-		result
+    result$rootSubscene <<- recurse(result$rootSubscene)
 	}
 
 
@@ -392,7 +394,8 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		if (type %in% c("light", "bboxdeco", "background"))
 		  return(result)
 
-		mat <- getMaterial(x, id)
+		obj <- getObj(id)
+		mat <- getMaterial(id)
 		result["is_lit"] <- mat$lit && type %in% c("triangles", "quads", "surface", "planes",
 							   "spheres", "sprites")
 
@@ -401,7 +404,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 
 		result["has_texture"] <- !is.null(mat$texture) && length(rgl.attrib.count(id, "texcoords"))
 
-		result["is_transparent"] <- is_transparent <- any(rgl.attrib(id, "colors")[,"a"] < 1)
+		result["is_transparent"] <- is_transparent <- any(obj$colors[,"a"] < 1)
 
 		result["depth_sort"] <- depth_sort <- is_transparent && type %in% c("triangles", "quads", "surface",
 										    "spheres", "sprites", "text")
@@ -444,15 +447,15 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  result
 	}
 
-	convertBBox <- function(id) {
-	  obj <- result$objects[[as.character(id)]]
+	convertBBox <- function(id, subscene) {
+	  obj <- getObj(id)
 	  verts <- obj$vertices
 	  text <- obj$texts
 	  if (!length(text))
 	    text <- rep("", NROW(verts))
 	  else
 	    text <- text[,"text"]
-	  mat <- getMaterial(x, id)
+	  mat <- getMaterial(id)
 	  if (length(mat$color) > 1)
 	    mat$color <- mat$color[2] # We ignore the "box" colour
 
@@ -460,6 +463,9 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	    text[missing] <- apply(verts[missing,], 1, function(row) format(row[!is.na(row)]))
 
 	  res <- integer(0)
+	  points3d(subscene$par3d$bbox[1:2],
+	           subscene$par3d$bbox[3:4],
+	           subscene$par3d$bbox[5:6])
 	  if (any(inds <- is.na(verts[,2]) & is.na(verts[,3])))
 	    res <- c(res, do.call(axis3d, c(list(edge = "x", at = verts[inds, 1], labels = text[inds]), mat)))
 	  if (any(inds <- is.na(verts[,1]) & is.na(verts[,3])))
@@ -473,16 +479,16 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	convertBBoxes <- function (id) {
 	  ids <- NULL
 	  id <- as.character(id)
-	  sub <- result$objects[[id]]
+	  sub <- getObj(id)
 	  types <- vapply(sub$objects,
-	                  function(x) result$objects[[as.character(x)]]$type,
+	                  function(x) getObj(x)$type,
 	                  character(1))
 	  names(types) <- as.character(sub$objects)
 	  if (length(bboxes <- names(types)[types == "bboxdeco"])) {
 	    for (i in bboxes) {
-	      newids <- convertBBox(i)
+	      newids <- convertBBox(i, sub)
 	      sub$objects <- c(sub$objects, as.numeric(newids))
-	      result$objects[[id]]$objects <<- sub$objects
+	      setObj(id, sub)
 	      ids <- c(ids, newids)
 	    }
 	  }
@@ -530,16 +536,20 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	width <- wfactor*rwidth;
 	height <- hfactor*rheight;
 
+  result <- NULL
+	initResult()
 
-	result <- initResult()
 	types <- vapply(result$objects, function(x) x$type, character(1))
 	if (any(types == "bboxdeco")) {
-	  saveredraw <- par3d(skipRedraw = TRUE)
+	  saveNULL <- options(rgl.useNULL = TRUE)
+	  dev <- open3d()
 	  ids <- convertBBoxes(result$rootSubscene)
 	  temp <- scene3d()$objects[as.character(ids)]
 	  result$objects[as.character(ids)] <- temp
 	  types <- vapply(result$objects, function(x) x$type, character(1))
-	  on.exit({ rgl.pop(id=ids); par3d(saveredraw) })
+	  rgl.set(dev)
+	  rgl.close()
+	  options(saveNULL)
 	}
 
 	ids <- vapply(result$objects, function(x) x$id, integer(1))
@@ -558,10 +568,10 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	types <- types[keep]
 	flags <- expandFlags(nflags)
 	rownames(flags) <- cids
-	fullviewport <- result$objects[[as.character(result$rootSubscene)]]$par3d$viewport
+	fullviewport <- getObj(result$rootSubscene)$par3d$viewport
 
 	for (i in seq_along(ids)) {
-	  obj <- result$objects[[cids[i]]]
+	  obj <- getObj(cids[i])
 	  if (obj$type == "sprites" && flags[i, "sprites_3d"]) {
 	    obj$objects <- NULL
 	    for (j in seq_along(obj$ids)) {
@@ -573,10 +583,10 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  }
 	}
 	for (i in seq_along(ids)) {
-	  obj <- result$objects[[cids[i]]]
+	  obj <- getObj(cids[i])
 	  obj$flags <- nflags[i]
 	  if (obj$type != "subscene") {
-	    shade <- shaders(x, ids[i], types[i], flags[i,])
+	    shade <- shaders(ids[i], types[i], flags[i,])
 	    obj$vshader <- paste(shade$vertex, collapse = "\n")
 	    obj$fshader <- paste(shade$fragment, collapse = "\n")
 
@@ -591,7 +601,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	    obj$par3d$viewport$y <- obj$par3d$viewport$y/fullviewport$height
 	    obj$par3d$viewport$height <- obj$par3d$viewport$height/fullviewport$height
 	  }
-	  result$objects[[cids[i]]] <- obj
+	  setObj(cids[i], obj)
 	}
 
 	result$scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])

@@ -9,8 +9,12 @@ This vignette is used for testing.
 
 ```{r fig.height=6,fig.width=6}
 library(rglwidget)
-example(plot3d)
+example(sprites3d)
 
 par3d(mouseMode=c("trackball", "none", "none"))
+rglwidget()
+example(persp3d)
+rglwidget()
+example(plot3d)
 rglwidget()
 ```
