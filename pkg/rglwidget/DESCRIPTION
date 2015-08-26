@@ -8,5 +8,5 @@ Maintainer: Duncan Murdoch <murdoch.duncan@gmail.com>
 Description: Provides an 'htmlwidgets' framework for the 'rgl' package.
 License: GPL2
 LazyData: TRUE
-Depends: rgl
+Depends: rgl (>= 0.95.1307)
 Imports: htmlwidgets, htmltools
