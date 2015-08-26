@@ -52,6 +52,118 @@ rglClass = function() {
 };
 
 (function() {
+    this.getVertexShader = function(id, subscene) {
+	    var obj = this.getObj(id),
+	        flags = obj.flags,
+	        type = obj.type,
+	        is_indexed = flags & this.f_is_indexed,
+          is_lit = flags & this.f_is_lit,
+		      has_texture = flags & this.f_has_texture,
+		      fixed_quads = flags & this.f_fixed_quads,
+		      depth_sort = flags & this.f_depth_sort,
+		      sprites_3d = flags & this.f_sprites_3d,
+		      sprite_3d = flags & this.f_sprite_3d,
+		      is_clipplanes = type === "clipplanes",
+		      reuse = flags & this.f_reuse,
+		      clipplanes = this.countClipplanes(id);
+
+		  if (type === "clipplanes" || sprites_3d || reuse) return;
+
+		  if (has_texture)
+			  var texture_format = this.getMaterial(id, "textype");
+
+		  if (is_lit) {
+			  lights = this.getIdsByType("light");
+			  if (lights.length === 0) {
+				  is_lit = false;
+			  }
+			  else {
+				  var lAmbient = [],
+				      lDiffuse = [],
+				      lSpecular = [],
+				      lightxyz = [],
+				      lighttype = [], i, light, lightcols;
+				  for (i=0; i<lights.length; i++) {
+					  light = this.getObj(lights[i]);
+					  lightcols = light.colors;
+					  lAmbient[i] = lightcols[1];
+					  lDiffuse[i] = lightcols[2];
+					  lSpecular[i] = lightcols[3];
+					  lightxyz[i] = light.vertices;
+					  lighttype[i] = {viewpoint: light.viewpoint,
+					                  finite: light.finite};
+				  }
+			  }
+		  }
+		  result = "	/* ****** "+type+" object "+id+" vertex shader ****** */\n"+
+
+			"	attribute vec3 aPos;\n"+
+		  "	attribute vec4 aCol;\n"+
+			" uniform mat4 mvMatrix;\n"+
+			" uniform mat4 prMatrix;\n"+
+			" varying vec4 vCol;\n"+
+			" varying vec4 vPosition;\n";
+
+			if (is_lit && !fixed_quads)
+				result = result + "	attribute vec3 aNorm;\n"+
+			                    " uniform mat4 normMatrix;\n"+
+			                    " varying vec3 vNormal;\n";
+
+			if (has_texture || type === "text")
+				result = result + " attribute vec2 aTexcoord;\n"+
+			                    " varying vec2 vTexcoord;\n";
+
+			if (type === "text")
+				result = result + "	uniform vec2 textScale;\n";
+
+			if (fixed_quads)
+				result = result + "	attribute vec2 aOfs;\n";
+			else if (sprite_3d)
+				result = result + "	uniform vec3 uOrig;\n"+
+			                    " uniform float uSize;\n"+
+			                    " uniform mat4 usermat;\n";
+
+			result = result + "	void main(void) {\n";
+
+			if (clipplanes || (!fixed_quads && !sprite_3d))
+				result = result + "	  vPosition = mvMatrix * vec4(aPos, 1.);\n";
+
+			if (!fixed_quads && !sprite_3d)
+				result = result + "	  gl_Position = prMatrix * vPosition;\n";
+
+			if (type == "points") {
+			  var size = this.getMaterial(id, "size");
+				result = result + "	  gl_PointSize = "+size.toFixed(1)+";\n";
+			}
+
+			result = result + "	  vCol = aCol;\n";
+
+			if (is_lit && !fixed_quads && !sprite_3d)
+				result = result + "	  vNormal = normalize((normMatrix * vec4(aNorm, 1.)).xyz);\n";
+
+			if (has_texture || type === "text")
+				result = result + "	  vTexcoord = aTexcoord;\n";
+
+			if (type == "text")
+				result = result + "	  vec4 pos = prMatrix * mvMatrix * vec4(aPos, 1.);\n"+
+			                    "   pos = pos/pos.w;\n"+
+			                    "   gl_Position = pos + vec4(aOfs*textScale, 0.,0.);\n";
+
+			if (type == "sprites")
+				result = result + "	  vec4 pos = mvMatrix * vec4(aPos, 1.);\n"+
+			                    "   pos = pos/pos.w + vec4(aOfs, 0., 0.);\n"+
+			                    "   gl_Position = prMatrix*pos;\n";
+
+			if (sprite_3d)
+				result = result + "	  vNormal = normalize((normMatrix * vec4(aNorm, 1.)).xyz);\n"+
+			                    "   vec4 pos = mvMatrix * vec4(uOrig, 1.);\n"+
+			                    "   vPosition = pos/pos.w + vec4(uSize*(vec4(aPos, 1.)*usermat).xyz,0.);\n"+
+			                    "   gl_Position = prMatrix * vPosition;\n";
+
+			result = result + "	}\n";
+			return result;
+    };
+
     this.getShader = function(shaderType, code) {
         var gl = this.gl, shader;
         shader = gl.createShader(shaderType);
@@ -148,6 +260,26 @@ rglClass = function() {
     this.getObj = function(id) {
       return this.scene.objects[id];
     };
+
+    this.getIdsByType = function(type, subscene = undefined) {
+      var
+        result = [], i, obj, self = this;
+      if (typeof subscene === "undefined") {
+        Object.keys(this.scene.objects).forEach(
+          function(key) {
+            if (self.getObj(key).type === type)
+              result.push(key);
+          });
+      } else {
+        ids <- this.getObj(subscene).objects;
+        for (i=0; i < ids.length; i++) {
+          if (this.getObj(ids[i]).type === type) {
+            result.push(ids[i]);
+          }
+        }
+      }
+      return result;
+	  };
 
     this.getMaterial = function(id, property) {
       var obj = this.getObj(id),
@@ -466,7 +598,8 @@ rglClass = function() {
 
 		if (!sprites_3d && !is_clipplanes) {
 			obj.prog = gl.createProgram();
-			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,                       obj.vshader ));
+			var test = this.getVertexShader(id, this.rootSubscene);
+			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,                       test ));
 			gl.attachShader(obj.prog, this.getShader( gl.FRAGMENT_SHADER,
 			                obj.fshader ));
 			//  Force aPos to location 0, aCol to location 1
