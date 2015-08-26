@@ -380,10 +380,13 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		       "is_lines", "sprites_3d", "sprite_3d",
 		       "is_subscene", "is_clipplanes", "reuse")
 
-	getFlags <- function(x, id, type) {
+	getFlags <- function(id) {
+
+	  obj <- getObj(id)
+	  type <- obj$type
 
 		if (type == "subscene")
-			return(getSubsceneFlags(x, id))
+			return(getSubsceneFlags(id))
 
 		result <- structure(rep(FALSE, length(flagnames)), names = flagnames)
 		if (type == "clipplanes") {
@@ -394,7 +397,6 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		if (type %in% c("light", "bboxdeco", "background"))
 		  return(result)
 
-		obj <- getObj(id)
 		mat <- getMaterial(id)
 		result["is_lit"] <- mat$lit && type %in% c("triangles", "quads", "surface", "planes",
 							   "spheres", "sprites")
@@ -402,14 +404,14 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		result["is_smooth"] <- mat$smooth && type %in% c("triangles", "quads", "surface", "planes",
 								 "spheres")
 
-		result["has_texture"] <- !is.null(mat$texture) && length(rgl.attrib.count(id, "texcoords"))
+		result["has_texture"] <- !is.null(mat$texture)
 
 		result["is_transparent"] <- is_transparent <- any(obj$colors[,"a"] < 1)
 
 		result["depth_sort"] <- depth_sort <- is_transparent && type %in% c("triangles", "quads", "surface",
 										    "spheres", "sprites", "text")
 
-		result["sprites_3d"] <- sprites_3d <- type == "sprites" && rgl.attrib.count(id, "ids")
+		result["sprites_3d"] <- sprites_3d <- type == "sprites" && length(obj$ids)
 
 		result["is_indexed"] <- (depth_sort || type %in% c("quads", "surface", "text", "sprites")) && !sprites_3d
 
@@ -419,12 +421,12 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		result
 	}
 
-	getSubsceneFlags <- function(x, id) {
+	getSubsceneFlags <- function(id) {
 		result <- structure(rep(FALSE, length(flagnames)), names = flagnames)
 		result["is_subscene"] <- TRUE
-		subs <- rgl.ids(subscene = id)
-		for (i in seq_len(nrow(subs)))
-			result <- result | getFlags(x, subs[i, "id"], as.character(subs[i, "type"]))
+		objs <- getObj(id)$objects
+		for (i in seq_along(objs))
+			result <- result | getFlags(objs[i])
 		return(result)
 	}
 
@@ -553,7 +555,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	}
 
 	ids <- vapply(result$objects, function(x) x$id, integer(1))
-  flags <- vapply(result$objects, function(obj) numericFlags(getFlags(x, obj$id, obj$type)),
+  flags <- vapply(result$objects, function(obj) numericFlags(getFlags(obj$id)),
                                  numeric(1), USE.NAMES = FALSE)
 
 	unknowntypes <- setdiff(types, knowntypes)
@@ -593,8 +595,6 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	    # FIXME:  could reuse the texture
 	    if (!is.null(obj$material) && !is.null(obj$material$texture))
 	      obj$material$uri <- knitr::image_uri(obj$material$texture)
-  	  if (flags[i, "depth_sort"])
-	      obj$centers <- rgl.attrib(ids[i], "centers")
 	  } else if (obj$type == "subscene") {
 	    obj$par3d$viewport$x <- obj$par3d$viewport$x/fullviewport$width
 	    obj$par3d$viewport$width <- obj$par3d$viewport$width/fullviewport$width
