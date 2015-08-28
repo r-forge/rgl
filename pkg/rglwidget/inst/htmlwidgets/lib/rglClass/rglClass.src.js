@@ -35,9 +35,6 @@ function logAndValidate(functionName, args) {
    validateNoneOfTheArgsAreUndefined (functionName, args);
 }
 
-
-
-
 rglClass = function() {
     this.canvas = null;
     this.userMatrix = new CanvasMatrix4();
@@ -52,7 +49,7 @@ rglClass = function() {
 };
 
 (function() {
-    this.getVertexShader = function(id, subscene) {
+    this.getVertexShader = function(id) {
 	    var obj = this.getObj(id),
 	        flags = obj.flags,
 	        type = obj.type,
@@ -63,40 +60,15 @@ rglClass = function() {
 		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      is_clipplanes = type === "clipplanes",
 		      reuse = flags & this.f_reuse,
-		      clipplanes = this.countClipplanes(id);
+		      nclipplanes = this.countClipplanes(id);
 
 		  if (type === "clipplanes" || sprites_3d || reuse) return;
 
 		  if (has_texture)
 			  var texture_format = this.getMaterial(id, "textype");
 
-		  if (is_lit) {
-			  lights = this.getIdsByType("light");
-			  if (lights.length === 0) {
-				  is_lit = false;
-			  }
-			  else {
-				  var lAmbient = [],
-				      lDiffuse = [],
-				      lSpecular = [],
-				      lightxyz = [],
-				      lighttype = [], i, light, lightcols;
-				  for (i=0; i<lights.length; i++) {
-					  light = this.getObj(lights[i]);
-					  lightcols = light.colors;
-					  lAmbient[i] = lightcols[1];
-					  lDiffuse[i] = lightcols[2];
-					  lSpecular[i] = lightcols[3];
-					  lightxyz[i] = light.vertices;
-					  lighttype[i] = {viewpoint: light.viewpoint,
-					                  finite: light.finite};
-				  }
-			  }
-		  }
 		  result = "	/* ****** "+type+" object "+id+" vertex shader ****** */\n"+
-
 			"	attribute vec3 aPos;\n"+
 		  "	attribute vec4 aCol;\n"+
 			" uniform mat4 mvMatrix;\n"+
@@ -125,7 +97,7 @@ rglClass = function() {
 
 			result = result + "	void main(void) {\n";
 
-			if (clipplanes || (!fixed_quads && !sprite_3d))
+			if (nclipplanes || (!fixed_quads && !sprite_3d))
 				result = result + "	  vPosition = mvMatrix * vec4(aPos, 1.);\n";
 
 			if (!fixed_quads && !sprite_3d)
@@ -162,6 +134,151 @@ rglClass = function() {
 
 			result = result + "	}\n";
 			return result;
+    };
+
+    this.getFragmentShader = function(id) {
+	    var obj = this.getObj(id),
+	        flags = obj.flags,
+	        type = obj.type,
+	        is_indexed = flags & this.f_is_indexed,
+          is_lit = flags & this.f_is_lit,
+		      has_texture = flags & this.f_has_texture,
+		      fixed_quads = flags & this.f_fixed_quads,
+		      depth_sort = flags & this.f_depth_sort,
+		      sprites_3d = flags & this.f_sprites_3d,
+		      sprite_3d = flags & this.f_sprite_3d,
+		      reuse = flags & this.f_reuse,
+		      nclipplanes = this.countClipplanes(id), i,
+          texture_format, nlights;
+
+		  if (type === "clipplanes" || sprites_3d || reuse) return;
+
+		  if (has_texture)
+			  texture_format = this.getMaterial(id, "textype");
+/*
+		  if (is_lit) {
+			  lights = this.getIdsByType("light");
+			  if (lights.length === 0) {
+				  is_lit = false;
+			  }
+			  else {
+				  for (i=0; i<lights.length; i++) {
+					  light = this.getObj(lights[i]);
+					  lightcols = light.colors;
+					  lAmbient[i] = lightcols[1];
+					  lDiffuse[i] = lightcols[2];
+					  lSpecular[i] = lightcols[3];
+					  lightxyz[i] = light.vertices;
+					  lighttype[i] = {viewpoint: light.viewpoint,
+					                  finite: light.finite};
+				  }
+			  }
+		  } */
+		  result = "/* ****** "+type+" object "+id+" fragment shader ****** */\n"+
+		  				 "#ifdef GL_ES\n"+
+				       "  precision highp float;\n"+
+				       "#endif\n"+
+				       "  varying vec4 vCol; // carries alpha\n"+
+				       "  varying vec4 vPosition;\n";
+
+			if (has_texture || type === "text")
+				result = result + "	varying vec2 vTexcoord;\n"+
+			                    " uniform sampler2D uSampler;\n";
+
+			if (is_lit && !fixed_quads)
+				result = result + "	varying vec3 vNormal;\n";
+
+			for (i = 0; i < nclipplanes; i++)
+				result = result + "	uniform vec4 vClipplane"+i+";\n";
+
+			if (is_lit) {
+			  nlights = this.countLights(id);
+			  if (nlights)
+			      result = result + "	uniform mat4 mvMatrix;\n";
+			}
+
+			if (is_lit) {
+				result = result + "	  uniform vec3 emission;\n"+
+				                  "   uniform float shininess;\n";
+
+				for (i=0; i < nlights; i++) {
+					result = result + "	  uniform vec3 ambient" + i + ";\n"+
+						                "   uniform vec3 specular" + i +"; // light*material\n"+
+						                "   uniform vec3 diffuse" + i + ";\n"+
+						                "   uniform vec3 lightDir" + i + ";\n"+
+						                "   uniform bool viewpoint" + i + ";\n"+
+						                "   uniform bool finite" + i + ";\n";
+				}
+			}
+
+			result = result + "	void main(void) {\n";
+
+			for (i=0; i < nclipplanes;i++)
+			  result = result + "	  if (dot(vPosition, vClipplane"+i+") < 0.0) discard;\n";
+
+			if (is_lit) {
+				result = result + "	  vec3 eye = normalize(-vPosition.xyz);\n"+
+				                  "   vec3 lightdir;\n"+
+				                  "   vec4 colDiff;\n"+
+				                  "   vec3 halfVec;\n"+
+				                  "   vec4 lighteffect = vec4(emission, 0.)+
+				                  "   vec3 col;\n"+
+				                  "   float nDotL;\n";
+				if (fixed_quads) {
+					result = result +   "	  vec3 n = vec3(0., 0., 1.);\n";
+				}
+				else {
+					result = result +   "	  vec3 n = normalize(vNormal);\n"+
+						                  "   n = -faceforward(n, n, eye);\n";
+				}
+        for (i=0; i < nlights; i++) {
+					result = result + "   colDiff = vec4(vCol.rgb * diffuse" + i + ", vCol.a);\n"+
+					                  "   lightdir = lightDir" + i + ";\n"+
+					                  "   if (!viewpoint" + i +")\n"+
+						                "     lightdir = (mvMatrix * vec4(lightdir, 1.)).xyz;\n"+
+						                "   if (!finite" + i + ") {\n"+
+						                "     halfVec = normalize(lightdir + eye);\n"+
+					                  "   } else {\n"+
+						                "     lightdir = normalize(lightdir - vPosition.xyz);\n"+
+									          "     halfVec = normalize(lightdir + eye);\n"+
+					                  "   }\n"+
+					                  "	  col = ambient" + i + ";\n"+
+						                "   nDotL = dot(n, lightdir);\n"+
+						                "   col = col + max(nDotL, 0.) * colDiff.rgb;\n"+
+						                "   col = col + pow(max(dot(halfVec, n), 0.), shininess) * specular" + i + ";\n"+
+						                "   lighteffect = lighteffect + vec4(col, colDiff.a);\n";
+				}
+
+		  } else {
+				result = result +   "   vec4 colDiff = vCol;\n"+
+                            "	  vec4 lighteffect = colDiff;\n";
+			}
+
+			if ((has_texture && texture_format === "rgba") || type === "text")
+				result = result +   "	  vec4 textureColor = lighteffect*texture2D(uSampler, vTexcoord);\n";
+
+			if (has_texture) {
+			  result = result + {
+						rgb:            "   vec4 textureColor = lighteffect*vec4(texture2D(uSampler, vTexcoord).rgb, 1.);\n",
+						alpha:          "   vec4 textureColor = texture2D(uSampler, vTexcoord);\n"+
+                            "   float luminance = dot(vec3(1.,1.,1.), textureColor.rgb)/3.;\n"+
+                            "   textureColor =  vec4(lighteffect.rgb, lighteffect.a*luminance);\n",
+						luminance:      "   vec4 textureColor = vec4(lighteffect.rgb*dot(texture2D(uSampler, vTexcoord).rgb, vec3(1.,1.,1.))/3., lighteffect.a);\n",
+					"luminance.alpha":"	  vec4 textureColor = texture2D(uSampler, vTexcoord);\n"+
+						                "   float luminance = dot(vec3(1.,1.,1.),textureColor.rgb)/3.;\n"+
+						                "   textureColor = vec4(lighteffect.rgb*luminance, lighteffect.a*textureColor.a);\n"
+			    }[texture_format]+
+                            "   gl_FragColor = textureColor;\n";
+			} else if (type === "text") {
+			  result = result +   "	  if (textureColor.a < 0.1)\n"+
+                            "     discard;\n"+
+                            "   else\n"+
+                            "     gl_FragColor = textureColor;\n";
+			} else
+			  result = result +   "   gl_FragColor = lighteffect;\n";
+
+			result = result + "	}\n";
+      return result;
     };
 
     this.getShader = function(shaderType, code) {
@@ -208,13 +325,13 @@ rglClass = function() {
           i;
       for(i = 0; i < m; i++){
         newArray.push([]);
-      };
+      }
 
       for(i = 0; i < n; i++){
         for(var j = 0; j < m; j++){
           newArray[j].push(a[i][j]);
-        };
-      };
+        }
+      }
       return newArray;
     };
 
@@ -230,7 +347,7 @@ rglClass = function() {
       mat = this.flatten(this.transpose(mat));
       result.load(mat);
       return result;
-    }
+    };
 
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
@@ -247,14 +364,17 @@ rglClass = function() {
     this.f_reuse = 4096;
 
     this.whichList = function(id) {
-      var flags = this.getObj(id).flags;
+      var obj = this.getObj(id),
+          flags = obj.flags;
+        if (obj.type === "light")
+          return "lights";
         if (flags & this.f_is_subscene)
             return "subscenes";
-        else if (flags & this.f_is_clipplanes)
+        if (flags & this.f_is_clipplanes)
             return "clipplanes";
-        else if (flags & this.f_is_transparent)
+        if (flags & this.f_is_transparent)
             return "transparent";
-        else return "opaque";
+        return "opaque";
     };
 
     this.getObj = function(id) {
@@ -510,24 +630,36 @@ rglClass = function() {
 	   };
 
     this.countClipplanes = function(id) {
+      return this.countObjs(id, "clipplanes");
+    };
+
+    this.countLights = function(id) {
+      return this.countObjs(id, "light");
+    };
+
+    this.countObjs = function(id, type) {
       var self = this,
           bound = 0, obj,
         recurse = function(subscene) {
         var result = 0,
           subscene = self.getObj(subscene),
           subids = subscene.objects,
-          i;
+          i, ids;
         for (i = 0; i < subids.length; i++) {
           obj = self.getObj(subids[i]);
-          if (obj.type == "sprites")
-            subids = subids.concat(obj.objects);
+          if (obj.type == "sprites" && typeof obj.ids !== "undefined")
+            subids = subids.concat(self.flatten(obj.ids));
         }
         i = subids.indexOf(parseInt(id, 10));
         if (i >= 0) {
-          var clipids = subscene.clipplanes;
-          for (j=0; j < clipids.length; j++) {
-            obj = self.getObj(clipids[j]);
-            result = result + obj.offsets.length;
+          if (type === "light")
+            result += subscene.lights.length;
+          else if (type === "clipplanes") {
+            ids = subscene.clipplanes;
+            for (j=0; j < ids.length; j++) {
+              obj = self.getObj(ids[j]);
+              result += obj.offsets.length;
+            }
           }
         }
         for (i = 0; i < subscene.subscenes.length; i++) {
@@ -539,7 +671,7 @@ rglClass = function() {
       };
       Object.keys(this.scene.objects).forEach(
         function(key) {
-          if (self.getObj(key).type === "clipplanes")
+          if (self.getObj(key).type === type)
             bound = bound + 1;
         });
       if (bound <= 0)
@@ -557,6 +689,7 @@ rglClass = function() {
       sub.transparent = [];
       sub.opaque = [];
       sub.clipplanes = [];
+      sub.lights = [];
       for (i=0; i < sub.objects.length; i++) {
         obj = this.getObj(sub.objects[i]);
         if (obj.type === "background")
@@ -577,7 +710,6 @@ rglClass = function() {
 		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      is_clipplanes = type === "clipplanes",
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
@@ -596,16 +728,26 @@ rglClass = function() {
       return;
     }
 
-		if (!sprites_3d && !is_clipplanes) {
+		if (!sprites_3d) {
 			obj.prog = gl.createProgram();
-			var test = this.getVertexShader(id, this.rootSubscene);
-			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,                       test ));
+			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,
+			  this.getVertexShader(id) ));
+			var test = obj.fshader;
 			gl.attachShader(obj.prog, this.getShader( gl.FRAGMENT_SHADER,
-			                obj.fshader ));
+			                this.getFragmentShader(id) ));
 			//  Force aPos to location 0, aCol to location 1
 			gl.bindAttribLocation(obj.prog, 0, "aPos");
 			gl.bindAttribLocation(obj.prog, 1, "aCol");
 			gl.linkProgram(obj.prog);
+      var linked = gl.getProgramParameter(obj.prog, gl.LINK_STATUS);
+      if (!linked) {
+
+        // An error occurred while linking
+        var lastError = gl.getProgramInfoLog(program);
+        console.warn("Error in program linking:" + lastError);
+
+        gl.deleteProgram(program);
+      }
 		}
 
 		if (type === "text") {
@@ -742,7 +884,7 @@ rglClass = function() {
 		if (nclipplanes && !sprites_3d) {
 		  obj.clipLoc = [];
 		  for (i=0; i < nclipplanes; i++)
-        obj.clipLoc[i] = gl.getUniformLocation(obj.prog,                                       "vClipplane" + (i+1));
+        obj.clipLoc[i] = gl.getUniformLocation(obj.prog,"vClipplane" + i);
 		}
 
 		if (is_indexed) {
@@ -810,7 +952,7 @@ rglClass = function() {
 			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, obj.f, gl[drawtype]);
 		}
 
-		if (!sprites_3d && !is_clipplanes) {
+		if (!sprites_3d) {
 			obj.mvMatLoc = gl.getUniformLocation(obj.prog, "mvMatrix");
 			obj.prMatLoc = gl.getUniformLocation(obj.prog, "prMatrix");
 		}
@@ -852,7 +994,6 @@ rglClass = function() {
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
 		      is_lines = flags & this.f_is_lines,
-		      is_clipplanes = type === "clipplanes",
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
