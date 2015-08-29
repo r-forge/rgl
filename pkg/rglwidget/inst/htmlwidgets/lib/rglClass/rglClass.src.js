@@ -155,25 +155,7 @@ rglClass = function() {
 
 		  if (has_texture)
 			  texture_format = this.getMaterial(id, "textype");
-/*
-		  if (is_lit) {
-			  lights = this.getIdsByType("light");
-			  if (lights.length === 0) {
-				  is_lit = false;
-			  }
-			  else {
-				  for (i=0; i<lights.length; i++) {
-					  light = this.getObj(lights[i]);
-					  lightcols = light.colors;
-					  lAmbient[i] = lightcols[1];
-					  lDiffuse[i] = lightcols[2];
-					  lSpecular[i] = lightcols[3];
-					  lightxyz[i] = light.vertices;
-					  lighttype[i] = {viewpoint: light.viewpoint,
-					                  finite: light.finite};
-				  }
-			  }
-		  } */
+
 		  result = "/* ****** "+type+" object "+id+" fragment shader ****** */\n"+
 		  				 "#ifdef GL_ES\n"+
 				       "  precision highp float;\n"+
@@ -195,6 +177,8 @@ rglClass = function() {
 			  nlights = this.countLights(id);
 			  if (nlights)
 			      result = result + "	uniform mat4 mvMatrix;\n";
+			  else
+			      is_lit = false;
 			}
 
 			if (is_lit) {
@@ -221,7 +205,7 @@ rglClass = function() {
 				                  "   vec3 lightdir;\n"+
 				                  "   vec4 colDiff;\n"+
 				                  "   vec3 halfVec;\n"+
-				                  "   vec4 lighteffect = vec4(emission, 0.)+
+				                  "   vec4 lighteffect = vec4(emission, 0.);\n"+
 				                  "   vec3 col;\n"+
 				                  "   float nDotL;\n";
 				if (fixed_quads) {
@@ -348,6 +332,23 @@ rglClass = function() {
       result.load(mat);
       return result;
     };
+
+    this.stringToRgb = function(s) {
+      var bigint = parseInt(s, 16);
+      return [((bigint >> 16) & 255)/255,
+              ((bigint >> 8) & 255)/255,
+               (bigint & 255)/255];
+    };
+
+    this.componentProduct = function(x, y) {
+      if (typeof y === "undefined") {
+        alert("y undefined");
+      }
+      var result = new Float32Array(3), i;
+      for (i = 0; i<3; i++)
+        result[i] = x[i]*y[i];
+      return result;
+    }
 
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
@@ -715,8 +716,16 @@ rglClass = function() {
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
           i,j,v;
 
-    if (type === "background" || type === "light" || type === "bboxdeco")
+    if (type === "background" || type === "bboxdeco")
       return;
+
+    if (type === "light") {
+      obj.ambient = new Float32Array(obj.colors[0].slice(0,3));
+      obj.diffuse = new Float32Array(obj.colors[1].slice(0,3));
+      obj.specular = new Float32Array(obj.colors[2].slice(0,3));
+      obj.lightDir = new Float32Array(obj.vertices[0]);
+      return;
+    }
 
     if (type === "subscene") {
       this.initSubscene(id);
@@ -870,13 +879,14 @@ rglClass = function() {
 
     if (sprites_3d) {
 			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
+			is_lit = false;
     }
 
 		if (!sprites_3d && reuse) {
 			 obj.values = thisprefix.scene.objects[id].values;
 		}
 
-    if (is_lit && !fixed_quads && !sprites_3d) {
+    if (is_lit && !fixed_quads) {
 			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
 
@@ -885,6 +895,30 @@ rglClass = function() {
 		  obj.clipLoc = [];
 		  for (i=0; i < nclipplanes; i++)
         obj.clipLoc[i] = gl.getUniformLocation(obj.prog,"vClipplane" + i);
+		}
+
+		if (is_lit) {
+		  obj.emissionLoc = gl.getUniformLocation(obj.prog, "emission");
+		  obj.emission = new Float32Array(this.stringToRgb(this.getMaterial(id, "emission")));
+		  obj.shininessLoc = gl.getUniformLocation(obj.prog, "shininess");
+		  obj.shininess = this.getMaterial(id, "shininess");
+		  obj.nlights = this.countLights(id);
+		  obj.ambientLoc = [];
+		  obj.ambient = new Float32Array(this.stringToRgb(this.getMaterial(id, "ambient")));
+		  obj.specularLoc = [];
+		  obj.specular = new Float32Array(this.stringToRgb(this.getMaterial(id, "specular")));
+		  obj.diffuseLoc = [];
+		  obj.lightDirLoc = [];
+		  obj.viewpointLoc = [];
+		  obj.finiteLoc = [];
+		  for (i=0; i < obj.nlights; i++) {
+		    obj.ambientLoc[i] = gl.getUniformLocation(obj.prog, "ambient" + i);
+		    obj.specularLoc[i] = gl.getUniformLocation(obj.prog, "specular" + i);
+		    obj.diffuseLoc[i] = gl.getUniformLocation(obj.prog, "diffuse" + i);
+		    obj.lightDirLoc[i] = gl.getUniformLocation(obj.prog, "lightDir" + i);
+		    obj.viewpointLoc[i] = gl.getUniformLocation(obj.prog, "viewpoint" + i);
+		    obj.finiteLoc[i] = gl.getUniformLocation(obj.prog, "finite" + i);
+		  }
 		}
 
 		if (is_indexed) {
@@ -997,7 +1031,7 @@ rglClass = function() {
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
-		      sphereMV, baseofs, ofs, sscale, i, count;
+		      sphereMV, baseofs, ofs, sscale, i, count, light;
 
       if (type === "light" || type === "bboxdeco")
         return;
@@ -1067,6 +1101,17 @@ rglClass = function() {
 
 			if (is_lit) {
 			  gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(this.normMatrix.getAsArray()) );
+			  gl.uniform3fv( obj.emissionLoc, obj.emission);
+			  gl.uniform1f( obj.shininessLoc, obj.shininess);
+			  for (i=0; i < subscene.lights.length; i++) {
+			    light = this.getObj(subscene.lights[i]);
+			    gl.uniform3fv( obj.ambientLoc[i], this.componentProduct(light.ambient, obj.ambient));
+			    gl.uniform3fv( obj.specularLoc[i], this.componentProduct(light.specular, obj.specular));
+			    gl.uniform3fv( obj.diffuseLoc[i], light.diffuse);
+			    gl.uniform3fv( obj.lightDirLoc[i], light.lightDir);
+			    gl.uniform1i( obj.viewpointLoc[i], light.viewpoint);
+			    gl.uniform1i( obj.finiteLoc[i], light.finite);
+			  }
 			}
 
 			if (type === "text") {
