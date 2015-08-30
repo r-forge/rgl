@@ -49,6 +49,188 @@ rglClass = function() {
 };
 
 (function() {
+    this.multMV = function(M, v) {
+        return [ M.m11 * v[0] + M.m12 * v[1] + M.m13 * v[2] + M.m14 * v[3],
+                 M.m21 * v[0] + M.m22 * v[1] + M.m23 * v[2] + M.m24 * v[3],
+                 M.m31 * v[0] + M.m32 * v[1] + M.m33 * v[2] + M.m34 * v[3],
+                 M.m41 * v[0] + M.m42 * v[1] + M.m43 * v[2] + M.m44 * v[3]
+               ];
+    };
+
+    this.vlen = function(v) {
+		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		};
+
+		this.xprod = function(a, b) {
+			return [a[1]*b[2] - a[2]*b[1],
+			    a[2]*b[0] - a[0]*b[2],
+			    a[0]*b[1] - a[1]*b[0]];
+		};
+
+    this.cbind = function(a, b) {
+      return a.map(function(currentValue, index, array) {
+            return currentValue.concat(b[index]);
+      });
+    };
+
+    this.flatten = function(a) {
+      return a.reduce(function(x, y) { return x.concat(y); });
+    };
+
+    this.transpose = function(a) {
+      var newArray = [],
+          n = a.length,
+          m = a[0].length,
+          i;
+      for(i = 0; i < m; i++){
+        newArray.push([]);
+      }
+
+      for(i = 0; i < n; i++){
+        for(var j = 0; j < m; j++){
+          newArray[j].push(a[i][j]);
+        }
+      }
+      return newArray;
+    };
+
+    this.sumsq = function(x) {
+      var result = 0, i;
+      for (i=0; i < x.length; i++)
+        result += x[i]*x[i];
+      return result;
+    };
+
+    this.toCanvasMatrix4 = function(mat) {
+      var result = new CanvasMatrix4();
+      mat = this.flatten(this.transpose(mat));
+      result.load(mat);
+      return result;
+    };
+
+    this.stringToRgb = function(s) {
+      var bigint = parseInt(s, 16);
+      return [((bigint >> 16) & 255)/255,
+              ((bigint >> 8) & 255)/255,
+               (bigint & 255)/255];
+    };
+
+    this.componentProduct = function(x, y) {
+      if (typeof y === "undefined") {
+        alert("y undefined");
+      }
+      var result = new Float32Array(3), i;
+      for (i = 0; i<3; i++)
+        result[i] = x[i]*y[i];
+      return result;
+    };
+
+    this.getPowerOfTwo = function(value) {
+	     var pow = 1;
+	     while(pow<value) {
+	       pow *= 2;
+	     }
+	     return pow;
+	   };
+
+    this.f_is_lit = 1;
+    this.f_is_smooth = 2;
+    this.f_has_texture = 4;
+    this.f_is_indexed = 8;
+    this.f_depth_sort = 16;
+    this.f_fixed_quads = 32;
+    this.f_is_transparent = 64;
+    this.f_is_lines = 128;
+    this.f_sprites_3d = 256;
+    this.f_sprite_3d = 512;
+    this.f_is_subscene = 1024;
+    this.f_is_clipplanes = 2048;
+    this.f_reuse = 4096;
+
+    this.whichList = function(id) {
+      var obj = this.getObj(id),
+          flags = obj.flags;
+        if (obj.type === "light")
+          return "lights";
+        if (flags & this.f_is_subscene)
+            return "subscenes";
+        if (flags & this.f_is_clipplanes)
+            return "clipplanes";
+        if (flags & this.f_is_transparent)
+            return "transparent";
+        return "opaque";
+    };
+
+    this.getObj = function(id) {
+      return this.scene.objects[id];
+    };
+
+    this.getIdsByType = function(type, subscene) {
+      var
+        result = [], i, obj, self = this;
+      if (typeof subscene === "undefined") {
+        Object.keys(this.scene.objects).forEach(
+          function(key) {
+            if (self.getObj(key).type === type)
+              result.push(key);
+          });
+      } else {
+        ids = this.getObj(subscene).objects;
+        for (i=0; i < ids.length; i++) {
+          if (this.getObj(ids[i]).type === type) {
+            result.push(ids[i]);
+          }
+        }
+      }
+      return result;
+	  };
+
+    this.getMaterial = function(id, property) {
+      var obj = this.getObj(id),
+          mat = obj.material[property];
+      if (typeof mat === "undefined")
+          mat = this.scene.material[property];
+      return mat;
+    };
+
+    this.inSubscene = function(id, subscene) {
+      var subscenes = this.getSubsceneEntries(subscene);
+      return subscenes.indexOf(id) > -1;
+    };
+
+    this.addToSubscene = function(id, subscene) {
+      if (this.getSubsceneEntries(subscene).indexOf(id) == -1) {
+        this.scene.objects[subscene].subscenes.push(id);
+        var thelist = this.whichList(id);
+        this.scene.objects[subscene][thelist].push(id);
+      }
+    };
+
+    this.delFromSubscene = function(id, subscene) {
+      var thelist,
+        i = this.getSubsceneEntries(subscene).indexOf(id);
+      if (i > -1) {
+        this.getObj(subscene).subscenes.splice(i, 1);
+        thelist = this.whichList(id);
+        i = this.getObj(subscene)[thelist].indexOf(id);
+        this.getObj(subscene)[thelist].splice(i, 1);
+      }
+    };
+
+    this.setSubsceneEntries = function(ids, subsceneid) {
+      var sub = this.getObj(subsceneid), i;
+      sub.subscenes = [];
+      sub.clipplanes = [];
+      sub.transparent = [];
+      sub.opaque = [];
+      for (i = 0; i < ids.length; i++)
+        this.addToSubscene(ids[i], subsceneid);
+    };
+
+    this.getSubsceneEntries = function(subscene) {
+      return this.getObj(subscene).subscenes;
+    };
+
     this.getVertexShader = function(id) {
 	    var obj = this.getObj(id),
 	        flags = obj.flags,
@@ -274,188 +456,6 @@ rglClass = function() {
             alert(gl.getShaderInfoLog(shader));
         return shader;
     };
-
-    this.multMV = function(M, v) {
-        return [ M.m11 * v[0] + M.m12 * v[1] + M.m13 * v[2] + M.m14 * v[3],
-                 M.m21 * v[0] + M.m22 * v[1] + M.m23 * v[2] + M.m24 * v[3],
-                 M.m31 * v[0] + M.m32 * v[1] + M.m33 * v[2] + M.m34 * v[3],
-                 M.m41 * v[0] + M.m42 * v[1] + M.m43 * v[2] + M.m44 * v[3]
-               ];
-    };
-
-    this.vlen = function(v) {
-		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-		};
-
-		this.xprod = function(a, b) {
-			return [a[1]*b[2] - a[2]*b[1],
-			    a[2]*b[0] - a[0]*b[2],
-			    a[0]*b[1] - a[1]*b[0]];
-		};
-
-    this.cbind = function(a, b) {
-      return a.map(function(currentValue, index, array) {
-            return currentValue.concat(b[index]);
-      });
-    };
-
-    this.flatten = function(a) {
-      return a.reduce(function(x, y) { return x.concat(y); });
-    };
-
-    this.transpose = function(a) {
-      var newArray = [],
-          n = a.length,
-          m = a[0].length,
-          i;
-      for(i = 0; i < m; i++){
-        newArray.push([]);
-      }
-
-      for(i = 0; i < n; i++){
-        for(var j = 0; j < m; j++){
-          newArray[j].push(a[i][j]);
-        }
-      }
-      return newArray;
-    };
-
-    this.sumsq = function(x) {
-      var result = 0, i;
-      for (i=0; i < x.length; i++)
-        result += x[i]*x[i];
-      return result;
-    };
-
-    this.toCanvasMatrix4 = function(mat) {
-      var result = new CanvasMatrix4();
-      mat = this.flatten(this.transpose(mat));
-      result.load(mat);
-      return result;
-    };
-
-    this.stringToRgb = function(s) {
-      var bigint = parseInt(s, 16);
-      return [((bigint >> 16) & 255)/255,
-              ((bigint >> 8) & 255)/255,
-               (bigint & 255)/255];
-    };
-
-    this.componentProduct = function(x, y) {
-      if (typeof y === "undefined") {
-        alert("y undefined");
-      }
-      var result = new Float32Array(3), i;
-      for (i = 0; i<3; i++)
-        result[i] = x[i]*y[i];
-      return result;
-    };
-
-    this.f_is_lit = 1;
-    this.f_is_smooth = 2;
-    this.f_has_texture = 4;
-    this.f_is_indexed = 8;
-    this.f_depth_sort = 16;
-    this.f_fixed_quads = 32;
-    this.f_is_transparent = 64;
-    this.f_is_lines = 128;
-    this.f_sprites_3d = 256;
-    this.f_sprite_3d = 512;
-    this.f_is_subscene = 1024;
-    this.f_is_clipplanes = 2048;
-    this.f_reuse = 4096;
-
-    this.whichList = function(id) {
-      var obj = this.getObj(id),
-          flags = obj.flags;
-        if (obj.type === "light")
-          return "lights";
-        if (flags & this.f_is_subscene)
-            return "subscenes";
-        if (flags & this.f_is_clipplanes)
-            return "clipplanes";
-        if (flags & this.f_is_transparent)
-            return "transparent";
-        return "opaque";
-    };
-
-    this.getObj = function(id) {
-      return this.scene.objects[id];
-    };
-
-    this.getIdsByType = function(type, subscene) {
-      var
-        result = [], i, obj, self = this;
-      if (typeof subscene === "undefined") {
-        Object.keys(this.scene.objects).forEach(
-          function(key) {
-            if (self.getObj(key).type === type)
-              result.push(key);
-          });
-      } else {
-        ids = this.getObj(subscene).objects;
-        for (i=0; i < ids.length; i++) {
-          if (this.getObj(ids[i]).type === type) {
-            result.push(ids[i]);
-          }
-        }
-      }
-      return result;
-	  };
-
-    this.getMaterial = function(id, property) {
-      var obj = this.getObj(id),
-          mat = obj.material[property];
-      if (typeof mat === "undefined")
-          mat = this.scene.material[property];
-      return mat;
-    };
-
-    this.inSubscene = function(id, subscene) {
-      var subscenes = this.getSubsceneEntries(subscene);
-      return subscenes.indexOf(id) > -1;
-    };
-
-    this.addToSubscene = function(id, subscene) {
-      if (this.getSubsceneEntries(subscene).indexOf(id) == -1) {
-        this.scene.objects[subscene].subscenes.push(id);
-        var thelist = this.whichList(id);
-        this.scene.objects[subscene][thelist].push(id);
-      }
-    };
-
-    this.delFromSubscene = function(id, subscene) {
-      var thelist,
-        i = this.getSubsceneEntries(subscene).indexOf(id);
-      if (i > -1) {
-        this.getObj(subscene).subscenes.splice(i, 1);
-        thelist = this.whichList(id);
-        i = this.getObj(subscene)[thelist].indexOf(id);
-        this.getObj(subscene)[thelist].splice(i, 1);
-      }
-    };
-
-    this.setSubsceneEntries = function(ids, subsceneid) {
-      var sub = this.getObj(subsceneid), i;
-      sub.subscenes = [];
-      sub.clipplanes = [];
-      sub.transparent = [];
-      sub.opaque = [];
-      for (i = 0; i < ids.length; i++)
-        this.addToSubscene(ids[i], subsceneid);
-    };
-
-    this.getSubsceneEntries = function(subscene) {
-      return this.getObj(subscene).subscenes;
-    };
-
-    this.getPowerOfTwo = function(value) {
-	     var pow = 1;
-	     while(pow<value) {
-	       pow *= 2;
-	     }
-	     return pow;
-	   };
 
     this.handleLoadedTexture = function(texture, textureCanvas) {
 	    var gl = this.gl;
@@ -1346,7 +1346,6 @@ rglClass = function() {
 		  return {x:canvasX, y:canvasY};
 		};
 
-
     this.setMouseHandlers = function() {
       var self = this, activeSubscene, handler,
           handlers = {}, drag = 0;
@@ -1688,5 +1687,17 @@ rglClass = function() {
 			gl.flush();
 		};
 
+		this.applyControls = function(x) {
+		  var self = this;
+	    Object.keys(x).forEach(function(key){
+		    var control = x[key],
+		        type = control.type;
+		    if (typeof type === "undefined")
+		      return;
+		    if (type === "subsetSetter") {
+		      // do something
+		    }
+		  });
+		}
 
 }).call(rglClass.prototype);

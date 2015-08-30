@@ -1,2 +1,2 @@
-exportPattern("^[[:alpha:]]+")
+export(rglwidget, renderRglwidget, rglwidgetOutput)
 import(htmlwidgets)
