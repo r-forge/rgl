@@ -294,12 +294,13 @@ rglClass = function() {
 		};
 
     this.cbind = function(a, b) {
-      return a.map(function(currentValue, index, array)
-              currentValue.concat(b[index]));
+      return a.map(function(currentValue, index, array) {
+            return currentValue.concat(b[index]);
+      });
     };
 
     this.flatten = function(a) {
-      return a.reduce(function(x, y) x.concat(y));
+      return a.reduce(function(x, y) { return x.concat(y); });
     };
 
     this.transpose = function(a) {
@@ -348,7 +349,7 @@ rglClass = function() {
       for (i = 0; i<3; i++)
         result[i] = x[i]*y[i];
       return result;
-    }
+    };
 
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
@@ -382,7 +383,7 @@ rglClass = function() {
       return this.scene.objects[id];
     };
 
-    this.getIdsByType = function(type, subscene = undefined) {
+    this.getIdsByType = function(type, subscene) {
       var
         result = [], i, obj, self = this;
       if (typeof subscene === "undefined") {
@@ -392,7 +393,7 @@ rglClass = function() {
               result.push(key);
           });
       } else {
-        ids <- this.getObj(subscene).objects;
+        ids = this.getObj(subscene).objects;
         for (i=0; i < ids.length; i++) {
           if (this.getObj(ids[i]).type === type) {
             result.push(ids[i]);
@@ -641,9 +642,9 @@ rglClass = function() {
     this.countObjs = function(id, type) {
       var self = this,
           bound = 0, obj,
-        recurse = function(subscene) {
+        recurse = function(subsceneid) {
         var result = 0,
-          subscene = self.getObj(subscene),
+          subscene = self.getObj(subsceneid),
           subids = subscene.objects,
           i, ids;
         for (i = 0; i < subids.length; i++) {
@@ -741,7 +742,6 @@ rglClass = function() {
 			obj.prog = gl.createProgram();
 			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,
 			  this.getVertexShader(id) ));
-			var test = obj.fshader;
 			gl.attachShader(obj.prog, this.getShader( gl.FRAGMENT_SHADER,
 			                this.getFragmentShader(id) ));
 			//  Force aPos to location 0, aCol to location 1
@@ -790,7 +790,7 @@ rglClass = function() {
     v = obj.vertices;
     obj.vertexCount = v.length;
 
-    var stride = 3, nc, cofs, nofs, radofs, oofs, tofs;
+    var stride = 3, nc, cofs, nofs, radofs, oofs, tofs, vnew, v1;
 
     nc = obj.colorCount = obj.colors.length;
     if (nc > 1) {
@@ -815,7 +815,7 @@ rglClass = function() {
     	if (obj.radii.length === v.length) {
     	  v = this.cbind(v, obj.radii);
     	} else if (obj.radii.length === 1) {
-    	  v = v.map(function(row, i, arr) row.concat(obj.radii[0]));
+    	  v = v.map(function(row, i, arr) { return row.concat(obj.radii[0]);});
     	}
     } else
     	radofs = -1;
@@ -825,8 +825,8 @@ rglClass = function() {
       stride += 2;
     	oofs = stride;
     	stride += 2;
-      var vnew = new Array(4*v.length), v1,
-          size = obj.radii, s = size[0]/2;
+      vnew = new Array(4*v.length);
+      var size = obj.radii, s = size[0]/2;
       for (i=0; i < v.length; i++) {
         if (size.length > 1)
           s = size[i]/2;
@@ -842,7 +842,7 @@ rglClass = function() {
       stride += 2;
       oofs = stride;
       stride += 2;
-      var vnew = new Array(4*v.length), v1;
+      vnew = new Array(4*v.length);
       for (i=0; i < v.length; i++) {
         vnew[4*i]  = v[i].concat([0,-0.5]).concat(obj.adj[0]);
         vnew[4*i+1]= v[i].concat([1,-0.5]).concat(obj.adj[0]);
@@ -964,7 +964,7 @@ rglClass = function() {
                    j + 1 + nx*i);
           }
         }
-        frowsize <- 6
+        frowsize = 6;
       }
 		  obj.f = new Uint16Array(f);
 			if (depth_sort) {
@@ -1031,14 +1031,15 @@ rglClass = function() {
 		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
 		      thisprefix = this.getPrefix(id),
-		      sphereMV, baseofs, ofs, sscale, i, count, light;
+		      sphereMV, baseofs, ofs, sscale, i, count, light,
+		      faces;
 
       if (type === "light" || type === "bboxdeco")
         return;
 
 		  if (type === "clipplanes") {
-			  var count = obj.offsets.length,
-			      IMVClip = [];
+			  count = obj.offsets.length;
+			  var IMVClip = [];
 			  for (i=0; i < count; i++) {
 				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane[i]);
  			  }
@@ -1112,6 +1113,11 @@ rglClass = function() {
 			    gl.uniform1i( obj.viewpointLoc[i], light.viewpoint);
 			    gl.uniform1i( obj.finiteLoc[i], light.finite);
 			  }
+			  for (i=subscene.lights.length; i < obj.nlights; i++) {
+			    gl.uniform3f( obj.ambientLoc[i], 0,0,0);
+			    gl.uniform3f( obj.specularLoc[i], 0,0,0);
+			    gl.uniform3f( obj.diffuseLoc[i], 0,0,0);
+			  }
 			}
 
 			if (type === "text") {
@@ -1128,8 +1134,8 @@ rglClass = function() {
 						if (sprites_3d) frowsize = 1;
 						else if (type === "triangles") frowsize = 3;
 						else frowsize = 6;
-            var depths = new Float32Array(nfaces),
-							  faces = new Array(nfaces);
+            var depths = new Float32Array(nfaces);
+						faces = new Array(nfaces);
 						for(i=0; i<nfaces; i++) {
 							z = this.prmvMatrix.m13*obj.centers[3*i] +
 							    this.prmvMatrix.m23*obj.centers[3*i+1] +
@@ -1148,7 +1154,7 @@ rglClass = function() {
 						if (type !== "spheres") {
 						  var f = new Uint16Array(obj.f.length);
 							for (i=0; i<nfaces; i++) {
-					  	  for (var j=0; j<frowsize; j++) {
+					  	  for (j=0; j<frowsize; j++) {
 							    f[frowsize*i + j] = obj.f[frowsize*faces[i] + j];
 							  }
 							}
@@ -1157,8 +1163,8 @@ rglClass = function() {
 					}
 
 			if (type === "spheres") {
-				var subscene = this.getObj(subsceneid),
-				    scale = subscene.par3d.scale,
+				subscene = this.getObj(subsceneid);
+				var scale = subscene.par3d.scale,
 						scount = count;
 				gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, this.sphere.sphereStride,  0);
 				gl.enableVertexAttribArray(obj.normLoc );
@@ -1284,8 +1290,8 @@ rglClass = function() {
 
 				if (subscene_has_faces) {
 				  this.setnormMatrix(subsceneid);
-				  if ((obj.flags & this.f_sprites_3d)
-				      && typeof obj.spriteNormmat === "undefined") {
+				  if ((obj.flags & this.f_sprites_3d) &&
+				      typeof obj.spriteNormmat === "undefined") {
 				    obj.spriteNormmat = new CanvasMatrix4(this.normMatrix);
 				  }
 				}
@@ -1434,12 +1440,11 @@ rglClass = function() {
     handlers.y0zoom = 0;
 		handlers.zoom0 = 0;
 		handlers.zoomdown = function(x, y) {
-		  var activeSub = this.getObj(activeSubscene);
-		  handlers.y0zoom = y;
-			var activeSub = this.getObj(activeSubscene),
-			    activeProjection = this.getObj(this.useid(activeSub.id, "projection")),
+		  var activeSub = this.getObj(activeSubscene),
+        activeProjection = this.getObj(this.useid(activeSub.id, "projection")),
 			  i, l = activeProjection.par3d.listeners;
-			for (i = 0; i < l.length; i++) {
+		  handlers.y0zoom = y;
+		  for (i = 0; i < l.length; i++) {
 			  activeSub = this.getObj(l[i]);
 			  activeSub.zoom0 = log(activeSub.par3d.zoom);
 			}
@@ -1545,7 +1550,7 @@ rglClass = function() {
 		      activeSubscene = self.scene.rootSubscene;
 			  var activeSub = self.getObj(activeSubscene),
 			      activeProjection = self.getObj(self.useid(activeSub.id, "projection")),
-			  i, l = activeProjection.par3d.listeners;
+			      l = activeProjection.par3d.listeners;
 
 		    for (i = 0; i < l.length; i++) {
 		      activeSub = self.getObj(l[i]);
@@ -1573,7 +1578,7 @@ rglClass = function() {
 		    y0 = coords.y - viewport.y*this.canvas.height;
 		  return 0 <= x0 && x0 <= viewport.width*this.canvas.width &&
 		         0 <= y0 && y0 <= viewport.height*this.canvas.height;
-		}
+		};
 
     this.whichSubscene = function(coords) {
       var self = this,
@@ -1585,7 +1590,7 @@ rglClass = function() {
                 return(id);
             }
             if (self.inViewport(coords, subsceneid))
-              return(subsceneid)
+              return(subsceneid);
             else
               return undefined;
           },
@@ -1606,7 +1611,7 @@ rglClass = function() {
       var gl = this.gl;
       result = {vb: new Float32Array(this.flatten(this.transpose(verts.vb))),
               it: new Uint16Array(this.flatten(this.transpose(verts.it))),
-              sphereStride: 12}
+              sphereStride: 12};
       result.sphereCount = result.it.length;
 	    result.buf = gl.createBuffer();
 	    gl.bindBuffer(gl.ARRAY_BUFFER, result.buf);
@@ -1652,19 +1657,19 @@ rglClass = function() {
 	      alert("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
 	      return;
 	    }
-    }
+    };
 
     this.initGL = function() {
 	   this.gl = this.canvas.getContext("webgl") ||
 	               this.canvas.getContext("experimental-webgl");
 	   if (debug)
 	     this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
-	 }
+	 };
 
     this.resize = function() {
       if (this.gl !== null)
         this.drawScene();
-    }
+    };
 
 		this.drawInstance = function() {
 	    var gl = this.gl;
