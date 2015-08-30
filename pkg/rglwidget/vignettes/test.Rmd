@@ -15,6 +15,25 @@ par3d(mouseMode=c("trackball", "none", "none"))
 firstscene <- scene3d()
 rglwidget()
 
+y <- x <- seq(-10, 10, length = 30)
+f <- function(x, y) { r <- sqrt(x^2 + y^2); 10 * sin(r)/r }
+z <- outer(x, y, f)
+z[is.na(z)] <- 1
+open3d()
+bg3d("white")
+material3d(col = "black")
+persp3d(x, y, z, aspect = c(1, 1, 0.5), col = "lightblue",
+        xlab = "X", ylab = "Y", zlab = "Sinc( r )")
+xE <- c(-10, 10); xy <- expand.grid(xE, xE)
+points3d(xy[, 1], xy[, 2], 6, col = "red")
+lines3d(x, y = 10, z = 6 + sin(x), col = "green")
+phi <- seq(0, 2*pi, len = 201)
+r1 <- 7.725 # radius of 2nd maximum
+xr <- r1 * cos(phi)
+yr <- r1 * sin(phi)
+lines3d(xr, yr, f(xr, yr), col = "pink", lwd = 2)
+rglwidget()
+
 lat <- matrix(seq(90, -90, len = 50)*pi/180, 50, 50, byrow = TRUE)
 long <- matrix(seq(-180, 180, len = 50)*pi/180, 50, 50)
 r <- 6378.1 # radius of Earth in km
@@ -31,6 +50,8 @@ rglwidget()
 
 open3d()
 triangles3d(rnorm(30), rnorm(30), rnorm(30), col=rainbow(30), alpha=0.5)
+planes3d(1,1,1,0, col="white")
+clipplanes3d(1,1,1,0.001)
 rglwidget()
 
 rglwidget(firstscene)
