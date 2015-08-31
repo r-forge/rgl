@@ -8,6 +8,7 @@ output: html_document
 This vignette is used for testing.
 
 ```{r fig.height=6,fig.width=6}
+library(rgl)
 library(rglwidget)
 example(sprites3d)
 

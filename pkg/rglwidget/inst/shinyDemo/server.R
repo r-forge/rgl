@@ -1,4 +1,5 @@
 library(shiny)
+library(rgl)
 library(rglwidget)
 
 options(rgl.useNULL = TRUE)
