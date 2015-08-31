@@ -2,7 +2,7 @@ library(shiny)
 library(rglwidget)
 
 shinyUI(pageWithSidebar(
-  headerPanel("Shiny with plot3d 2"),
+  headerPanel("Shiny with plot3d"),
   sidebarPanel(
     uiOutput("outputSlider")
   ),
