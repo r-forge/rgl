@@ -1,2 +1,4 @@
-export(rglwidget, renderRglwidget, rglwidgetOutput)
+export(rglwidget, renderRglwidget, rglwidgetOutput,
+       rglcontroller, renderRglcontroller, rglcontrollerOutput,
+       subsetSetter)
 import(htmlwidgets)
