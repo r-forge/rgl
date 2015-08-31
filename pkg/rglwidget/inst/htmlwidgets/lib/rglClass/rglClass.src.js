@@ -8,7 +8,8 @@ var min = Math.min,
     PI = Math.PI,
     log = Math.log,
     exp = Math.exp,
-    floor = Math.floor;
+    floor = Math.floor,
+    round = Math.round;
 
 debug = false;
 
@@ -102,6 +103,8 @@ rglClass = function() {
     };
 
     this.toCanvasMatrix4 = function(mat) {
+      if (mat instanceof CanvasMatrix4)
+        return mat;
       var result = new CanvasMatrix4();
       mat = this.flatten(this.transpose(mat));
       result.load(mat);
@@ -218,13 +221,9 @@ rglClass = function() {
     };
 
     this.setSubsceneEntries = function(ids, subsceneid) {
-      var sub = this.getObj(subsceneid), i;
-      sub.subscenes = [];
-      sub.clipplanes = [];
-      sub.transparent = [];
-      sub.opaque = [];
-      for (i = 0; i < ids.length; i++)
-        this.addToSubscene(ids[i], subsceneid);
+      var sub = this.getObj(subsceneid);
+      sub.objects = ids;
+      this.initSubscene(subsceneid);
     };
 
     this.getSubsceneEntries = function(subscene) {
@@ -686,6 +685,7 @@ rglClass = function() {
           i, obj;
       sub.par3d.userMatrix = this.toCanvasMatrix4(sub.par3d.userMatrix);
       sub.par3d.listeners = [].concat(sub.par3d.listeners);
+      sub.backgroundId = undefined;
       sub.subscenes = [];
       sub.clipplanes = [];
       sub.transparent = [];
@@ -1694,10 +1694,28 @@ rglClass = function() {
 		        type = control.type;
 		    if (typeof type === "undefined")
 		      return;
+
 		    if (type === "subsetSetter") {
-		      // do something
+          var value = Math.round(control.value),
+              subscenes = [].concat(control.subscenes),
+              i, j, entries, subsceneid;
+
+          for (i=0; i < subscenes.length; i++) {
+            subsceneid = subscenes[i];
+            entries = self.getObj(subsceneid).objects;
+            entries = entries.filter(function(x) {
+                return control.fullset.indexOf(x) < 0;
+              });
+            if (control.accumulate) {
+              for (j=0; j<=value; j++)
+                entries = entries.concat(control.subsets[j]);
+            } else {
+              entries = entries.concat(control.subsets[value]);
+            }
+            self.setSubsceneEntries(entries, subsceneid);
+          }
 		    }
 		  });
-		}
-
+		  self.drawScene();
+		};
 }).call(rglClass.prototype);
