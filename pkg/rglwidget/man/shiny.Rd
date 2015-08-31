@@ -1,6 +1,8 @@
 \name{shiny}
 \alias{rglwidgetOutput}
 \alias{renderRglwidget}
+\alias{rglcontrollerOutput}
+\alias{renderRglcontroller}
 \title{
 Functions for integration of \code{\link{rglwidget}} into
 Shiny app.
@@ -10,24 +12,29 @@ These functions allow an \pkg{rgl} scene to be embedded
 in a Shiny app.
 }
 \usage{
-rglwidgetOutput(outputId, width = "100\%", height = "400px")
+rglwidgetOutput(outputId, width = "512px", height = "512px")
 renderRglwidget(expr, env = parent.frame(), quoted = FALSE)
+
+rglcontrollerOutput(outputId, width = "0px", height = "0px")
+renderRglcontroller(expr, env = parent.frame(), quoted = FALSE)
 }
 \arguments{
   \item{outputId}{
-The name for the \code{rglwidget()} control.
+The name for the control.
 }
   \item{width, height}{
 Width and height to display the control.
 }
   \item{expr}{An R expression returning
-a \code{\link{rglwidget}} as output.}
+a \code{\link{rglwidget}} (for \code{renderRglwidget}) or a \code{\link{rglcontroller}} (for \code{renderRglcontroller}) as output.}
   \item{env}{The environment in which to evaluate \code{expr}.}
   \item{quoted}{Is the expression already quoted?}
 }
 \details{
-Use \code{rglwidgetOutput} as an output object in a Shiny user
-interface section; use \code{renderRglwidget} as the render
+Use \code{rglwidgetOutput} or \code{rglcontrollerOutput} as an output
+object in a Shiny user
+interface section; use \code{renderRglwidget} or \code{renderRglcontroller}
+as the render
 function in the server section.
 }
 \value{
@@ -35,7 +42,4 @@ Used internally by Shiny.
 }
 \author{
 Duncan Murdoch
-}
-\seealso{
-\code{\link[shiny]{shinyWidgetOutput}}
 }
