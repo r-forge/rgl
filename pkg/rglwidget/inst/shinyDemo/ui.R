@@ -2,10 +2,9 @@ library(shiny)
 library(rglwidget)
 
 shinyUI(pageWithSidebar(
-  headerPanel("Shiny with rglwidget"),
+  headerPanel("Shiny with plot3d 2"),
   sidebarPanel(
-    sliderInput("chooseSubset", "Choose Subset", min=0, max=2,
-                value=0, animate = TRUE)
+    uiOutput("outputSlider")
   ),
   mainPanel(rglwidgetOutput('thewidget'),
     rglcontrollerOutput('thecontroller')

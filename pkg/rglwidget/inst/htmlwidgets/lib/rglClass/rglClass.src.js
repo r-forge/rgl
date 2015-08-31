@@ -120,7 +120,7 @@ rglClass = function() {
 
     this.componentProduct = function(x, y) {
       if (typeof y === "undefined") {
-        alert("y undefined");
+        debugger;
       }
       var result = new Float32Array(3), i;
       for (i = 0; i<3; i++)
@@ -129,12 +129,19 @@ rglClass = function() {
     };
 
     this.getPowerOfTwo = function(value) {
-	     var pow = 1;
-	     while(pow<value) {
-	       pow *= 2;
-	     }
-	     return pow;
-	   };
+	    var pow = 1;
+	    while(pow<value) {
+	      pow *= 2;
+	    }
+	    return pow;
+	  };
+
+	  this.unique = function(arr) {
+	    arr = [].concat(arr);
+	    return arr.filter(function(value, index, self) {
+	      return self.indexOf(value) === index;
+	    });
+	  };
 
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
@@ -165,6 +172,10 @@ rglClass = function() {
     };
 
     this.getObj = function(id) {
+      if (typeof id !== "number") {
+		    alert("getObj id is "+typeof id);
+		    debugger;
+      }
       return this.scene.objects[id];
     };
 
@@ -174,6 +185,7 @@ rglClass = function() {
       if (typeof subscene === "undefined") {
         Object.keys(this.scene.objects).forEach(
           function(key) {
+            key = parseInt(key, 10);
             if (self.getObj(key).type === type)
               result.push(key);
           });
@@ -672,7 +684,7 @@ rglClass = function() {
       };
       Object.keys(this.scene.objects).forEach(
         function(key) {
-          if (self.getObj(key).type === type)
+          if (self.getObj(parseInt(key, 10)).type === type)
             bound = bound + 1;
         });
       if (bound <= 0)
@@ -716,6 +728,11 @@ rglClass = function() {
 		      gl = this.gl,
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
           i,j,v;
+
+    if (typeof id !== "number") {
+      alert("initObj id is "+typeof id);
+      debugger;
+    }
 
     if (type === "background" || type === "bboxdeco")
       return;
@@ -879,6 +896,7 @@ rglClass = function() {
 
     if (sprites_3d) {
 			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
+			obj.ids = this.flatten([].concat(obj.ids));
 			is_lit = false;
     }
 
@@ -1033,6 +1051,11 @@ rglClass = function() {
 		      thisprefix = this.getPrefix(id),
 		      sphereMV, baseofs, ofs, sscale, i, count, light,
 		      faces;
+
+		  if (typeof id !== "number") {
+		    alert("drawObj id is "+typeof id);
+		    debugger;
+		  }
 
       if (type === "light" || type === "bboxdeco")
         return;
@@ -1303,8 +1326,8 @@ rglClass = function() {
 				if (clipids.length > 0) {
 				  this.invMatrix = new CanvasMatrix4(this.mvMatrix);
 				  this.invMatrix.invert();
-				  for (i = 0; i < obj.clipplanes.length; i++)
-				    this.drawObj(clipids[i]);
+				  for (i = 0; i < clipids.length; i++)
+				    this.drawObj(clipids[i], subsceneid);
 				}
 				subids = obj.opaque;
 				gl.depthMask(true);
@@ -1638,7 +1661,7 @@ rglClass = function() {
 	        self = this;
 	    this.sphere = this.initSphere(x.sphereVerts);
 	    Object.keys(objs).forEach(function(key){
-		    self.initObj(key);
+		    self.initObj(parseInt(key, 10));
 		  });
 		  this.setMouseHandlers();
 		};
@@ -1694,7 +1717,8 @@ rglClass = function() {
 		        type = control.type;
 		    if (typeof type === "undefined")
 		      return;
-
+        if (typeof control.subscenes === "undefined" || control.subscenes === null)
+          control.subscenes = self.scene.rootSubscene;
 		    if (type === "subsetSetter") {
           var value = Math.round(control.value),
               subscenes = [].concat(control.subscenes),
@@ -1702,6 +1726,8 @@ rglClass = function() {
 
           for (i=0; i < subscenes.length; i++) {
             subsceneid = subscenes[i];
+            if (typeof self.getObj === "undefined" || typeof self.getObj(subsceneid) === "undefined")
+              debugger;
             entries = self.getObj(subsceneid).objects;
             entries = entries.filter(function(x) {
                 return control.fullset.indexOf(x) < 0;
@@ -1712,7 +1738,8 @@ rglClass = function() {
             } else {
               entries = entries.concat(control.subsets[value]);
             }
-            self.setSubsceneEntries(entries, subsceneid);
+            entries = entries.map(function(x) parseInt(x, 10));
+            self.setSubsceneEntries(self.unique(entries), subsceneid);
           }
 		    }
 		  });
