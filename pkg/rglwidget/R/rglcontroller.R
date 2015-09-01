@@ -27,7 +27,7 @@ renderRglcontroller <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
 
-subsetSetter <- function(value, subsets, subscenes = NULL,
+subsetControl <- function(value, subsets, subscenes = NULL,
                          fullset = Reduce(union, subsets),
                          accumulate = FALSE) {
   subsets <- lapply(subsets, as.integer)

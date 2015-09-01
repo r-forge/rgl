@@ -1,13 +1,13 @@
 \name{webGLcontrols}
-\alias{subsetSetter}
+\alias{subsetControl}
 \title{
-Setters to use with rglcontroller.
+Controls to use with rglcontroller.
 }
 \description{
 This is a setter function to produce actions in a Shiny app.
 }
 \usage{
-subsetSetter(value, subsets, subscenes = NULL,
+subsetControl(value, subsets, subscenes = NULL,
                          fullset = Reduce(union, subsets),
                          accumulate = FALSE)
 }
@@ -24,7 +24,7 @@ subsetSetter(value, subsets, subscenes = NULL,
   as the value increases.}
 }
 \details{
-\code{subsetSetter} produces data for \code{\link{rglcontroller}} to
+\code{subsetControl} produces data for \code{\link{rglcontroller}} to
 display subsets of the object in one or more subscenes.  This code will not
 touch objects in the
 subscenes if they
@@ -33,12 +33,14 @@ all the object ids mentioned in \code{subsets}, so by default if an id is
 not mentioned in one of the subsets, it will not be controlled by the slider.
 }
 \value{
-\code{subsetSetter} returns controller data in a list.
+\code{subsetControl} returns controller data in a list.
 }
 \author{
 Duncan Murdoch
 }
 
 \seealso{
-\code{\link{rglcontroller}}
+\code{\link{rglcontroller} for how to embed this in a Shiny app,
+\code{\link[rgl]{subsetSetter}} for a way to embed a pure Javascript
+control.
 }

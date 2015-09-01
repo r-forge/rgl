@@ -1710,6 +1710,33 @@ rglClass = function() {
 			gl.flush();
 		};
 
+		this.subsetSetter = function(control) {
+		  if (typeof control.subscenes === "undefined" ||
+		      control.subscenes === null)
+        control.subscenes = this.scene.rootSubscene;
+      var value = Math.round(control.value),
+          subscenes = [].concat(control.subscenes),
+          i, j, entries, subsceneid;
+
+      for (i=0; i < subscenes.length; i++) {
+        subsceneid = subscenes[i];
+        if (typeof this.getObj(subsceneid) === "undefined")
+          debugger;
+        entries = this.getObj(subsceneid).objects;
+        entries = entries.filter(function(x) {
+            return control.fullset.indexOf(x) < 0;
+          });
+        if (control.accumulate) {
+          for (j=0; j<=value; j++)
+            entries = entries.concat(control.subsets[j]);
+        } else {
+          entries = entries.concat(control.subsets[value]);
+        }
+        entries = entries.map(function(x) parseInt(x, 10));
+        this.setSubsceneEntries(this.unique(entries), subsceneid);
+      }
+		}
+
 		this.applyControls = function(x) {
 		  var self = this;
 	    Object.keys(x).forEach(function(key){
@@ -1717,31 +1744,7 @@ rglClass = function() {
 		        type = control.type;
 		    if (typeof type === "undefined")
 		      return;
-        if (typeof control.subscenes === "undefined" || control.subscenes === null)
-          control.subscenes = self.scene.rootSubscene;
-		    if (type === "subsetSetter") {
-          var value = Math.round(control.value),
-              subscenes = [].concat(control.subscenes),
-              i, j, entries, subsceneid;
-
-          for (i=0; i < subscenes.length; i++) {
-            subsceneid = subscenes[i];
-            if (typeof self.getObj === "undefined" || typeof self.getObj(subsceneid) === "undefined")
-              debugger;
-            entries = self.getObj(subsceneid).objects;
-            entries = entries.filter(function(x) {
-                return control.fullset.indexOf(x) < 0;
-              });
-            if (control.accumulate) {
-              for (j=0; j<=value; j++)
-                entries = entries.concat(control.subsets[j]);
-            } else {
-              entries = entries.concat(control.subsets[value]);
-            }
-            entries = entries.map(function(x) parseInt(x, 10));
-            self.setSubsceneEntries(self.unique(entries), subsceneid);
-          }
-		    }
+		    self[type](control);
 		  });
 		  self.drawScene();
 		};

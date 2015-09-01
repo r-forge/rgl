@@ -12,7 +12,7 @@ shinyServer(function(input, output) {
   output$thewidget <- renderRglwidget(rglwidget(x, controllers="thecontroller"))
   output$thecontroller <-
     renderRglcontroller(rglcontroller("thewidget",
-                          subsetSetter(input$chooseSubset,
+                          subsetControl(input$chooseSubset,
                                        subsets = unname(as.list(ids)),
                                        accumulate = TRUE)))
   output$outputSlider <- renderUI({
