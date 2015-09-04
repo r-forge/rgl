@@ -39,3 +39,16 @@ subsetControl <- function(value, subsets, subscenes = NULL,
        fullset = fullset,
        accumulate = accumulate)
 }
+
+propertyControl <- function(value, entries, properties, objids, values = NULL,
+                            param = seq_len(NROW(values)), interp = TRUE) {
+  objids <- as.integer(objids)
+  list(type = "propertySetter",
+       value = value,
+       values = values,
+       entries = entries,
+       properties = properties,
+       objids = objids,
+       param = param,
+       interp = interp)
+}

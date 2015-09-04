@@ -143,6 +143,13 @@ rglClass = function() {
 	    });
 	  };
 
+	  this.repeatToLen = function(arr, len) {
+	    arr = [].concat(arr);
+	    while (arr.length < len/2)
+	      arr = arr.concat(arr);
+	    return arr.concat(arr.slice(0, len - arr.length));
+	  };
+
     this.f_is_lit = 1;
     this.f_is_smooth = 2;
     this.f_has_texture = 4;
@@ -1736,6 +1743,86 @@ rglClass = function() {
         this.setSubsceneEntries(this.unique(entries), subsceneid);
       }
 		}
+
+		this.propertySetter = function(control)  {
+		  var value = control.value,
+		      values = [].concat(control.values),
+		      svals = [].concat(control.param),
+		      direct = values[0] === null,
+		      entries = [].concat(control.entries),
+		      ncol = entries.length,
+		      nrow = values.length/ncol,
+		      properties = this.repeatToLen(control.properties, ncol),
+		      objids = this.repeatToLen(control.objids, ncol),
+		      property = properties[0], objid = objids[0],
+		      obj = this.getObj(objid),
+		      propvals, i, v1, v2, p, entry, gl, needsBinding,
+
+		      getPropvals = function() {
+            if (property === "userMatrix")
+              return obj.userMatrix.getAsArray();
+            else
+              return obj[property];
+		      };
+
+      if (direct && typeof value === "undefined")
+        return;
+
+      if (control.interp) {
+        values = values.slice(0, ncol).concat(values).
+                 concat(values.slice(ncol*(nrow-1), ncol*nrow));
+        svals = [-Infinity].concat(svals).concat(Infinity);
+        for (i = 1; i < svals.length; i++) {
+          if (value <= svals[i]) {
+            if (svals[i] === Infinity)
+              p = 1;
+            else
+              p = (svals[i] - value)/(svals[i] - svals[i-1]);
+            break;
+          }
+        }
+      } else if (!direct) {
+        value = round(value);
+      }
+
+      propvals = getPropvals();
+
+      for (j=0; j<entries.length; j++) {
+        entry = entries[j];
+        newprop = properties[j];
+        newid = objids[j];
+
+        if (newprop != property || newid != objid) {
+          property = newprop;
+          objid = newid;
+          obj = this.getObj(objid);
+          propvals = getPropvals();
+        }
+        if (control.interp) {
+          v1 = values[ncol*(i-1) + j];
+          v2 = values[ncol*i + j];
+          propvals[entry] = p*v1 + (1-p)*v2;
+        } else if (!direct) {
+          propvals[entry] = values[ncol*value + j];
+        } else {
+          propvals[entry] = value[j];
+        }
+      }
+      needsBinding = [];
+      for (j=0; j < entries.length; j++) {
+        if (properties[j] === "values" &&
+            needsBinding.indexOf(objids[j]) === -1) {
+          needsBinding.push(objids[j]);
+        }
+      }
+      debugger;
+      for (j=0; j < needsBinding.length; j++) {
+        gl = this.gl;
+        obj = this.getObj(needsBinding[j]);
+        gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
+        gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW);
+      }
+    };
 
 		this.applyControls = function(x) {
 		  var self = this;

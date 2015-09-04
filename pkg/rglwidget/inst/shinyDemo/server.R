@@ -4,7 +4,7 @@ library(rglwidget)
 
 options(rgl.useNULL = TRUE)
 open3d()
-example(plot3d)
+plot3d((-10):10, rnorm(21), rnorm(21))
 x <- scene3d()
 ids <- names(x$objects)
 
@@ -12,11 +12,11 @@ shinyServer(function(input, output) {
   output$thewidget <- renderRglwidget(rglwidget(x, controllers="thecontroller"))
   output$thecontroller <-
     renderRglcontroller(rglcontroller("thewidget",
-                          subsetControl(input$chooseSubset,
-                                       subsets = unname(as.list(ids)),
-                                       accumulate = TRUE)))
+                          propertyControl(value=input$setValue, values=c(-10,10),
+                                          param=c(-10,10), entries=0, properties="values",
+                                          objids = ids[1], interp = TRUE)))
   output$outputSlider <- renderUI({
-    sliderInput("chooseSubset", "Choose subset", min=1, max=length(ids),
-                round = TRUE, value = 0, step = 1)
+    sliderInput("setValue", "Set Value", min=-10, max=10,
+                 value = 0)
   })
 })
