@@ -17,6 +17,6 @@ shinyServer(function(input, output) {
                                           objids = ids[1], interp = TRUE)))
   output$outputSlider <- renderUI({
     sliderInput("setValue", "Set Value", min=-10, max=10,
-                 value = 0)
+                 value = 0, step=0.1)
   })
 })

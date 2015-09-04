@@ -1815,7 +1815,6 @@ rglClass = function() {
           needsBinding.push(objids[j]);
         }
       }
-      debugger;
       for (j=0; j < needsBinding.length; j++) {
         gl = this.gl;
         obj = this.getObj(needsBinding[j]);
