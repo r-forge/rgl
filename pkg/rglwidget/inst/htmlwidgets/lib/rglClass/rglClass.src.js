@@ -1823,6 +1823,70 @@ rglClass = function() {
       }
     };
 
+    this.ageSetter = function(control) {
+      var objids = [].concat(control.objids),
+          nobjs = objids.length,
+          time = control.value,
+          births = control.births,
+          ages = control.ages,
+          steps = births.length,
+          j = Array(steps),
+          p = Array(steps),
+          i, k, age, j0, propvals, stride, ofs, objid, obj,
+          attrib, dim,
+          attribs = ["colors", "alpha", "radii", "vertices",
+                     "normals", "origins", "texcoords"],
+          ofss    = ["cofs", "cofs", "radofs", "vofs",
+                     "nofs", "oofs", "tofs"],
+          dims    = [3,1,1,3,
+                     3,2,2];
+      /* Infinity doesn't make it through JSON */
+      ages[0] = -Infinity;
+      ages[ages.length-1] = Infinity;
+      for (i = 0; i < steps; i++) {
+        age = time - births[i];
+        for (j0 = 1; age > ages[j0]; j0++);
+        if (ages[j0] == Infinity)
+          p[i] = 1;
+        else if (ages[j0] > ages[j0-1])
+          p[i] = (ages[j0] - age)/(ages[j0] - ages[j0-1]);
+        else
+          p[i] = 0;
+        j[i] = j0;
+      }
+      for (l = 0; l < nobjs; l++) {
+        objid = objids[l];
+        obj = this.getObj(objid);
+        propvals = obj.values;
+        stride = obj.offsets.stride;
+        for (k = 0; k < attribs.length; k++) {
+          attrib = control[attribs[k]];
+          if (typeof attrib !== "undefined") {
+            ofs = obj.offsets[ofss[k]];
+            if (ofs >= 0) {
+              dim = dims[k];
+              for (i = 0; i < steps; i++) {
+                if (attribs[k] === "alpha") {
+                  propvals[i*stride + ofs + 3] = p[i]*attrib[j[i]] + (1-p[i])*attrib[j[i] + 1];
+                } else {
+                  for (d=0; d < dim; d++) {
+                    propvals[i*stride + ofs + d] = p[i]*attrib[dim*(j[i]-1) + d] + (1-p[i])*attrib[dim*j[i] + d];
+                  }
+                }
+              }
+            } else
+              alert("\'"+attribs[k]+"\' property not found in object "+objid);
+          }
+        }
+        obj.values = propvals;
+        if (typeof obj.buf !== "undefined") {
+          gl = this.gl;
+          gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
+          gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW);
+        }
+      }
+		}
+
 		this.applyControls = function(x) {
 		  var self = this;
 	    Object.keys(x).forEach(function(key){
