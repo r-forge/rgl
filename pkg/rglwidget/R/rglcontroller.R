@@ -1,11 +1,11 @@
-rglcontroller <- function(sceneId, ...) {
+rglcontroller <- function(sceneId, respondTo = NULL, ...) {
 
   # create widget
   controls = list(...)
 
   htmlwidgets::createWidget(
     name = 'rglcontroller',
-    x = list(sceneId = sceneId, controls=controls),
+    x = list(sceneId = sceneId, respondTo = respondTo, controls=controls),
     width = 0,
     height = 0,
     package = 'rglwidget'
