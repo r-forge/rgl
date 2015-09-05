@@ -11,20 +11,19 @@ vertices have ages depending on the control setting.
 Attributes of those vertices can then be changed.
 }
 \usage{
-ageControl(value, births, ages,
+ageControl(births, ages, objids, value = 0,
            colors = NULL, alpha = NULL, radii = NULL, vertices = NULL,
-           normals = NULL, origins = NULL, texcoords = NULL, objids)
+           normals = NULL, origins = NULL, texcoords = NULL)
 }
 \arguments{
-  \item{value}{The value to use for input (typically \code{input$value}
-  in a Shiny app.}
   \item{births}{Numeric birth times of vertices.}
   \item{ages}{Chosen ages at which the following attributes
   will apply.}
+  \item{objids}{Object ids to which the changes apply.}
+  \item{value}{Initial value; typically overridden by input.}
   \item{colors, alpha, radii, vertices, normals, origins, texcoords}{
   Attributes of the vertices that can be changed.  There should be
   one entry or row for each entry in \code{ages}.}
-  \item{objids}{Object ids to which the changes apply.}
 }
 \details{
 All attributes must have the same number of entries (rows for the matrices)

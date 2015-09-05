@@ -11,11 +11,23 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    el.rglcontroller = instance;
-    instance.subscenes = [].concat(x.subscenes);
+    var applyVals = function() {
 
-    /* We might be running before the scene exists.  If so, it
-       will have to apply our initial value. */
+      /* We might be running before the scene exists.  If so, it
+         will have to apply our initial value. */
+
+        var scene = window[x.sceneId].rglinstance;
+        if (typeof scene !== "undefined") {
+          scene.applyControls(x.controls);
+          instance.initialized = true;
+        } else {
+          instance.controls = x.controls;
+          instance.initialized = false;
+        }
+      };
+
+    el.rglcontroller = instance;
+
     if (x.respondTo !== null) {
       var control = window[x.respondTo];
       if (typeof control !== "undefined") {
@@ -26,22 +38,12 @@ HTMLWidgets.widget({
           }
           if (oldhandler !== null)
             oldhandler.call(this);
-          var scene = window[x.sceneId].rglinstance;
-          if (typeof scene !== "undefined") {
-            scene.applyControls(x.controls);
-            instance.initialized = true;
-          }
+          applyVals();
         };
+        control.onchange();
       }
     }
-    var scene = window[x.sceneId].rglinstance;
-    if (typeof scene !== "undefined") {
-      scene.applyControls(x.controls);
-      instance.initialized = true;
-    } else {
-      instance.controls = x.controls;
-      instance.initialized = false;
-    }
+    applyVals();
   },
 
   resize: function(el, width, height, instance) {

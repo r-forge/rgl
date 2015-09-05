@@ -1,4 +1,4 @@
-rglcontroller <- function(sceneId, respondTo = NULL, ...) {
+rglcontroller <- function(sceneId, ..., respondTo = NULL) {
 
   # create widget
   controls = list(...)
@@ -53,9 +53,9 @@ propertyControl <- function(value, entries, properties, objids, values = NULL,
        interp = interp)
 }
 
-ageControl <- function(value, births, ages, colors = NULL, alpha = NULL,
+ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = NULL,
                        radii = NULL, vertices = NULL, normals = NULL,
-                       origins = NULL, texcoords = NULL, objids) {
+                       origins = NULL, texcoords = NULL) {
 
   lengths <- c(colors = NROW(colors), alpha = length(alpha),
                radii = length(radii), vertices = NROW(vertices),

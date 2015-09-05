@@ -11,8 +11,8 @@ shinyServer(function(input, output) {
   output$thewidget <- renderRglwidget(rglwidget(x, controllers="thecontroller"))
   output$thecontroller <-
     renderRglcontroller(rglcontroller("thewidget", respondTo = "Slider",
-                          ageControl(0, births=c((-10):10),
-                                          ages = c(-5,0,5),
-                                          colors = c("green", "yellow", "red"),
-                                          objids = ids["data"])))
+                          ageControl(births=c((-10):10),
+                                     ages = c(-5,0,5),
+                                     colors = c("green", "yellow", "red"),
+                                     objids = ids["data"])))
 })

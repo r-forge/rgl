@@ -8,7 +8,7 @@ This function produces an object which can be used in the output
 of a Shiny app, to control an \code{\link{rglwidget}}.
 }
 \usage{
-rglcontroller(sceneId, respondTo = NULL, ...)
+rglcontroller(sceneId, ..., respondTo = NULL)
 }
 \arguments{
   \item{sceneId}{
