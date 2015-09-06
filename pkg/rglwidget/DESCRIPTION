@@ -1,11 +1,10 @@
 Package: rglwidget
 Type: Package
 Title: 'rgl' in 'htmlwidgets' Framework
-Version: 0.1
-Date: 2015-08-31
+Version: 0.1.1325
 Author: Duncan Murdoch
 Maintainer: Duncan Murdoch <murdoch.duncan@gmail.com>
 Description: Provides an 'htmlwidgets' framework for the 'rgl' package.
 License: GPL-2
 LazyData: TRUE
-Imports: htmlwidgets, htmltools, knitr, rgl (>= 0.95.1307)
+Imports: htmlwidgets, htmltools, knitr, rgl (>= 0.95.1324)

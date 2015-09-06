@@ -509,31 +509,46 @@ rglClass = function() {
 	     image.src = uri;
 	   };
 
-    this.drawTextToCanvas = function(text, cex, fontFamily) {
+    this.drawTextToCanvas = function(text, cex, family, font) {
 	     var canvasX, canvasY,
 	         textX, textY,
-
-	         textHeight = 20 * cex,
+           scaling = 20,
 	         textColour = "white",
 
 	         backgroundColour = "rgba(0,0,0,0)",
            canvas = this.textureCanvas,
 	         ctx = canvas.getContext("2d"),
-           i;
-
-	     ctx.font = textHeight+"px "+fontFamily;
+           i, textHeights = [], widths = [], offset = 0, offsets = [],
+	         fontStrings = [],
+           getFontString = function(i) {
+             textHeights[i] = scaling*cex[i];
+             var fontString = textHeights[i] + "px"
+                 family0 = family[i],
+                 font0 = font[i];
+             if (family0 === "sans")
+               family0 = "sans-serif";
+             else if (family0 === "mono")
+               family0 = "monospace";
+             fontString = fontString + " " + family0;
+             if (font0 === 2 || font0 === 4)
+               fontString = "bold " + fontString;
+             if (font0 === 3 || font0 === 4)
+               fontString = "italic " + fontString;
+             return fontString;
+           }
+       cex = this.repeatToLen(cex, text.length);
+       family = this.repeatToLen(family, text.length);
+       font = this.repeatToLen(font, text.length);
 
 	     canvasX = 1;
-	     var widths = [];
 	     for (i = 0; i < text.length; i++)  {
+	       ctx.font = fontStrings[i] = getFontString(i);
 	       widths[i] = ctx.measureText(text[i]).width;
+	       offset = offsets[i] = offset + 2*textHeights[i];
 	       canvasX = (widths[i] > canvasX) ? widths[i] : canvasX;
 	     }
 	     canvasX = this.getPowerOfTwo(canvasX);
-
-	     var offset = 2*textHeight, // offset to first baseline
-	         skip = 2*textHeight;   // skip between baselines
-	     canvasY = this.getPowerOfTwo(offset + text.length*skip);
+	     canvasY = this.getPowerOfTwo(offset);
 
 	     canvas.width = canvasX;
 	     canvas.height = canvasY;
@@ -541,19 +556,17 @@ rglClass = function() {
 	     ctx.fillStyle = backgroundColour;
 	     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-	     ctx.fillStyle = textColour;
-	     ctx.textAlign = "left";
-
 	     ctx.textBaseline = "alphabetic";
-	     ctx.font = textHeight+"px "+fontFamily;
-
 	     for(i = 0; i < text.length; i++) {
-	       textY = i*skip + offset;
+	       textY = offsets[i];
+	       ctx.font = fontStrings[i];
+	       ctx.fillStyle = textColour;
+	       ctx.textAlign = "left";
 	       ctx.fillText(text[i], 0,  textY);
 	     }
 	     return {canvasX:canvasX, canvasY:canvasY,
-	             widths:widths, textHeight:textHeight,
-	             offset:offset, skip:skip};
+	             widths:widths, textHeights:textHeights,
+	             offsets:offsets};
 	   };
 
     this.setViewport = function(id) {
@@ -784,7 +797,11 @@ rglClass = function() {
 		}
 
 		if (type === "text") {
-      texinfo = this.drawTextToCanvas(obj.texts, obj.cex);
+		  obj.cex = this.flatten(obj.cex);
+		  obj.family = this.flatten(obj.family);
+		  obj.font = this.flatten(obj.family);
+      texinfo = this.drawTextToCanvas(obj.texts, obj.cex, obj.family,
+                                      obj.font);
 		}
 
 		if (fixed_quads && !sprites_3d) {
@@ -875,10 +892,10 @@ rglClass = function() {
         for (j=0; j < 4; j++) {
           v1 = vnew[4*i+j];
           v1[tofs+2] = 2*(v1[tofs]-v1[tofs+2])*texinfo.widths[i];
-	        v1[tofs+3] = 2*(v1[tofs+1]-v1[tofs+3])*texinfo.textHeight;
+	        v1[tofs+3] = 2*(v1[tofs+1]-v1[tofs+3])*texinfo.textHeights[i];
 	        v1[tofs] *= texinfo.widths[i]/texinfo.canvasX;
-	        v1[tofs+1] = 1.0-(texinfo.offset + i*texinfo.skip -
-	            v1[tofs+1]*texinfo.textHeight)/texinfo.canvasY;
+	        v1[tofs+1] = 1.0-(texinfo.offsets[i] -
+	            v1[tofs+1]*texinfo.textHeights[i])/texinfo.canvasY;
 	        vnew[4*i+j] = v1;
         }
       }
@@ -1655,7 +1672,7 @@ rglClass = function() {
 		this.initialize = function(el, x) {
 		  this.canvas = el;
 		  this.textureCanvas = document.createElement("canvas");
-		  this.textureCanvas.style.display = "none";
+		  this.textureCanvas.style.display = "block";
 		  this.canvas.rglinstance = this;
 		  this.initGL0();
 		  this.scene = x;
