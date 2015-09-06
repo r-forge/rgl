@@ -10,6 +10,11 @@ This vignette is used for testing.
 ```{r fig.height=6,fig.width=6}
 library(rgl)
 library(rglwidget)
+
+
+text3d(1:4, rnorm(4), rnorm(4), letters[1:4], font=1:4, family=c("sans", "serif"), cex=1:4)
+rglwidget()
+
 example(sprites3d)
 
 par3d(mouseMode=c("trackball", "none", "none"))
