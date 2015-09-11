@@ -187,7 +187,7 @@ rglClass = function() {
 
     this.getIdsByType = function(type, subscene) {
       var
-        result = [], i, obj, self = this;
+        result = [], i, self = this;
       if (typeof subscene === "undefined") {
         Object.keys(this.scene.objects).forEach(
           function(key) {
@@ -252,20 +252,15 @@ rglClass = function() {
 	    var obj = this.getObj(id),
 	        flags = obj.flags,
 	        type = obj.type,
-	        is_indexed = flags & this.f_is_indexed,
           is_lit = flags & this.f_is_lit,
 		      has_texture = flags & this.f_has_texture,
 		      fixed_quads = flags & this.f_fixed_quads,
-		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
 		      reuse = flags & this.f_reuse,
 		      nclipplanes = this.countClipplanes(id);
 
 		  if (type === "clipplanes" || sprites_3d || reuse) return;
-
-		  if (has_texture)
-			  var texture_format = this.getMaterial(id, "textype");
 
 		  result = "	/* ****** "+type+" object "+id+" vertex shader ****** */\n"+
 			"	attribute vec3 aPos;\n"+
@@ -339,13 +334,10 @@ rglClass = function() {
 	    var obj = this.getObj(id),
 	        flags = obj.flags,
 	        type = obj.type,
-	        is_indexed = flags & this.f_is_indexed,
           is_lit = flags & this.f_is_lit,
 		      has_texture = flags & this.f_has_texture,
 		      fixed_quads = flags & this.f_fixed_quads,
-		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
-		      sprite_3d = flags & this.f_sprite_3d,
 		      reuse = flags & this.f_reuse,
 		      nclipplanes = this.countClipplanes(id), i,
           texture_format, nlights;
@@ -510,7 +502,7 @@ rglClass = function() {
 
     this.drawTextToCanvas = function(text, cex, family, font) {
 	     var canvasX, canvasY,
-	         textX, textY,
+	         textY,
            scaling = 20,
 	         textColour = "white",
 
@@ -743,7 +735,6 @@ rglClass = function() {
 		      depth_sort = flags & this.f_depth_sort,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
           i,j,v;
@@ -922,10 +913,6 @@ rglClass = function() {
 			is_lit = false;
     }
 
-		if (!sprites_3d && reuse) {
-			 obj.values = thisprefix.scene.objects[id].values;
-		}
-
     if (is_lit && !fixed_quads) {
 			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
@@ -1051,10 +1038,6 @@ rglClass = function() {
 							       surface : "TRIANGLES",
 							       triangles : "TRIANGLES"};
 
-    this.getPrefix = function(id) {
-      return this;  // FIXME when this is worked out
-    };
-
 	  this.drawObj = function(id, subsceneid) {
 	    var obj = this.getObj(id),
 	        subscene = this.getObj(subsceneid),
@@ -1068,9 +1051,7 @@ rglClass = function() {
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
 		      is_lines = flags & this.f_is_lines,
-		      reuse = flags & this.f_reuse,
 		      gl = this.gl,
-		      thisprefix = this.getPrefix(id),
 		      sphereMV, baseofs, ofs, sscale, i, count, light,
 		      faces;
 
@@ -1092,7 +1073,7 @@ rglClass = function() {
 			}
 
       if (sprites_3d) {
-			  var norigs = obj.vertices.length, spriteid,
+			  var norigs = obj.vertices.length,
 			      savenorm = new CanvasMatrix4(this.normMatrix);
 			  this.origs = obj.vertices;
 				this.usermat = new Float32Array(obj.userMatrix.getAsArray());
@@ -1843,7 +1824,7 @@ rglClass = function() {
 
     this.vertexSetter = function(control)  {
       var svals = [].concat(control.param),
-          i, j, k, p, propvals, stride, ofs, objid, obj,
+          j, k, p, propvals, stride, ofs, obj,
           attrib,
           ofss    = {x:"vofs", y:"vofs", z:"vofs",
                      red:"cofs", green:"cofs", blue:"cofs",
@@ -1859,7 +1840,7 @@ rglClass = function() {
                      ts:0, tt:1},
   	    values = control.values,
 		    direct = values === null,
-		    ncol, nrow,
+		    ncol,
         interp = control.interp,
         vertices = [].concat(control.vertices),
         attributes = [].concat(control.attributes),
