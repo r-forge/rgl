@@ -1845,43 +1845,53 @@ rglClass = function() {
       var svals = [].concat(control.param),
           i, j, k, p, propvals, stride, ofs, objid, obj,
           attrib,
-          ofss    = {alpha:"cofs", radii:"radofs",
-                     x:"vofs", y:"vofs", z:"vofs",
-                     red:"cofs", green:"cofs", blue:"cofs"},
-          pos     = {alpha:3,radii:0,
-                     x:0, y:1, z:2,
-                     red:0, green:1, blue:2},
+          ofss    = {x:"vofs", y:"vofs", z:"vofs",
+                     red:"cofs", green:"cofs", blue:"cofs",
+                     alpha:"cofs", radii:"radofs",
+                     nx:"nofs", ny:"nofs", nz:"nofs",
+                     ox:"oofs", oy:"oofs", oz:"oofs",
+                     ts:"tofs", tt:"tofs"},
+          pos     = {x:0, y:1, z:2,
+                     red:0, green:1, blue:2,
+                     alpha:3,radii:0,
+                     nx:0, ny:1, nz:2,
+                     ox:0, oy:1, oz:2,
+                     ts:0, tt:1},
   	    values = control.values,
-		    direct = values[0] === null,
-		    entries = control.entries,
-		    ncol = entries.length,
-		    nrow = values.length/ncol,
+		    direct = values === null,
+		    ncol, nrow,
         interp = control.interp,
-        vertices = this.repeatToLen(control.vertices, ncol),
-        attributes = this.repeatToLen(control.attributes, ncol),
+        vertices = [].concat(control.vertices),
+        attributes = [].concat(control.attributes),
         value = control.value;
+
+      ncol = max(vertices.length, attributes.length);
 
       if (!ncol)
         return;
 
+      vertices = this.repeatToLen(vertices, ncol);
+      attributes = this.repeatToLen(attributes, ncol);
+
       if (direct)
         interp = false;
 
-      if (interp) {
-        values = values.slice(0, ncol).concat(values).
-                 concat(values.slice(ncol*(nrow-1), ncol*nrow));
-        svals = [-Infinity].concat(svals).concat(Infinity);
-        for (j = 1; j < svals.length; j++) {
-          if (value <= svals[j]) {
+
+      values = [values[0]].concat(values).concat(values[values.length-1]);
+      svals = [-Infinity].concat(svals).concat(Infinity);
+      for (j = 1; j < svals.length; j++) {
+        if (value <= svals[j]) {
+          if (interp) {
             if (svals[j] === Infinity)
               p = 1;
             else
               p = (svals[j] - value)/(svals[j] - svals[j-1]);
-            break;
+          } else {
+            if (svals[j] - value > value - svals[j-1])
+              j = j - 1;
           }
+          break;
         }
-      } else if (!direct) {
-        j = round(value);
       }
 
       obj = this.getObj(control.objid);

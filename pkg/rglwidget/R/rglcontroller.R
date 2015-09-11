@@ -130,3 +130,32 @@ ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = N
 
   result
 }
+
+vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
+                          param = seq_len(NROW(values)), interp = TRUE) {
+  attributes <- match.arg(attributes,
+                          choices = c("x", "y", "z",
+                                      "red", "green", "blue", "alpha",
+                                      "radii",
+                                      "nx", "ny", "nz",
+                                      "ox", "oy", "oz",
+                                      "ts", "tt"),
+                          several.ok = TRUE)
+  if (!is.null(values)) {
+    ncol <- max(length(vertices), length(attributes))
+    if (is.matrix(values))
+      stopifnot(ncol == ncol(values))
+    else {
+      stopifnot(ncol == 1)
+      values <- matrix(values, ncol = 1)
+    }
+  }
+
+  list(type = "vertexSetter",
+       values = values,
+       vertices = vertices - 1, # Javascript 0-based indexing
+       attributes = attributes,
+       objid = as.integer(objid),
+       param = param - 1,       # Javascript 0-based indexing
+       interp = interp)
+}
