@@ -17,7 +17,7 @@ rglwidget()
 
 example(sprites3d)
 
-par3d(mouseMode=c("trackball", "none", "none"))
+par3d(mouseMode=c("trackball", "none", "none", "none"))
 firstscene <- scene3d()
 rglwidget()
 

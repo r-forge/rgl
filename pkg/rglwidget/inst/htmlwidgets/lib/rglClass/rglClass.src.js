@@ -120,7 +120,7 @@ rglClass = function() {
 
     this.componentProduct = function(x, y) {
       if (typeof y === "undefined") {
-        debugger;
+        alert("Bad arg to componentProduct");
       }
       var result = new Float32Array(3), i;
       for (i = 0; i<3; i++)
@@ -181,7 +181,6 @@ rglClass = function() {
     this.getObj = function(id) {
       if (typeof id !== "number") {
 		    alert("getObj id is "+typeof id);
-		    debugger;
       }
       return this.scene.objects[id];
     };
@@ -522,7 +521,7 @@ rglClass = function() {
 	         fontStrings = [],
            getFontString = function(i) {
              textHeights[i] = scaling*cex[i];
-             var fontString = textHeights[i] + "px"
+             var fontString = textHeights[i] + "px",
                  family0 = family[i],
                  font0 = font[i];
              if (family0 === "sans")
@@ -535,7 +534,7 @@ rglClass = function() {
              if (font0 === 3 || font0 === 4)
                fontString = "italic " + fontString;
              return fontString;
-           }
+           };
        cex = this.repeatToLen(cex, text.length);
        family = this.repeatToLen(family, text.length);
        font = this.repeatToLen(font, text.length);
@@ -751,7 +750,6 @@ rglClass = function() {
 
     if (typeof id !== "number") {
       alert("initObj id is "+typeof id);
-      debugger;
     }
 
     if (type === "background" || type === "bboxdeco")
@@ -1078,7 +1076,6 @@ rglClass = function() {
 
 		  if (typeof id !== "number") {
 		    alert("drawObj id is "+typeof id);
-		    debugger;
 		  }
 
       if (type === "light" || type === "bboxdeco")
@@ -1740,26 +1737,30 @@ rglClass = function() {
         control.subscenes = this.scene.rootSubscene;
       var value = Math.round(control.value),
           subscenes = [].concat(control.subscenes),
-          i, j, entries, subsceneid;
+          i, j, entries, subsceneid,
+          ismissing = function(x) {
+            return control.fullset.indexOf(x) < 0;
+          },
+          tointeger = function(x) {
+            return parseInt(x, 10);
+          };
 
       for (i=0; i < subscenes.length; i++) {
         subsceneid = subscenes[i];
         if (typeof this.getObj(subsceneid) === "undefined")
-          debugger;
+          alert("typeof object is undefined");
         entries = this.getObj(subsceneid).objects;
-        entries = entries.filter(function(x) {
-            return control.fullset.indexOf(x) < 0;
-          });
+        entries = entries.filter(ismissing);
         if (control.accumulate) {
           for (j=0; j<=value; j++)
             entries = entries.concat(control.subsets[j]);
         } else {
           entries = entries.concat(control.subsets[value]);
         }
-        entries = entries.map(function(x) parseInt(x, 10));
+        entries = entries.map(tointeger);
         this.setSubsceneEntries(this.unique(entries), subsceneid);
       }
-		}
+		};
 
 		this.propertySetter = function(control)  {
 		  var value = control.value,
@@ -1840,6 +1841,76 @@ rglClass = function() {
       }
     };
 
+    this.vertexSetter = function(control)  {
+      var svals = [].concat(control.param),
+          i, j, k, p, propvals, stride, ofs, objid, obj,
+          attrib,
+          ofss    = {alpha:"cofs", radii:"radofs",
+                     x:"vofs", y:"vofs", z:"vofs",
+                     red:"cofs", green:"cofs", blue:"cofs"},
+          pos     = {alpha:3,radii:0,
+                     x:0, y:1, z:2,
+                     red:0, green:1, blue:2},
+  	    values = control.values,
+		    direct = values[0] === null,
+		    entries = control.entries,
+		    ncol = entries.length,
+		    nrow = values.length/ncol,
+        interp = control.interp,
+        vertices = this.repeatToLen(control.vertices, ncol),
+        attributes = this.repeatToLen(control.attributes, ncol),
+        value = control.value;
+
+      if (!ncol)
+        return;
+
+      if (direct)
+        interp = false;
+
+      if (interp) {
+        values = values.slice(0, ncol).concat(values).
+                 concat(values.slice(ncol*(nrow-1), ncol*nrow));
+        svals = [-Infinity].concat(svals).concat(Infinity);
+        for (j = 1; j < svals.length; j++) {
+          if (value <= svals[j]) {
+            if (svals[j] === Infinity)
+              p = 1;
+            else
+              p = (svals[j] - value)/(svals[j] - svals[j-1]);
+            break;
+          }
+        }
+      } else if (!direct) {
+        j = round(value);
+      }
+
+      obj = this.getObj(control.objid);
+      propvals = obj.values;
+      for (k=0; k<ncol; k++) {
+        attrib = attributes[k];
+        vertex = vertices[k];
+        ofs = obj.offsets[ofss[attrib]];
+        if (ofs < 0)
+          alert("Attribute '"+attrib+"' not found in object "+control.objid);
+        else {
+          stride = obj.offsets.stride;
+          ofs = vertex*stride + ofs + pos[attrib];
+          if (direct) {
+            propvals[ofs] = value;
+          } else if (interp) {
+            propvals[ofs] = p*control.values[j-1][k] + (1-p)*control.values[j][k];
+          } else {
+            propvals[ofs] = control.values[j][k];
+          }
+        }
+      }
+      if (typeof obj.buf !== "undefined") {
+        var gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, obj.buf);
+        gl.bufferData(gl.ARRAY_BUFFER, propvals, gl.STATIC_DRAW);
+      }
+    };
+
     this.ageSetter = function(control) {
       var objids = [].concat(control.objids),
           nobjs = objids.length,
@@ -1852,24 +1923,36 @@ rglClass = function() {
           i, k, age, j0, propvals, stride, ofs, objid, obj,
           attrib, dim,
           attribs = ["colors", "alpha", "radii", "vertices",
-                     "normals", "origins", "texcoords"],
+                     "normals", "origins", "texcoords",
+                     "x", "y", "z",
+                     "red", "green", "blue"],
           ofss    = ["cofs", "cofs", "radofs", "vofs",
-                     "nofs", "oofs", "tofs"],
+                     "nofs", "oofs", "tofs",
+                     "vofs", "vofs", "vofs",
+                     "cofs", "cofs", "cofs"],
           dims    = [3,1,1,3,
-                     3,2,2];
+                     3,2,2,
+                     1,1,1,
+                     1,1,1],
+          pos     = [0,3,0,0,
+                     0,0,0,
+                     0,1,2,
+                     0,1,2];
       /* Infinity doesn't make it through JSON */
       ages[0] = -Infinity;
       ages[ages.length-1] = Infinity;
       for (i = 0; i < steps; i++) {
-        age = time - births[i];
-        for (j0 = 1; age > ages[j0]; j0++);
-        if (ages[j0] == Infinity)
-          p[i] = 1;
-        else if (ages[j0] > ages[j0-1])
-          p[i] = (ages[j0] - age)/(ages[j0] - ages[j0-1]);
-        else
-          p[i] = 0;
-        j[i] = j0;
+        if (births[i] !== null) {  // NA in R becomes null
+          age = time - births[i];
+          for (j0 = 1; age > ages[j0]; j0++);
+          if (ages[j0] == Infinity)
+            p[i] = 1;
+          else if (ages[j0] > ages[j0-1])
+            p[i] = (ages[j0] - age)/(ages[j0] - ages[j0-1]);
+          else
+            p[i] = 0;
+          j[i] = j0;
+        }
       }
       for (l = 0; l < nobjs; l++) {
         objid = objids[l];
@@ -1882,10 +1965,9 @@ rglClass = function() {
             ofs = obj.offsets[ofss[k]];
             if (ofs >= 0) {
               dim = dims[k];
+              ofs = ofs + pos[k];
               for (i = 0; i < steps; i++) {
-                if (attribs[k] === "alpha") {
-                  propvals[i*stride + ofs + 3] = p[i]*attrib[j[i]] + (1-p[i])*attrib[j[i] + 1];
-                } else {
+                if (births[i] !== null) {
                   for (d=0; d < dim; d++) {
                     propvals[i*stride + ofs + d] = p[i]*attrib[dim*(j[i]-1) + d] + (1-p[i])*attrib[dim*j[i] + d];
                   }
@@ -1902,7 +1984,7 @@ rglClass = function() {
           gl.bufferData(gl.ARRAY_BUFFER, obj.values, gl.STATIC_DRAW);
         }
       }
-		}
+		};
 
 		this.applyControls = function(x) {
 		  var self = this;

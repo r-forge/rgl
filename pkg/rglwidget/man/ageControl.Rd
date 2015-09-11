@@ -13,7 +13,9 @@ Attributes of those vertices can then be changed.
 \usage{
 ageControl(births, ages, objids, value = 0,
            colors = NULL, alpha = NULL, radii = NULL, vertices = NULL,
-           normals = NULL, origins = NULL, texcoords = NULL)
+           normals = NULL, origins = NULL, texcoords = NULL,
+           x = NULL, y = NULL, z = NULL,
+           red = NULL, green = NULL, blue = NULL)
 }
 \arguments{
   \item{births}{Numeric birth times of vertices.}
@@ -24,6 +26,8 @@ ageControl(births, ages, objids, value = 0,
   \item{colors, alpha, radii, vertices, normals, origins, texcoords}{
   Attributes of the vertices that can be changed.  There should be
   one entry or row for each entry in \code{ages}.}
+  \item{x, y, z, red, green, blue}{These one-dimensional
+  components of vertices and colors are provided for convenience.}
 }
 \details{
 All attributes must have the same number of entries (rows for the matrices)
@@ -32,7 +36,11 @@ the number of vertices in the object.
 
 Not all objects contain all attributes; if one is chosen that is
 not a property of the corresponding object, a Javascript alert() will be
-generated.  (This restriction may be removed in the future.)
+generated.  (This restriction may be removed in the future by attempting
+to add the attribute when it makes sense.)
+
+If a \code{births} entry is \code{NA}, no change will be made to that
+vertex.
 }
 \value{
 A list of cleaned up parameter values, to be used in an rgl controller.
