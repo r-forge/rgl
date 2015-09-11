@@ -59,4 +59,5 @@ Duncan Murdoch
              ages = c(-5,0,5),
              colors = c("green", "yellow", "red"),
              objids = ids["data"])
+  options(saveopts)
 }

@@ -4,16 +4,19 @@ library(rglwidget)
 
 options(rgl.useNULL = TRUE)
 open3d()
-id <- text3d(1:4, rnorm(4), rnorm(4), letters[1:4], font=1:4, col = c("black", "black"),
-             family=c("sans", "serif"), cex=1:4)
+id <- plot3d((-10):10, rnorm(21), rnorm(21), col = c("black", "black"),
+             size = 10)["data"]
+print(id)
 x <- scene3d()
 
 shinyServer(function(input, output) {
   output$thewidget <- renderRglwidget(rglwidget(x, controllers="thecontroller"))
   output$thecontroller <-
     renderRglcontroller(rglcontroller("thewidget", respondTo = "Slider",
-                          ageControl(births=rep(1, 4),
-                                     ages = c(-2,0,2),
+                          ageControl(births=(-10):10,
+                                     ages = c(-5,0,5),
                                      color = c("red", "green", "blue"),
-                                     objids = id)))
+                                     objids = id),
+                          vertexControl(values = 2*(5:(-5)), param = 2*((-5):5),
+                             vertices = 11, attributes="x", objid=id, interp=FALSE)))
 })
