@@ -55,12 +55,16 @@ propertyControl <- function(value, entries, properties, objids, values = NULL,
 
 ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = NULL,
                        radii = NULL, vertices = NULL, normals = NULL,
-                       origins = NULL, texcoords = NULL) {
+                       origins = NULL, texcoords = NULL,
+                       x = NULL, y = NULL, z = NULL,
+                       red = NULL, green = NULL, blue = NULL) {
 
   lengths <- c(colors = NROW(colors), alpha = length(alpha),
                radii = length(radii), vertices = NROW(vertices),
                normals = NROW(normals), origins = NROW(origins),
-               texcoords = NROW(texcoords))
+               texcoords = NROW(texcoords),
+               x = length(x), y = length(y), z = length(z),
+               red = length(red), green = length(green), blue = length(blue))
   lengths <- lengths[lengths > 0]
   n <- unique(lengths)
   stopifnot(length(n) == 1, n == length(ages), all(diff(ages) >= 0))
@@ -105,6 +109,24 @@ ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = N
     stopifnot(ncol(texcoords) == 2)
     result <- c(result, list(texcoords = as.numeric(t(texcoords[rows,]))))
   }
+
+  if (!is.null(x))
+    result <- c(result, list(x = x[rows]))
+
+  if (!is.null(y))
+    result <- c(result, list(y = y[rows]))
+
+  if (!is.null(z))
+    result <- c(result, list(z = z[rows]))
+
+  if (!is.null(red))
+    result <- c(result, list(red = red[rows]))
+
+  if (!is.null(green))
+    result <- c(result, list(green = green[rows]))
+
+  if (!is.null(blue))
+    result <- c(result, list(blue = blue[rows]))
 
   result
 }
