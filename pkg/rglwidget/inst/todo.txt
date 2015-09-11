@@ -3,7 +3,7 @@ TODO:
 For those objects where the init method expands the number of vertices,
 the control/setter methods need to be modified correspondingly.
 
-On Windows, the 3d sprites flash annoyingly.  This might be caused by the onchange
-event being called while still being serviced.  Need to prevent that.
+On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
+events being called while still being serviced.  Need to prevent that.
 
-Vertexsetter needs to be finished and tested.
+Vertexsetter needs to be finished and tested.  Done.

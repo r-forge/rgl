@@ -1876,9 +1876,10 @@ rglClass = function() {
       if (direct)
         interp = false;
 
+      /* JSON doesn't pass Infinity */
+      svals[0] = -Infinity;
+      svals[svals.length - 1] = Infinity;
 
-      values = [values[0]].concat(values).concat(values[values.length-1]);
-      svals = [-Infinity].concat(svals).concat(Infinity);
       for (j = 1; j < svals.length; j++) {
         if (value <= svals[j]) {
           if (interp) {
@@ -1908,9 +1909,9 @@ rglClass = function() {
           if (direct) {
             propvals[ofs] = value;
           } else if (interp) {
-            propvals[ofs] = p*control.values[j-1][k] + (1-p)*control.values[j][k];
+            propvals[ofs] = p*values[j-1][k] + (1-p)*values[j][k];
           } else {
-            propvals[ofs] = control.values[j][k];
+            propvals[ofs] = values[j][k];
           }
         }
       }

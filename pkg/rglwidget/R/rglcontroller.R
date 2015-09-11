@@ -149,6 +149,9 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
       stopifnot(ncol == 1)
       values <- matrix(values, ncol = 1)
     }
+    # Repeat first and last values to make search simpler.
+    param <- c(-Inf, param, Inf)
+    values <- rbind(values[1,], values, values[nrow(values),])
   }
 
   list(type = "vertexSetter",
