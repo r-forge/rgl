@@ -1,6 +1,9 @@
 export(rglwidget, renderRglwidget, rglwidgetOutput,
        rglcontroller, renderRglcontroller, rglcontrollerOutput,
-       subsetControl, propertyControl, ageControl, vertexControl)
+       subsetControl, propertyControl, ageControl, vertexControl,
+       writeWebGL2)
 import(htmlwidgets)
 importFrom(rgl, scene3d, points3d, axis3d, box3d, open3d, rgl.set, rgl.close,
            subdivision3d, octahedron3d, par3d)
+importFrom(htmltools, includeScript, tags)
+importFrom(jsonlite, toJSON)

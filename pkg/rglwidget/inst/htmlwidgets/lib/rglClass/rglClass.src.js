@@ -36,7 +36,7 @@ function logAndValidate(functionName, args) {
    validateNoneOfTheArgsAreUndefined (functionName, args);
 }
 
-rglClass = function() {
+rglwidgetClass = function() {
     this.canvas = null;
     this.userMatrix = new CanvasMatrix4();
     this.types = [];
@@ -1648,25 +1648,38 @@ rglClass = function() {
     };
 
 		this.initialize = function(el, x) {
-		  this.canvas = el;
 		  this.textureCanvas = document.createElement("canvas");
 		  this.textureCanvas.style.display = "block";
-		  this.canvas.rglinstance = this;
-		  this.initGL0();
 		  this.scene = x;
 	    this.normMatrix = new CanvasMatrix4();
 	    this.saveMat = {};
 	    this.distance = null;
 	    this.posLoc = 0;
 	    this.colLoc = 1;
+	    if (el)
+	      this.initCanvas(el);
+		};
+
+		this.initCanvas = function(el) {
+		  this.canvas = el;
+		  this.canvas.rglinstance = this;
+		  this.initGL0();
 	    var objs = this.scene.objects,
 	        self = this;
-	    this.sphere = this.initSphere(x.sphereVerts);
+	    this.sphere = this.initSphere(this.scene.sphereVerts);
 	    Object.keys(objs).forEach(function(key){
 		    self.initObj(parseInt(key, 10));
 		  });
 		  this.setMouseHandlers();
 		};
+
+		/* this is only used by writeWebGL2 as the onload handler; with rglwidget(), it
+		   is done as part of this.initialize. */
+
+		this.start = function() {
+		  this.initCanvas(this.canvas);
+		  this.drawScene();
+		}
 
     this.initGL0 = function() {
 	    if (!window.WebGLRenderingContext){
@@ -1989,4 +2002,4 @@ rglClass = function() {
 		  });
 		  self.drawScene();
 		};
-}).call(rglClass.prototype);
+}).call(rglwidgetClass.prototype);
