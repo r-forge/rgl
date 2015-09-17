@@ -7,6 +7,6 @@ On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
 events being called while still being serviced.  (Doesn't appear to be.  Not sure
 of the cause...)
 
-Other browsers need to be tested.
+Other browsers need to be tested. Done on OSX.
 
 Vertexsetter needs to be finished and tested.  Done.

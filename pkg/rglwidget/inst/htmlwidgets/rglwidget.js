@@ -11,7 +11,7 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    var rgl = new rglClass(), i, controller;
+    var rgl = new rglwidgetClass(), i, controller;
     rgl.initialize(el, x);
     el.rglwidget = rgl;
 
