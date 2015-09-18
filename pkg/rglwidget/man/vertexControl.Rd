@@ -9,7 +9,8 @@ input control (e.g. a \code{\link[shiny]{sliderInput}} control)
 sets a value which controls attributes of a selection of vertices.
 }
 \usage{
-vertexControl(values = NULL, vertices = 1, attributes, objid, param = seq_len(NROW(values)), interp = TRUE)
+vertexControl(values = NULL, vertices = 1, attributes,
+              objid, param = seq_len(NROW(values)), interp = TRUE)
 }
 \arguments{
   \item{values}{

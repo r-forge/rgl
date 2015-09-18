@@ -7,7 +7,3 @@ dependencies:
      version: 2009
      src: htmlwidgets/lib/CanvasMatrix
      script: CanvasMatrix.src.js
-  -  name: WebGLDebug
-     version: 1.0.0
-     src: htmlwidgets/lib/WebGLDebug
-     script: webgl-debug.js
