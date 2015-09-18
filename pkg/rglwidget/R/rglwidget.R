@@ -1,7 +1,7 @@
 
 rglwidget <- function(x = scene3d(), width = NULL, height = NULL,
-                      controllers = NULL) {
-  x = convertScene(x, width, height)
+                      controllers = NULL, snapshot = FALSE) {
+  x = convertScene(x, width, height, snapshot = snapshot)
   if (!is.null(controllers))
     x$controllers = controllers
   # create widget

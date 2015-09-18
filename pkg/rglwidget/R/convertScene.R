@@ -1,5 +1,6 @@
 
-convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NULL) {
+convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NULL,
+                         snapshot = FALSE) {
 
 	# Lots of utility functions and constants defined first; execution starts way down there...
 
@@ -82,8 +83,22 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
       subscene$id
     }
     result$rootSubscene <<- recurse(result$rootSubscene)
-	}
 
+    snapshotimg <- NULL
+    snapshotfile <- NULL
+    if (is.logical(snapshot) && snapshot) {
+      snapshotfile <- tempfile(fileext = ".png")
+      on.exit(unlink(snapshotfile))
+      snapshot3d(snapshotfile)
+    } else if (is.character(snapshot) && substr(snapshot, 1, 5) != "data:") {
+      snapshotfile <- snapshot
+    } else if (is.character(snapshot))
+      snapshotimg <- snapshot
+    if (!is.null(snapshotfile))
+      snapshotimg <- image_uri(snapshotfile)
+    if (!is.null(snapshotimg))
+      result$snapshot <<- snapshotimg
+	}
 
 	flagnames <- c("is_lit", "is_smooth", "has_texture", "is_indexed",
 		       "depth_sort", "fixed_quads", "is_transparent",
@@ -229,7 +244,18 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		prefixes$texture <- as.character(prefixes$texture)
 	}
 
-	rect <- par3d("windowRect")
+	if (is.logical(snapshot) && snapshot) {
+		if (rgl.useNULL()) {
+	    warning("Can't take snapshot with NULL rgl device")
+	    snapshot <- FALSE
+	  } else if (!missing(x))
+		  warning("Will take snapshot of current scene which may differ from x.")
+  }
+	if (is.list(x$rootSubscene))
+	  rect <- x$rootSubscene$par3d$windowRect
+	else
+	  rect <- x$objects[[x$rootSubscene]]$par3d$windowRect
+
 	rwidth <- rect[3] - rect[1] + 1
 	rheight <- rect[4] - rect[2] + 1
 	if (is.null(width)) {
@@ -300,7 +326,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  if (obj$type != "subscene") {
 	    # FIXME:  could reuse the texture
 	    if (!is.null(obj$material) && !is.null(obj$material$texture))
-	      obj$material$uri <- knitr::image_uri(obj$material$texture)
+	      obj$material$uri <- image_uri(obj$material$texture)
 	  } else if (obj$type == "subscene") {
 	    obj$par3d$viewport$x <- obj$par3d$viewport$x/fullviewport$width
 	    obj$par3d$viewport$width <- obj$par3d$viewport$width/fullviewport$width

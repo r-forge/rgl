@@ -18,5 +18,5 @@ shinyServer(function(input, output) {
                                      color = c("red", "green", "blue"),
                                      objids = id),
                           vertexControl(values = 2*(5:(-5)), param = 2*((-5):5),
-                             vertices = 11, attributes="x", objid=id, interp=FALSE)))
+                             vertices = 11, attributes="x", objid=id)))
 })

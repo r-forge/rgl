@@ -9,7 +9,8 @@ graphical displays in HTML documents of various types.  This function
 provides the necessities to embed an \pkg{rgl} scene in one.
 }
 \usage{
-rglwidget(x = scene3d(), width = NULL, height = NULL, controllers = NULL)
+rglwidget(x = scene3d(), width = NULL, height = NULL,
+          controllers = NULL, snapshot = FALSE)
 }
 \arguments{
   \item{x}{
@@ -21,6 +22,8 @@ The width and height of the display in pixels.
   \item{controllers}{Names of \code{\link{rglcontroller}} objects
 associated with this scene.  See Details below.
 }
+  \item{snapshot}{Control of snapshot of scene.  See
+\code{\link{writeWebGL2}} for details.}
 }
 \details{
 This produces a WebGL version of an \pkg{rgl} scene using the \pkg{htmlwidgets}

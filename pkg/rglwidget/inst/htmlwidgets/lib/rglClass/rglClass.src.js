@@ -11,31 +11,6 @@ var min = Math.min,
     floor = Math.floor,
     round = Math.round;
 
-debug = false;
-
-function logGLCall(functionName, args) {
-   console.log("gl." + functionName + "(" +
-      WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
-}
-
-function validateNoneOfTheArgsAreUndefined(functionName, args) {
-  for (var ii = 0; ii < args.length; ++ii) {
-    if (typeof args[ii] === "undefined") {
-      console.error("undefined passed to gl." + functionName + "(" +
-                     WebGLDebugUtils.glFunctionArgsToString(functionName, args) + ")");
-    }
-  }
-}
-
-function throwOnGLError(err, funcName, args) {
-  throw WebGLDebugUtils.glEnumToString(err) + " was caused by call to: " + funcName;
-}
-
-function logAndValidate(functionName, args) {
-   logGLCall(functionName, args);
-   validateNoneOfTheArgsAreUndefined (functionName, args);
-}
-
 rglwidgetClass = function() {
     this.canvas = null;
     this.userMatrix = new CanvasMatrix4();
@@ -1678,12 +1653,36 @@ rglwidgetClass = function() {
 
 		this.start = function() {
 		  this.initCanvas(this.canvas);
+		  if (typeof this.prefix !== "undefined") {
+		    this.debugelement = document.getElementById(this.prefix + "debug");
+	      this.debug("");
+		  }
 		  this.drawScene();
 		}
 
+		this.debug = function(msg, img) {
+		  if (typeof this.debugelement !== "undefined") {
+		    this.debugelement.innerHTML = msg;
+		    if (typeof img !== "undefined") {
+		      this.debugelement.insertBefore(img, this.debugelement.firstChild);
+		    }
+		  } else
+		    alert(msg);
+		};
+
+    this.getSnapshot = function() {
+      var img;
+	    if (typeof this.scene.snapshot !== "undefined") {
+	      img = document.createElement("img");
+	      img.src = this.scene.snapshot;
+	      img.alt = "Snapshot";
+	    }
+	    return img;
+    }
+
     this.initGL0 = function() {
 	    if (!window.WebGLRenderingContext){
-	      alert("%snapshotimg2% Your browser does not support WebGL. See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
+	      debug("Your browser does not support WebGL. See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>", this.getSnapshot());
 	      return;
 	    }
 	    try {
@@ -1691,7 +1690,8 @@ rglwidgetClass = function() {
 	    }
 	    catch(e) {}
 	    if ( !this.gl ) {
-	      alert("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\\\"http://get.webgl.org\\\">http://get.webgl.org</a>");
+	      debug("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>",
+	            this.getSnapshot());
 	      return;
 	    }
     };
