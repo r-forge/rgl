@@ -191,26 +191,28 @@ rglwidgetClass = function() {
     };
 
     this.inSubscene = function(id, subscene) {
-      var subscenes = this.getSubsceneEntries(subscene);
-      return subscenes.indexOf(id) > -1;
+      return this.getObj(subscene).objects.indexOf(id) > -1;
     };
 
     this.addToSubscene = function(id, subscene) {
-      if (this.getSubsceneEntries(subscene).indexOf(id) == -1) {
-        this.scene.objects[subscene].subscenes.push(id);
-        var thelist = this.whichList(id);
-        this.scene.objects[subscene][thelist].push(id);
+      var thelist,
+          thesub = this.getObj(subscene);
+      if (thesub.objects.indexOf(id) == -1) {
+        thelist = this.whichList(id);
+        thesub.objects.push(id);
+        thesub[thelist].push(id);
       }
     };
 
     this.delFromSubscene = function(id, subscene) {
       var thelist,
-        i = this.getSubsceneEntries(subscene).indexOf(id);
+          thesub = this.getObj(subscene),
+          i = thesub.objects.indexOf(id);
       if (i > -1) {
-        this.getObj(subscene).subscenes.splice(i, 1);
+        thesub.objects.splice(i, 1);
         thelist = this.whichList(id);
-        i = this.getObj(subscene)[thelist].indexOf(id);
-        this.getObj(subscene)[thelist].splice(i, 1);
+        i = thesub[thelist].indexOf(id);
+        thesub[thelist].splice(i, 1);
       }
     };
 
@@ -220,7 +222,11 @@ rglwidgetClass = function() {
       this.initSubscene(subsceneid);
     };
 
-    this.getSubsceneEntries = function(subscene) {
+    this.getSubsceneObjects = function(subscene) {
+      return this.getObj(subscene).objects;
+    };
+
+    this.getChildSubscenes = function(subscene) {
       return this.getObj(subscene).subscenes;
     };
 
@@ -1583,7 +1589,7 @@ rglwidgetClass = function() {
     this.whichSubscene = function(coords) {
       var self = this,
           recurse = function(subsceneid) {
-            var subscenes = self.getSubsceneEntries(subsceneid), i, id;
+            var subscenes = self.getChildSubscenes(subsceneid), i, id;
             for (i=0; i < subscenes.length; i++) {
               id = recurse(subscenes[i]);
               if (typeof(id) !== "undefined")
