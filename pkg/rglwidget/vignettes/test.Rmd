@@ -11,6 +11,9 @@ This vignette is used for testing.
 library(rgl)
 library(rglwidget)
 
+example(spheres3d)
+rglwidget()
+rgl.close()
 
 text3d(1:4, rnorm(4), rnorm(4), letters[1:4], font=1:4, family=c("sans", "serif"), cex=1:4)
 rglwidget()

@@ -90,9 +90,9 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
              )
 
   cat(result, file=filename, sep="\n")
-  if (!is.null(reuse)) {
-    prefixes <- prefixes[!duplicated(prefixes$id),]
-    attr(filename, "reuse") <- prefixes
-  }
+#   if (!is.null(reuse)) {
+#     prefixes <- prefixes[!duplicated(prefixes$id),]
+#     attr(filename, "reuse") <- prefixes
+#   }
   invisible(filename)
 }

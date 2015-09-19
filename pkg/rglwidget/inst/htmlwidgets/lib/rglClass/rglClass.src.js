@@ -1657,7 +1657,7 @@ rglwidgetClass = function() {
 		    this.debugelement = document.getElementById(this.prefix + "debug");
 	      this.debug("");
 		  }
-		  this.drawScene();
+		  this.drawInstance();
 		}
 
 		this.debug = function(msg, img) {
