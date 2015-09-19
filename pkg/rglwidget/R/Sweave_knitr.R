@@ -176,7 +176,7 @@ save_rgl <- function(name, devices) {
   )
 }
 
-setupKnitr <- function() {
+setupKnitr2 <- function() {
   if (requireNamespace("knitr")) {
     knit_hooks$set(webgl = hook_webgl)
     knit_hooks$set(rgl = hook_rgl)
