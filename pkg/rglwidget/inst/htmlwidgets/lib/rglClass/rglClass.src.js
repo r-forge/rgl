@@ -87,6 +87,7 @@ rglwidgetClass = function() {
     };
 
     this.stringToRgb = function(s) {
+      s = s.replace("#", "");
       var bigint = parseInt(s, 16);
       return [((bigint >> 16) & 255)/255,
               ((bigint >> 8) & 255)/255,
