@@ -222,7 +222,7 @@ rglwidgetClass = function() {
       this.initSubscene(subsceneid);
     };
 
-    this.getSubsceneObjects = function(subscene) {
+    this.getSubsceneEntries = function(subscene) {
       return this.getObj(subscene).objects;
     };
 
