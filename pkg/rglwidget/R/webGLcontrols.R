@@ -46,7 +46,7 @@ subsetSetter <- function(subsets, subscenes = currentSubscene3d(), prefixes = ""
   for (i in seq_len(nsubs))
     result <- c(result,
       if (!is.null(elementIds)) subst(
-'      rgl = document.getElementById("%elementId%");',
+'      rgl = document.getElementById("%elementId%").rglinstance;',
         elementId = elementIds[i]),
       subst(
 '  entries = %prefix%rgl.getSubsceneEntries(%subscene%);
