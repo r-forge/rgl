@@ -10,7 +10,7 @@ provides the necessities to embed an \pkg{rgl} scene in one.
 }
 \usage{
 rglwidget(x = scene3d(), width = NULL, height = NULL,
-          controllers = NULL, snapshot = FALSE)
+          controllers = NULL, snapshot = FALSE, ...)
 }
 \arguments{
   \item{x}{
@@ -23,7 +23,10 @@ The width and height of the display in pixels.
 associated with this scene.  See Details below.
 }
   \item{snapshot}{Control of snapshot of scene.  See
-\code{\link{writeWebGL2}} for details.}
+\code{\link{writeWebGL2}} for details.
+}
+  \item{...}{Additional arguments (e.g. \code{elementId})
+to pass to \code{htmlwidgets::\link{createWidget}}.}
 }
 \details{
 This produces a WebGL version of an \pkg{rgl} scene using the \pkg{htmlwidgets}
