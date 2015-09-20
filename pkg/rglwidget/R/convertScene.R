@@ -280,13 +280,14 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	types <- vapply(result$objects, function(x) x$type, character(1))
 	if (any(types == "bboxdeco")) {
 	  saveNULL <- options(rgl.useNULL = TRUE)
-	  dev <- open3d()
+	  dev <- rgl.cur()
+	  open3d()
 	  ids <- convertBBoxes(result$rootSubscene)
 	  temp <- scene3d()$objects[as.character(ids)]
 	  result$objects[as.character(ids)] <- temp
 	  types <- vapply(result$objects, function(x) x$type, character(1))
-	  rgl.set(dev)
 	  rgl.close()
+	  rgl.set(dev)
 	  options(saveNULL)
 	}
 
