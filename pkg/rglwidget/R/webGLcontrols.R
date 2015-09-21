@@ -9,46 +9,28 @@ subsetSlider <- function(subsets, labels = names(subsets),
                          accumulate = FALSE, ...) {
   propertySlider(subsetSetter(subsets, fullset = fullset,
                               subscenes = subscenes, prefixes = prefixes,
-                              elementIds = elementIds,
                               accumulate = accumulate),
                  labels = labels, ...)
 }
 
 subsetSetter <- function(subsets, subscenes = currentSubscene3d(), prefixes = "",
-                         elementIds = NULL,
 			 fullset = Reduce(union, subsets),
 			 accumulate = FALSE) {
   nsubs <- max(length(subscenes), length(prefixes))
   subscenes <- rep(subscenes, length.out = nsubs)
-  if (!is.null(elementIds)) {
-    elementIds <- rep(elementIds, length.out = nsubs)
-    if (!missing(prefixes)) {
-      prefixes <- ""
-      warning("'elementIds' specified, 'prefixes' ignored")
-    }
-  }
   prefixes <- rep(prefixes, length.out = nsubs)
-
   result <- subst(
 'function(value) {
   var i, ids = [%vals%],
-      fullset = [%fullset%],',
-    vals = paste(paste0("[", sapply(subsets,
-        				function(i) paste(i, collapse=",")),
-        				"]"), collapse=","),
+      fullset = [%fullset%], entries,
+      f = function(x) { return fullset.indexOf(x) < 0; };
+  value = Math.round(value);', 
+    vals = paste(paste0("[", sapply(subsets, 
+        				function(i) paste(i, collapse=",")), 
+        				"]"), collapse=","), 
     fullset = paste(fullset, collapse=","))
-  result <- c(result,
-    if (!is.null(elementIds))
-'      rgl,',
-'      entries,
-       f = function(x) { return fullset.indexOf(x) < 0; };
-  value = Math.round(value);')
-  for (i in seq_len(nsubs))
-    result <- c(result,
-      if (!is.null(elementIds)) subst(
-'      rgl = document.getElementById("%elementId%").rglinstance;',
-        elementId = elementIds[i]),
-      subst(
+  for (i in seq_len(nsubs)) 
+    result <- c(result, subst(
 '  entries = %prefix%rgl.getSubsceneEntries(%subscene%);
   entries = entries.filter(f);', prefix = prefixes[i], subscene = subscenes[i]),
       if (accumulate)
