@@ -29,9 +29,6 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
         as.character(includeScript(system.file("htmlwidgets/lib/rglClass/rglClass.src.js", package = "rglwidget")))
       )
 
-  getPrefix <- function(id)
-    prefixes$prefix[prefixes$id == id][1]
-
   scriptheader <- function() subst(
   '
 <canvas id="%prefix%canvas" class="rglWebGL" width="1" height="1"></canvas>
