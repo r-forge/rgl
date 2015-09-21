@@ -5,7 +5,6 @@
 subsetSlider <- function(subsets, labels = names(subsets),
                          fullset = Reduce(union, subsets),
                          subscenes = currentSubscene3d(), prefixes = "",
-                         elementIds = NULL,
                          accumulate = FALSE, ...) {
   propertySlider(subsetSetter(subsets, fullset = fullset,
                               subscenes = subscenes, prefixes = prefixes,
