@@ -658,7 +658,7 @@ rglwidgetClass = function() {
         }
         i = subids.indexOf(parseInt(id, 10));
         if (i >= 0) {
-          if (type === "light")
+          if (type === "light" && typeof subscene.lights !== "undefined")
             result += subscene.lights.length;
           else if (type === "clipplanes") {
             ids = subscene.clipplanes;
