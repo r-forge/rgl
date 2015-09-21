@@ -4,7 +4,6 @@ library(rglwidget)
 library(misc3d)
 
 options(rgl.useNULL = TRUE)
-
 set.seed(123)
 u1 <- runif(1)
 u2 <- runif(1)*(1-u1)
