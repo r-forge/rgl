@@ -162,3 +162,10 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
        param = param - 1,       # Javascript 0-based indexing
        interp = interp)
 }
+
+# This is a bridge to the old system
+
+elementId2Prefix <- function(elementId, prefix = elementId) {
+  cat(paste0("<script>var ", prefix, "rgl = {};</script>"))
+  rglcontroller(elementId, list(type = "oldBridge", prefix = prefix))
+}

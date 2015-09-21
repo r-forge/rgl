@@ -127,16 +127,20 @@ toggleButton(sphereid+1, label = "versicolor", prefix = "toggle", subscene = sub
 toggleButton(sphereid+2, label = "virginica", prefix = "toggle", subscene = subid)
 ```
 
-An alternate control to achieve the same thing is `r indexfns("subsetSlider")`. 
+An alternate control to achieve the same thing is `r indexfns("subsetSlider")`.  Here we also illustrate the 
+`r indexfns("elementId2Prefix")` bridge to allow an `r indexfns("rglwidget")`
+to be controlled by the old-style slider.
 
-```{r slider, webgl=TRUE}
+```{r slider}
+rglwidget(elementId = "slider")
 ```
 ```{r results="asis"}
+elementId2Prefix("slider")
 subsetSlider(subsets = list(setosa = sphereid, 
                   versicolor = sphereid + 1, 
                   virginica = sphereid + 2, 
                   all = sphereid + 0:2),
-             prefixes = "slider", subscenes = subid, 
+             prefixes = "slider", subscenes = subid,
              init = 3)
 ```
 

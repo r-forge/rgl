@@ -23,12 +23,12 @@ subsetSetter <- function(subsets, subscenes = currentSubscene3d(), prefixes = ""
   var i, ids = [%vals%],
       fullset = [%fullset%], entries,
       f = function(x) { return fullset.indexOf(x) < 0; };
-  value = Math.round(value);', 
-    vals = paste(paste0("[", sapply(subsets, 
-        				function(i) paste(i, collapse=",")), 
-        				"]"), collapse=","), 
+  value = Math.round(value);',
+    vals = paste(paste0("[", sapply(subsets,
+        				function(i) paste(i, collapse=",")),
+        				"]"), collapse=","),
     fullset = paste(fullset, collapse=","))
-  for (i in seq_len(nsubs)) 
+  for (i in seq_len(nsubs))
     result <- c(result, subst(
 '  entries = %prefix%rgl.getSubsceneEntries(%subscene%);
   entries = entries.filter(f);', prefix = prefixes[i], subscene = subscenes[i]),

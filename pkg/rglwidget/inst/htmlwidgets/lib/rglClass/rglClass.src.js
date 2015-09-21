@@ -1998,6 +1998,14 @@ rglwidgetClass = function() {
       }
 		};
 
+		this.oldBridge = function(control) {
+		  var attrname, global = window[control.prefix + "rgl"];
+		  if (typeof global !== "undefined")
+        for (attrname in global)
+          this[attrname] = global[attrname];
+      window[control.prefix + "rgl"] = this;
+		};
+
 		this.applyControls = function(x) {
 		  var self = this;
 	    Object.keys(x).forEach(function(key){

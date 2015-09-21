@@ -2,12 +2,13 @@ export(rglwidget, renderRglwidget, rglwidgetOutput,
        rglcontroller, renderRglcontroller, rglcontrollerOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
        ageSetter, par3dinterpSetter, propertySetter, vertexSetter,
-       writeWebGL2, setupKnitr2)
+       propertySlider,
+       writeWebGL2, setupKnitr2, elementId2Prefix)
 import(htmlwidgets)
 importFrom(rgl, scene3d, points3d, axis3d, box3d, open3d, rgl.set, rgl.close,
            subdivision3d, octahedron3d, par3d,
            rgl.cur, rgl.snapshot, rgl.postscript,
-           snapshot3d, rgl.useNULL)
-importFrom(htmltools, includeScript, tags)
+           snapshot3d, rgl.useNULL, currentSubscene3d)
+importFrom(htmltools, includeScript, tags, tagList)
 importFrom(jsonlite, toJSON)
 importFrom(knitr, fig_path, hook_plot_custom, image_uri, knit_hooks, opts_knit)
