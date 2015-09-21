@@ -9,9 +9,9 @@ shinyUI(fluidPage(
                "on the vertices of a simplex.  At each step it",
                "moves one vertex of the simplex to a better value."),
       sliderInput("Slider", min=1, max=60, step=1, value=1, label="Steps",
-                animate=animationOptions(100, loop=TRUE)),
+                animate=animationOptions(200, loop=TRUE)),
       sliderInput("Slider2", min=1, max=60, step=1, value=1, label="Cumulative",
-                  animate=animationOptions(100, loop=TRUE)),
+                  animate=animationOptions(200, loop=TRUE)),
       rglcontrollerOutput('thecontroller'),
       rglcontrollerOutput('thecontroller2')),
     mainPanel(
