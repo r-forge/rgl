@@ -174,6 +174,17 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  result
 	}
 
+	plotClipplanes <- function(subscene) {
+	  for (id in subscene$objects) {
+	    obj <- getObj(id)
+	    if (obj$type == "clipplanes") {
+	      class(obj) <- "rglobject"
+	      plot3d(obj)
+	    } else if (obj$type == "subscene")
+	      plotClipplanes(getObj(id))
+	  }
+	}
+
 	convertBBox <- function(id, subscene) {
 	  obj <- getObj(id)
 	  verts <- obj$vertices
@@ -193,6 +204,10 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  points3d(subscene$par3d$bbox[1:2],
 	           subscene$par3d$bbox[3:4],
 	           subscene$par3d$bbox[5:6])
+
+	  # plot the clipping planes as they affect the bounding box
+	  plotClipplanes(subscene)
+
 	  if (any(inds <- is.na(verts[,2]) & is.na(verts[,3])))
 	    res <- c(res, do.call(axis3d, c(list(edge = "x", at = verts[inds, 1], labels = text[inds]), mat)))
 	  if (any(inds <- is.na(verts[,1]) & is.na(verts[,3])))
@@ -287,7 +302,8 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  result$objects[as.character(ids)] <- temp
 	  types <- vapply(result$objects, function(x) x$type, character(1))
 	  rgl.close()
-	  rgl.set(dev)
+	  if (dev)
+	    rgl.set(dev)
 	  options(saveNULL)
 	}
 
