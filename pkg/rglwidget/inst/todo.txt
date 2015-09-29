@@ -10,3 +10,6 @@ of the cause...)
 Other browsers need to be tested. Done on OSX.
 
 Vertexsetter needs to be finished and tested.  Done.
+
+Get rmarkdown to do the base64 conversion of embedded images
+instead of doing it ourselves; make sure files get cleaned up.
