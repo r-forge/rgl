@@ -50,7 +50,7 @@ x <- r*cos(lat)*cos(long)
 y <- r*cos(lat)*sin(long)
 z <- r*sin(lat)
 persp3d(x, y, z, col = "white", 
-        texture = system.file("textures/worldsmall.png", package = "rgl"), 
+        texture = system.file("textures/world.png", package = "rgl"), 
         specular = "black", axes = FALSE, box = FALSE, xlab = "", ylab = "", zlab = "",
         normal_x = x, normal_y = y, normal_z = z)
 rglwidget()

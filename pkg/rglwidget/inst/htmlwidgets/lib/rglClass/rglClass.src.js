@@ -471,7 +471,14 @@ rglwidgetClass = function() {
 	       var w = image.width,
 	           h = image.height,
 	           canvasX = self.getPowerOfTwo(w),
-	           canvasY = self.getPowerOfTwo(h);
+	           canvasY = self.getPowerOfTwo(h),
+	           gl = self.gl,
+	           maxTexSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+	       if (maxTexSize > 4096) maxTexSize = 4096;
+	       while (canvasX > 1 && canvasY > 1 && (canvasX > maxTexSize || canvasY > maxTexSize)) {
+	         canvasX /= 2;
+	         canvasY /= 2;
+	       }
 	       canvas.width = canvasX;
 	       canvas.height = canvasY;
 	       ctx.imageSmoothingEnabled = true;
