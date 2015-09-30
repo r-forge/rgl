@@ -196,23 +196,38 @@ rglwidgetClass = function() {
 
     this.addToSubscene = function(id, subscene) {
       var thelist,
-          thesub = this.getObj(subscene);
-      if (thesub.objects.indexOf(id) == -1) {
-        thelist = this.whichList(id);
-        thesub.objects.push(id);
-        thesub[thelist].push(id);
+          thesub = this.getObj(subscene),
+          ids = [id],
+          obj = this.getObj(id), i;
+      if (typeof obj.newIds !== "undefined") {
+        ids = ids.concat(obj.newIds);
+      }
+      for (i = 0; i < ids.length; i++) {
+        id = ids[i];
+        if (thesub.objects.indexOf(id) == -1) {
+          thelist = this.whichList(id);
+          thesub.objects.push(id);
+          thesub[thelist].push(id);
+        }
       }
     };
 
     this.delFromSubscene = function(id, subscene) {
       var thelist,
           thesub = this.getObj(subscene),
-          i = thesub.objects.indexOf(id);
-      if (i > -1) {
-        thesub.objects.splice(i, 1);
-        thelist = this.whichList(id);
-        i = thesub[thelist].indexOf(id);
-        thesub[thelist].splice(i, 1);
+          obj = this.getObj(id),
+          ids = [id], i, newIds;
+      if (typeof obj.newIds !== "undefined")
+        ids = ids.concat(obj.newIds);
+      for (j=0; j<ids.length;j++) {
+        id = ids[j];
+        i = thesub.objects.indexOf(id);
+        if (i > -1) {
+          thesub.objects.splice(i, 1);
+          thelist = this.whichList(id);
+          i = thesub[thelist].indexOf(id);
+          thesub[thelist].splice(i, 1);
+        }
       }
     };
 

@@ -107,7 +107,7 @@ with(subset(iris, Species == "virginica"),
                col=as.numeric(Species),
      	       radius = 0.211))
 aspect3d(1,1,1)
-decorate3d()
+axesid <- decorate3d()
 subid <- currentSubscene3d()
 ```
 
@@ -119,12 +119,14 @@ toggleButton(sphereid+2, label = "virginica", prefix = "toggle", subscene = subi
 
 Note that we need to use `results="asis"` for the button code.  
 Normally we would also use `echo=FALSE`, though I didn't do so above;
-then the buttons will end up side-by-side:
+then the buttons will end up side-by-side.  We also add another button
+to toggle the axes:
 
 ```{r results="asis", echo=FALSE}
 toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
 toggleButton(sphereid+1, label = "versicolor", prefix = "toggle", subscene = subid)
 toggleButton(sphereid+2, label = "virginica", prefix = "toggle", subscene = subid)
+toggleButton(axesid, label="axes", prefix = "toggle", subscene = subid)
 ```
 
 An alternate control to achieve the same thing is `r indexfns("subsetSlider")`.  Here we also illustrate the 
