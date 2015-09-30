@@ -15,13 +15,13 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	getIdsByType <- function(type, subscene = NULL) {
 	  if (is.null(subscene))
 	    ids <- vapply(result$objects, function(x)
-	                    if (x$type == type) x$id else NA, integer(1))
+	                    if (x$type == type) x$id else NA, numeric(1))
 	  else {
 	    ids <- vapply(getObj(subscene)$objects, function(x) {
 	                    obj <- getObj(x)
 	                    if (obj$type == type) obj$id
 	                    else NA
-	                  }, integer(1))
+	                  }, numeric(1))
 	  }
 	  ids[!is.na(ids)]
 	}
@@ -78,7 +78,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
         subscene$subscenes <- unlist(subscenes)
         subscene$objects <- c(subscene$objects, subscene$subscenes)
       } else
-        subscene$subscenes <- integer(0)
+        subscene$subscenes <- numeric(0)
       setObj(subscene$id, subscene)
       subscene$id
     }
@@ -200,10 +200,14 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  if(any(missing <- text == ""))
 	    text[missing] <- apply(verts[missing,], 1, function(row) format(row[!is.na(row)]))
 
-	  res <- integer(0)
-	  points3d(subscene$par3d$bbox[1:2],
-	           subscene$par3d$bbox[3:4],
-	           subscene$par3d$bbox[5:6])
+	  res <- numeric(0)
+	  repeat { # Need to make sure the ids here don't clash with those in the scene
+	    tempID <- points3d(subscene$par3d$bbox[1:2],
+	                       subscene$par3d$bbox[3:4],
+	                       subscene$par3d$bbox[5:6])
+	    if (tempID > lastID)
+	      break;
+	  }
 
 	  # plot the clipping planes as they affect the bounding box
 	  plotClipplanes(subscene)
@@ -219,7 +223,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	}
 
 	convertBBoxes <- function (id) {
-	  ids <- NULL
+	  ids <- origIds <- NULL
 	  id <- as.character(id)
 	  sub <- getObj(id)
 	  types <- vapply(sub$objects,
@@ -232,12 +236,18 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	      sub$objects <- c(sub$objects, as.numeric(newids))
 	      setObj(id, sub)
 	      ids <- c(ids, newids)
+	      origIds <- c(origIds, rep(i, length(newids)))
 	    }
 	  }
 	  children <- sub$subscenes
-	  for (i in children)
-	    ids <- c(ids, convertBBoxes(i))
-	  ids
+	  for (i in children) {
+	    childids <- convertBBoxes(i)
+	    ids <- c(ids, childids)
+	    origIds <- c(origIds, attr(childids, "origIds"))
+	  }
+	  if (length(origIds))
+	    names(origIds) <- as.character(ids)
+	  structure(ids, origIds = origIds)
 	}
 
 		knowntypes <- c("points", "linestrip", "lines", "triangles", "quads",
@@ -250,7 +260,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	# Do a few checks first
 
 	if (is.null(reuse) || isTRUE(reuse))
-		prefixes <- data.frame(id = integer(), prefix = character(), texture = character(),
+		prefixes <- data.frame(id = numeric(), prefix = character(), texture = character(),
 				       stringsAsFactors = FALSE)
 	else {
 		if (!is.data.frame(reuse) || !all(c("id", "prefix", "texture") %in% names(reuse)))
@@ -294,12 +304,22 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 
 	types <- vapply(result$objects, function(x) x$type, character(1))
 	if (any(types == "bboxdeco")) {
+	  lastID <- max(vapply(result$objects, function(x) x$id, numeric(1)))
 	  saveNULL <- options(rgl.useNULL = TRUE)
 	  dev <- rgl.cur()
 	  open3d()
 	  ids <- convertBBoxes(result$rootSubscene)
-	  temp <- scene3d()$objects[as.character(ids)]
+	  origIds <- attr(ids, "origIds")
+	  scene <- scene3d()
+	  temp <- lapply(as.character(ids),
+	                 function(id) {
+	                   x <- scene$objects[[id]]
+	                   x$origId <- as.numeric(origIds[id])
+	                   x
+	                 })
 	  result$objects[as.character(ids)] <- temp
+	  for (id in unique(origIds))
+	    result$objects[[as.character(id)]]$newIds <- as.numeric(ids[origIds == id])
 	  types <- vapply(result$objects, function(x) x$type, character(1))
 	  rgl.close()
 	  if (dev)
@@ -307,7 +327,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  options(saveNULL)
 	}
 
-	ids <- vapply(result$objects, function(x) x$id, integer(1))
+	ids <- vapply(result$objects, function(x) x$id, numeric(1))
   flags <- vapply(result$objects, function(obj) numericFlags(getFlags(obj$id)),
                                  numeric(1), USE.NAMES = FALSE)
 
