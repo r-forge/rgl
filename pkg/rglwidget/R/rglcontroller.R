@@ -175,7 +175,7 @@ elementId2Prefix <- function(elementId, prefix = elementId) {
 sceneChange <- function(elementId, x = scene3d(),
                         delete = NULL, add = NULL, replace = NULL,
                         material = FALSE, rootSubscene = FALSE,
-                        delfromSubscenes = NULL) {
+                        delfromSubscenes = NULL, skipRedraw = FALSE) {
   allSubscenes <- function() {
     result <- numeric()
     for (obj in scene$objects)
@@ -214,6 +214,12 @@ sceneChange <- function(elementId, x = scene3d(),
   if (is.null(delfromSubscenes))
     delfromSubscenes <- allsubids
   scene$delfromSubscenes <- as.numeric(delfromSubscenes)
+  if (is.na(skipRedraw))
+    scene$redrawScene <- FALSE
+  else {
+    scene$redrawScene <- !skipRedraw
+    scene$skipRedraw <- skipRedraw
+  }
   scene
 }
 

@@ -31,24 +31,32 @@ HTMLWidgets.widget({
     if (x.respondTo !== null) {
       var control = window[x.respondTo];
       if (typeof control !== "undefined") {
-        var self = this, i, oldhandler = control.onchange,
+        var self = this, i,
             state = "idle";
+
+        /* Store the previous handler on the control,
+           so multiple calls here don't pile up a chain of
+           old handlers */
+
+        if (typeof control.rglOldhandler === "undefined")
+          control.rglOldhandler = control.onchange;
+
         control.onchange = function() {
           /* If we are called n>0 times while servicing a previous call, we want to finish
              the current call, then run again.  But the old handler might want to
              see every change. */
           if (state !== "idle") {
             state = "interrupted";
-            if (oldhandler !== null)
-              oldhandler.call(this);
+            if (control.rglOldhandler !== null)
+              control.rglOldhandler.call(this);
           }
           do {
             state = "busy";
             for (i=0; i<x.controls.length; i++) {
               x.controls[i].value = control.value;
             }
-            if (oldhandler !== null)
-              oldhandler.call(this);
+            if (control.rglOldhandler !== null)
+              control.rglOldhandler.call(this);
             applyVals();
             if (state === "busy")
               state = "idle";

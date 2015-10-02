@@ -131,11 +131,15 @@ shinyServer(function(input, output, session) {
     subsets <- setStartPoint()
     adds <- unique(unlist(subsets))
     session$sendCustomMessage("sceneChange",
-      sceneChange("thewidget", delete = deletes, add = adds))
+      sceneChange("thewidget", delete = deletes, add = adds,
+                  skipRedraw = TRUE))
     path$subsets <- subsets
     updateSliderInput(session, "Slider", value=1)
     updateSliderInput(session, "Slider2", value=1)
-  }, priority = 10)
+    session$onFlushed(function()
+      session$sendCustomMessage("sceneChange",
+        sceneChange("thewidget", skipRedraw = FALSE)))
+  })
 
   output$thewidget <- renderRglwidget({
     rglwidget(controllers="thecontroller")

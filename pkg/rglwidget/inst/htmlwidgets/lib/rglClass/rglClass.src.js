@@ -1298,7 +1298,8 @@ rglwidgetClass = function() {
 		      subscene_has_faces = false,
 		      subscene_needs_sorting = false,
 		      flags, i;
-
+      if (obj.par3d.skipRedraw)
+        return;
 		  for (i=0; i < subids.length; i++) {
 		    flags = objects[subids[i]].flags;
 		    subscene_has_faces |= (flags & this.f_is_lit)
@@ -2048,6 +2049,8 @@ rglwidgetClass = function() {
 		      objs = message.objects, mat = message.material,
 		      root = message.rootSubscene,
 		      initSubs = message.initSubscenes,
+		      redraw = message.redrawScene,
+		      skipRedraw = message.skipRedraw,
 		      deletes, subs, allsubs = [], obj, i,j;
 		  if (typeof message.delete !== "undefined") {
 		    deletes = [].concat(message.delete);
@@ -2086,6 +2089,11 @@ rglwidgetClass = function() {
 		  for (i = 0; i < allsubs.length; i++) {
 		    self.initSubscene(allsubs[i]);
 		  }
-	    self.drawScene();
+		  if (typeof skipRedraw !== "undefined") {
+		    var root = self.getObj(self.scene.rootSubscene);
+		    root.par3d.skipRedraw = skipRedraw;
+		  }
+		  if (redraw)
+	      self.drawScene();
 		}
 }).call(rglwidgetClass.prototype);
