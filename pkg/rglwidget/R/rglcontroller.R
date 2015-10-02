@@ -169,3 +169,57 @@ elementId2Prefix <- function(elementId, prefix = elementId) {
   cat(paste0("<script>var ", prefix, "rgl = {};</script>"))
   rglcontroller(elementId, list(type = "oldBridge", prefix = prefix))
 }
+
+# This puts together a custom message for a more extensive change
+
+sceneChange <- function(elementId, x = scene3d(),
+                        delete = NULL, add = NULL, replace = NULL,
+                        material = FALSE, rootSubscene = FALSE,
+                        delfromSubscenes = NULL) {
+  allSubscenes <- function() {
+    result <- numeric()
+    for (obj in scene$objects)
+      if (obj$type == "subscene")
+        result <- c(result, obj$id)
+    result
+  }
+  inSubscenes <- function(id, subs) {
+    result <- numeric()
+    for (sub in subs)
+      if (id %in% sub$objects)
+        result <- c(result, sub$id)
+    result
+  }
+  delete <- unique(c(delete, replace))
+  add <- unique(c(add, replace))
+
+  scene <- convertScene(x)
+  allsubids <- allSubscenes()
+  allsubs <- scene$objects[as.character(allsubids)]
+  for (id in add)
+    scene$objects[[as.character(id)]]$inSubscenes <- inSubscenes(id, allsubs)
+
+  scene$elementId <- elementId
+  allIds <- names(scene$objects)
+  dontSend <- setdiff(allIds, as.character(add))
+  scene$objects[dontSend] <- NULL
+  if (!length(scene$objects))
+    scene$objects <- NULL
+  scene$sphereVerts <- NULL
+  if (!material)
+    scene$material <- NULL
+  if (!rootSubscene)
+    scene$rootSubscene <- NULL
+  scene$delete <- delete
+  if (is.null(delfromSubscenes))
+    delfromSubscenes <- allsubids
+  scene$delfromSubscenes <- as.numeric(delfromSubscenes)
+  scene
+}
+
+registerSceneChange <- function() {
+  tags$script('
+Shiny.addCustomMessageHandler("sceneChange",
+  rglwidgetClass.prototype.sceneChangeHandler);
+')
+}

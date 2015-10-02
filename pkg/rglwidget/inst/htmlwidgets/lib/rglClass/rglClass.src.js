@@ -721,7 +721,10 @@ rglwidgetClass = function() {
       sub.lights = [];
       for (i=0; i < sub.objects.length; i++) {
         obj = this.getObj(sub.objects[i]);
-        if (obj.type === "background")
+        if (typeof obj === "undefined") {
+          sub.objects.splice(i, 1);
+          i--;
+        } else if (obj.type === "background")
           sub.backgroundId = obj.id;
         else
           sub[this.whichList(obj.id)].push(obj.id);
@@ -2039,4 +2042,50 @@ rglwidgetClass = function() {
 		  });
 		  self.drawScene();
 		};
+
+		this.sceneChangeHandler = function(message) {
+		  var self = document.getElementById(message.elementId).rglinstance,
+		      objs = message.objects, mat = message.material,
+		      root = message.rootSubscene,
+		      initSubs = message.initSubscenes,
+		      deletes, subs, allsubs = [], obj, i,j;
+		  if (typeof message.delete !== "undefined") {
+		    deletes = [].concat(message.delete);
+		    if (typeof message.delfromSubscenes !== "undefined")
+		      subs = [].concat(message.delfromSubscenes);
+		    else
+		      subs = [];
+		    for (i = 0; i < deletes.length; i++) {
+		      for (j = 0; j < subs.length; j++) {
+		        self.delFromSubscene(deletes[i], subs[j]);
+		      }
+		      delete self.scene.objects[deletes[i]];
+		    }
+		  }
+		  if (typeof objs !== "undefined") {
+		    Object.keys(objs).forEach(function(key){
+		      key = parseInt(key, 10);
+		      self.scene.objects[key] = objs[key];
+		      self.initObj(key);
+		      var obj = self.getObj(key),
+		          subs = [].concat(obj.inSubscenes), k;
+		      allsubs = allsubs.concat(subs);
+		      for (k = 0; k < subs.length; k++)
+		        self.addToSubscene(key, subs[k]);
+		    });
+		  }
+		  if (typeof mat !== "undefined") {
+		    self.scene.material = mat;
+		  }
+		  if (typeof root !== "undefined") {
+		    self.scene.rootSubscene = root;
+		  }
+		  if (typeof initSubs !== "undefined")
+		    allsubs = allsubs.concat(initSubs);
+		  allsubs = self.unique(allsubs);
+		  for (i = 0; i < allsubs.length; i++) {
+		    self.initSubscene(allsubs[i]);
+		  }
+	    self.drawScene();
+		}
 }).call(rglwidgetClass.prototype);

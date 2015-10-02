@@ -2,6 +2,7 @@ library(shiny)
 library(rglwidget)
 
 shinyUI(fluidPage(
+  registerSceneChange(),
   titlePanel("Nelder-Mead"),
   sidebarLayout(
     sidebarPanel(
@@ -13,7 +14,8 @@ shinyUI(fluidPage(
       sliderInput("Slider2", min=1, max=60, step=1, value=1, label="Cumulative",
                   animate=animationOptions(200, loop=TRUE)),
       rglcontrollerOutput('thecontroller'),
-      rglcontrollerOutput('thecontroller2')),
+      rglcontrollerOutput('thecontroller2'),
+      actionButton('newStart', 'Restart')),
     mainPanel(
       rglwidgetOutput('thewidget'))
   )
