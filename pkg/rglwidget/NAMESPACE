@@ -3,7 +3,8 @@ export(rglwidget, renderRglwidget, rglwidgetOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
        ageSetter, par3dinterpSetter, propertySetter, vertexSetter,
        propertySlider,
-       writeWebGL2, setupKnitr2, elementId2Prefix)
+       writeWebGL2, setupKnitr2, elementId2Prefix,
+       registerSceneChange, sceneChange)
 import(htmlwidgets)
 importFrom(rgl, scene3d, points3d, axis3d, box3d, open3d, rgl.set, rgl.close,
            subdivision3d, octahedron3d, par3d,

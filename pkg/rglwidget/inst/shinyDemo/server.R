@@ -5,6 +5,7 @@ library(misc3d)
 
 options(rgl.useNULL = TRUE)
 set.seed(123)
+
 u1 <- runif(1)
 u2 <- runif(1)*(1-u1)
 u3 <- 1 - u1 - u2
@@ -21,13 +22,15 @@ g <- function(n = 40, k = 5, alo = 0.1, ahi = 0.5, cmap = heat.colors) {
   col <- rev(cmap(length(th)))
   al <- seq(alo, ahi, len = length(th))
   x <- seq(-2, 2, len=n)
-  contour3d(f,th,x,x,x,color=col,alpha=al)
   bg3d(col="white")
+  contour3d(f,th,x,x,x,color=col,alpha=al)
 }
 
 f3 <- function(x) -f(x[1], x[2], x[3])
 
 g(20,3)
+surface <- scene3d()
+rgl.close()
 
 neldermead <- function(x, f) {
   n <- nrow(x)
@@ -72,7 +75,7 @@ neldermead <- function(x, f) {
       # cat('Accepted contraction 2,')
       for (i in 2:n) {
         x[i,] <- x[1,] + (x[i,] - x[1,])/2
-        cat(' f(z', i+2, ') = ', f(x[i,]), sep='')
+        # cat(' f(z', i+2, ') = ', f(x[i,]), sep='')
       }
       # cat('\n')
     }
@@ -94,23 +97,64 @@ showsimplex <- function(x, f, col="blue") {
     triangles3d(xyz[as.numeric(combn(n, 3)),], col=col, alpha=0.3))
 }
 
-xyz <- matrix(rnorm(12, sd=0.1) + rep(rnorm(3,sd=2), each=4), 4, 3)
-subsets <-list()
-for (i in 1:60){
-  xyz <- neldermead(xyz,f3)
-  subset <- showsimplex(xyz,f3)
-  subsets <-c(subsets,list(subset))
+setStartPoint <- function() {
+  xyz <- matrix(rnorm(12, sd=0.1) + rep(rnorm(3,sd=2), each=4), 4, 3)
+  subsets <-list()
+  for (i in 1:60){
+    xyz <- neldermead(xyz,f3)
+    subset <- showsimplex(xyz,f3)
+    subsets <-c(subsets,list(subset))
+  }
+  names(subsets) <- seq_along(subsets)
+  subsets
 }
-names(subsets) <- seq_along(subsets)
 
-shinyServer(function(input, output) {
-  output$thewidget <- renderRglwidget(rglwidget(controllers="thecontroller"))
+shinyServer(function(input, output, session) {
+
+  plot3d(surface)
+  dev <- rgl.cur()
+
+  session$onSessionEnded(function() {
+    rgl.set(dev)
+    rgl.close()
+  })
+
+  path <- reactiveValues(subsets = setStartPoint())
+
+  observeEvent(input$newStart, {
+    rgl.set(dev)
+
+    deletes <- unique(unlist(path$subsets))
+
+    if (length(deletes))
+      delFromSubscene3d(deletes)
+    subsets <- setStartPoint()
+    adds <- unique(unlist(subsets))
+    session$sendCustomMessage("sceneChange",
+      sceneChange("thewidget", delete = deletes, add = adds))
+    path$subsets <- subsets
+    updateSliderInput(session, "Slider", value=1)
+    updateSliderInput(session, "Slider2", value=1)
+  }, priority = 10)
+
+  output$thewidget <- renderRglwidget({
+    rglwidget(controllers="thecontroller")
+  })
+
   output$thecontroller <-
-    renderRglcontroller(rglcontroller("thewidget", respondTo = "Slider",
-                          subsetControl(1, subsets), sceneId = "thewidget"))
+    renderRglcontroller({
+      if (length(path$subsets))
+        rglcontroller("thewidget", respondTo = "Slider",
+                          subsetControl(1, path$subsets),
+                          sceneId = "thewidget")
+      })
+
   output$thecontroller2 <-
-    renderRglcontroller(rglcontroller("thewidget", respondTo = "Slider2",
-                          subsetControl(1, subsets, accumulate = TRUE),
-                          sceneId = "thewidget"))
+    renderRglcontroller({
+      if (length(path$subsets))
+        rglcontroller("thewidget", respondTo = "Slider2",
+                          subsetControl(1, path$subsets, accumulate = TRUE),
+                          sceneId = "thewidget")
+      })
 })
 

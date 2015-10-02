@@ -179,7 +179,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	    obj <- getObj(id)
 	    if (obj$type == "clipplanes") {
 	      class(obj) <- "rglobject"
-	      plot3d(obj)
+	      rgl::plot3d(obj)
 	    } else if (obj$type == "subscene")
 	      plotClipplanes(getObj(id))
 	  }
@@ -372,9 +372,6 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  }
 	  setObj(cids[i], obj)
 	}
-
-	result$scene_has_faces <- any(flags[,"is_lit"] & !flags[,"fixed_quads"])
-	result$scene_needs_sorting <- any(flags[,"depth_sort"])
 
 	# Make model sphere
 	x <- subdivision3d(octahedron3d(),2)
