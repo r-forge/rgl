@@ -5,8 +5,9 @@ HTMLWidgets.widget({
   type: 'output',
 
   initialize: function(el, width, height) {
-    return {
-    };
+    el.width = width;
+    el.height = height;
+    return {};
 
   },
 
@@ -34,9 +35,10 @@ HTMLWidgets.widget({
     rgl.drawInstance();
   },
 
-  resize: function(el, width, height, instance) {
-    if (typeof instance.resize === "function")
-      instance.resize();
+  resize: function(el, width, height, instance) {      
+    el.width = width;
+    el.height = height;
+    el.rglwidget.drawInstance();
   }
 
 });
