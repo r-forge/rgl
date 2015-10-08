@@ -1684,8 +1684,8 @@ rglwidgetClass = function() {
 		  this.setMouseHandlers();
 		};
 
-		/* this is only used by writeWebGL2 as the onload handler; with rglwidget(), it
-		   is done as part of this.initialize. */
+		/* this is only used by writeWebGL2; rglwidget has
+		   no debug element and does the drawing in rglwidget.js */
 
 		this.start = function() {
 		  if (typeof this.prefix !== "undefined") {
