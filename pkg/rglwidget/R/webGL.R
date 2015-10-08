@@ -31,13 +31,14 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
 
   scriptheader <- function() subst(
   '
-<canvas id="%prefix%canvas" class="rglWebGL" width="1" height="1"></canvas>
+<div id="%prefix%div" class="rglWebGL"></div>
 <script type="text/javascript">
-	var %prefix%rgl = new rglwidgetClass();
-  %prefix%rgl.initialize(null,%json%);
-  %prefix%rgl.canvas = document.getElementById("%prefix%canvas");
-  %prefix%rgl.canvas.width = %width%;
-  %prefix%rgl.canvas.height = %height%;
+	var div = document.getElementById("%prefix%div"),
+      %prefix%rgl = new rglwidgetClass();
+  div.width = %width%;
+  div.height = %height%;
+  %prefix%rgl.initialize(div,
+                         %json%);
   %prefix%rgl.prefix = "%prefix%";
 </script>', prefix, json, width, height)
 

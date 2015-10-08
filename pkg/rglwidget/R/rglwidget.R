@@ -31,6 +31,3 @@ renderRglwidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
 
-rglwidget_html <- function(id, style, class, ...) {
-  tags$canvas(id = id, class = class, ...)
-}

@@ -13,3 +13,6 @@ Vertexsetter needs to be finished and tested.  Done.
 
 Get rmarkdown to do the base64 conversion of embedded images
 instead of doing it ourselves; make sure files get cleaned up.
+
+Resizing isn't quite working:  canvas width and height need to be
+in pixels.  Put the canvas in a div and it should work. Done.

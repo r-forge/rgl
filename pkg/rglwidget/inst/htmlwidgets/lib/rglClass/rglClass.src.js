@@ -1664,13 +1664,16 @@ rglwidgetClass = function() {
 	    this.distance = null;
 	    this.posLoc = 0;
 	    this.colLoc = 1;
-	    if (el)
+	    if (el) {
+	      el.rglinstance = this;
 	      this.initCanvas(el);
+	    }
 		};
 
 		this.initCanvas = function(el) {
-		  this.canvas = el;
-		  this.canvas.rglinstance = this;
+		  this.canvas = document.createElement("canvas");
+		  this.resize(el);
+		  el.appendChild(this.canvas);
 		  this.initGL0();
 	    var objs = this.scene.objects,
 	        self = this;
@@ -1685,7 +1688,6 @@ rglwidgetClass = function() {
 		   is done as part of this.initialize. */
 
 		this.start = function() {
-		  this.initCanvas(this.canvas);
 		  if (typeof this.prefix !== "undefined") {
 		    this.debugelement = document.getElementById(this.prefix + "debug");
 	      this.debug("");
@@ -1736,9 +1738,9 @@ rglwidgetClass = function() {
 	     this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
 	 };
 
-    this.resize = function() {
-      if (this.gl !== null)
-        this.drawScene();
+    this.resize = function(el) {
+      this.canvas.width = el.width;
+      this.canvas.height = el.height;
     };
 
 		this.drawInstance = function() {
