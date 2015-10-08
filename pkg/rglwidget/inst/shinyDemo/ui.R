@@ -17,6 +17,6 @@ shinyUI(fluidPage(
       rglcontrollerOutput('thecontroller2'),
       actionButton('newStart', 'Restart')),
     mainPanel(
-      rglwidgetOutput('thewidget'))
+      rglwidgetOutput('thewidget', width = "100%", height = 512))
   )
 ))

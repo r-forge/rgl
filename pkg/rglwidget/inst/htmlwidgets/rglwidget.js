@@ -14,7 +14,6 @@ HTMLWidgets.widget({
   renderValue: function(el, x, instance) {
     var rgl = new rglwidgetClass(), i, controller;
     rgl.initialize(el, x);
-    el.rglwidget = rgl;
 
     /* We might have been called after (some of) the controllers were rendered.
        We need to make sure we respond to their initial values. */
@@ -35,10 +34,11 @@ HTMLWidgets.widget({
     rgl.drawInstance();
   },
 
-  resize: function(el, width, height, instance) {      
+  resize: function(el, width, height, instance) {
     el.width = width;
     el.height = height;
-    el.rglwidget.drawInstance();
+    el.rglinstance.resize(el);
+    el.rglinstance.drawInstance();
   }
 
 });
