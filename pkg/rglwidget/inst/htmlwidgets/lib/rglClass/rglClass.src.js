@@ -1602,8 +1602,8 @@ rglwidgetClass = function() {
 		  };
 
 		  handlers.wheelHandler = function(ev) {
-		    var del = 1.1, i;
-		    if (ev.shiftKey) del = 1.01;
+		    var del = 1.02, i;
+		    if (ev.shiftKey) del = 1.002;
 		    var ds = ((ev.detail || ev.wheelDelta) > 0) ? del : (1 / del);
 		    if (typeof activeSubscene === "undefined")
 		      activeSubscene = self.scene.rootSubscene;
