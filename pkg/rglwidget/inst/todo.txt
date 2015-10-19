@@ -30,4 +30,4 @@ be made into widgets.
 
 Support play3d() for widget.
 
-Make resizing less sensitive.
+Make resizing less sensitive to scrolling. DONE
