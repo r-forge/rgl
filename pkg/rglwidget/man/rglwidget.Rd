@@ -11,7 +11,7 @@ provides the necessities to embed an \pkg{rgl} scene in one.
 \usage{
 rglwidget(x = scene3d(), width = NULL, height = NULL,
           controllers = NULL, snapshot = FALSE,
-          elementId = NULL, reuse = FALSE, ...)
+          elementId = NULL, reuse = !interactive(), ...)
 }
 \arguments{
   \item{x}{
@@ -48,8 +48,8 @@ is reflected in the scene, you should list all controllers in the
 \code{controllers} argument.  See the sample application in
 \code{system.file("shinyDemo", package = "rglwidget")} for an example.
 
-If the \code{reuse} argument is \code{FALSE} (the default),
-earlier information will be
+If the \code{reuse} argument is \code{FALSE} (the default in interactive
+use), earlier information will be
 cleared before drawing the new scene.  If \code{TRUE}, earlier
 data will be re-used in the current scene, so it may be smaller
 and faster to load.  In both cases information from the current
@@ -58,6 +58,9 @@ be saved for possible use in a future scene.
 If \code{reuse=NA}, the saved information will neither be used
 nor updated.
 
+If \code{elementId} is \code{NULL} and we are not in a Shiny app,
+\code{elementId} is set to a random value to facilitate re-use
+of information.
 }
 \value{
 An object of class htmlwidget that will intelligently print itself into
