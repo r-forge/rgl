@@ -8,7 +8,7 @@ rglwidget <- local({
   function(x = scene3d(), width = NULL, height = NULL,
            controllers = NULL, snapshot = FALSE,
            elementId = NULL,
-           reuse = FALSE, ...) {
+           reuse = !interactive(), ...) {
   if (is.na(reuse))
     reuseDF <- NULL # local change only
   else if (!reuse)
@@ -16,8 +16,6 @@ rglwidget <- local({
 
   if (is.null(elementId) && !inShiny())
     elementId <- paste0("rgl", sample(100000, 1))
-
-  print(elementId)
 
   x = convertScene(x, width, height, snapshot = snapshot,
                    elementId = elementId, reuse = reuseDF)

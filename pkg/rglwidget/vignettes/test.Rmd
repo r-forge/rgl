@@ -12,8 +12,8 @@ library(rgl)
 library(rglwidget)
 
 example(spheres3d)
-rglwidget(reuse=TRUE)
-rglwidget(reuse=TRUE)
+rglwidget()
+rglwidget()
 rgl.close()
 
 text3d(1:4, rnorm(4), rnorm(4), letters[1:4], font=1:4, family=c("sans", "serif"), cex=1:4)
@@ -24,7 +24,7 @@ rgl.ids()
 
 par3d(mouseMode=c("trackball", "none", "none", "none"))
 thirdscene <- scene3d()
-rglwidget(reuse=TRUE)
+rglwidget()
 
 y <- x <- seq(-10, 10, length = 30)
 f <- function(x, y) { r <- sqrt(x^2 + y^2); 10 * sin(r)/r }
@@ -43,7 +43,7 @@ r1 <- 7.725 # radius of 2nd maximum
 xr <- r1 * cos(phi)
 yr <- r1 * sin(phi)
 lines3d(xr, yr, f(xr, yr), col = "pink", lwd = 2)
-rglwidget(reuse=TRUE)
+rglwidget()
 
 lat <- matrix(seq(90, -90, len = 50)*pi/180, 50, 50, byrow = TRUE)
 long <- matrix(seq(-180, 180, len = 50)*pi/180, 50, 50)
@@ -55,15 +55,15 @@ persp3d(x, y, z, col = "white",
         texture = system.file("textures/world.png", package = "rgl"), 
         specular = "black", axes = FALSE, box = FALSE, xlab = "", ylab = "", zlab = "",
         normal_x = x, normal_y = y, normal_z = z)
-rglwidget(reuse=TRUE)
+rglwidget()
 example(plot3d)
-rglwidget(reuse=TRUE)
+rglwidget()
 
 open3d()
 triangles3d(rnorm(30), rnorm(30), rnorm(30), col=rainbow(30), alpha=0.5)
 planes3d(1,1,1,0, col="white")
 clipplanes3d(1,1,1,0.001)
-rglwidget(reuse=TRUE)
+rglwidget()
 
-rglwidget(thirdscene, reuse=TRUE)
+rglwidget(thirdscene)
 ```
