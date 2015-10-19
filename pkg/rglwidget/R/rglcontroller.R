@@ -164,6 +164,12 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
 }
 
 # This is a bridge to the old system
+# In the old system, the rglClass object was a global named
+# <prefix>rgl, and controls install methods on it.  In the
+# new system, the rglClass object is just a field of a <div>
+# element.  The R code below creates an empty global for the
+# controls to modify, then the Javascript code in oldBridge
+# imports those into the real scene object.
 
 elementId2Prefix <- function(elementId, prefix = elementId) {
   cat(paste0("<script>var ", prefix, "rgl = {};</script>"))

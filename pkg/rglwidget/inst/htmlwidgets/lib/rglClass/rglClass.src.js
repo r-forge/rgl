@@ -138,7 +138,6 @@ rglwidgetClass = function() {
     this.f_sprite_3d = 512;
     this.f_is_subscene = 1024;
     this.f_is_clipplanes = 2048;
-    this.f_reuse = 4096;
 
     this.whichList = function(id) {
       var obj = this.getObj(id),
@@ -254,10 +253,9 @@ rglwidgetClass = function() {
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      reuse = flags & this.f_reuse,
 		      nclipplanes = this.countClipplanes(id);
 
-		  if (type === "clipplanes" || sprites_3d || reuse) return;
+		  if (type === "clipplanes" || sprites_3d) return;
 
 		  result = "	/* ****** "+type+" object "+id+" vertex shader ****** */\n"+
 			"	attribute vec3 aPos;\n"+
@@ -335,11 +333,10 @@ rglwidgetClass = function() {
 		      has_texture = flags & this.f_has_texture,
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
-		      reuse = flags & this.f_reuse,
 		      nclipplanes = this.countClipplanes(id), i,
           texture_format, nlights;
 
-		  if (type === "clipplanes" || sprites_3d || reuse) return;
+		  if (type === "clipplanes" || sprites_3d) return;
 
 		  if (has_texture)
 			  texture_format = this.getMaterial(id, "textype");
@@ -731,6 +728,28 @@ rglwidgetClass = function() {
       }
     };
 
+    this.copyObj = function(id, reuse) {
+      var obj = this.getObj(id),
+      	  prev = document.getElementById(reuse).rglinstance,
+      	  prevobj = prev.getObj(id),
+          fields = ["flags", "type",
+                    "colors", "vertices", "centers",
+                    "normals", "offsets",
+                    "texts", "cex", "family", "font", "adj",
+                    "material",
+                    "radii",
+                    "texcoords",
+                    "userMatrix", "ids",
+                    "dim",
+                    "par3d", "userMatrix",
+                    "viewpoint", "finite"],
+          i;
+      for (i = 0; i < fields.length; i++) {
+        if (typeof prevobj[fields[i]] !== "undefined")
+          obj[fields[i]] = prevobj[fields[i]];
+      }
+    }
+
     this.initObj = function(id) {
 	    var obj = this.getObj(id),
 	        flags = obj.flags,
@@ -744,7 +763,7 @@ rglwidgetClass = function() {
 		      sprite_3d = flags & this.f_sprite_3d,
 		      gl = this.gl,
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
-          i,j,v;
+          i,j,v, mat, uri;
 
     if (typeof id !== "number") {
       alert("initObj id is "+typeof id);
@@ -793,11 +812,10 @@ rglwidgetClass = function() {
 		}
 
 		if (type === "text") {
-		  obj.cex = this.flatten(obj.cex);
-		  obj.family = this.flatten(obj.family);
-		  obj.font = this.flatten(obj.family);
-      texinfo = this.drawTextToCanvas(obj.texts, obj.cex, obj.family,
-                                      obj.font);
+      texinfo = this.drawTextToCanvas(obj.texts,
+                                      this.flatten(obj.cex),
+                                      this.flatten(obj.family),
+                                      this.flatten(obj.family));
 		}
 
 		if (fixed_quads && !sprites_3d) {
@@ -817,7 +835,15 @@ rglwidgetClass = function() {
 		}
 
 		if (has_texture) {
-			this.loadImageToTexture(obj.material.uri, obj.texture);
+		  mat = obj.material;
+		  if (typeof mat.uri !== "undefined")
+		    uri = mat.uri;
+		  else if (typeof mat.uriElementId === "undefined")
+		    uri = this.getObj(mat.uriId).material.uri;
+		  else
+		    uri = document.getElementById(mat.uriElementId).rglinstance.getObj(mat.uriId).material.uri;
+
+			this.loadImageToTexture(uri, obj.texture);
 		}
 
 		if (type === "text") {
@@ -836,7 +862,7 @@ rglwidgetClass = function() {
     	v = this.cbind(v, obj.colors);
     } else {
     	cofs = -1;
-    	obj.colors = this.flatten(obj.colors);
+    	obj.onecolor = this.flatten(obj.colors);
     }
 
     if (typeof obj.normals !== "undefined") {
@@ -907,8 +933,9 @@ rglwidgetClass = function() {
       oofs = -1;
     }
 
-    if (stride !== v[0].length)
+    if (stride !== v[0].length) {
       alert("problem in stride calculation");
+    }
 
     obj.offsets = {vofs:0, cofs:cofs, nofs:nofs, radofs:radofs, oofs:oofs, tofs:tofs, stride:stride};
 
@@ -916,7 +943,7 @@ rglwidgetClass = function() {
 
     if (sprites_3d) {
 			obj.userMatrix = new CanvasMatrix4(obj.userMatrix);
-			obj.ids = this.flatten([].concat(obj.ids));
+			obj.objects = this.flatten([].concat(obj.ids));
 			is_lit = false;
     }
 
@@ -1087,8 +1114,8 @@ rglwidgetClass = function() {
 				this.radii = obj.radii;
 				this.normMatrix = subscene.spriteNormmat;
 				for (this.iOrig=0; this.iOrig < norigs; this.iOrig++) {
-			    for (i=0; i < obj.ids.length; i++) {
-					  this.drawObj(obj.ids[i], subsceneid);
+			    for (i=0; i < obj.objects.length; i++) {
+					  this.drawObj(obj.objects[i], subsceneid);
 					}
 				}
 				this.normMatrix = savenorm;
@@ -1208,7 +1235,7 @@ rglwidgetClass = function() {
 				gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(sphereNorm.getAsArray()) );
 
 			  if (nc == 1) {
-				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.colors));
+				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.onecolor));
 			  }
 
 			  for (i = 0; i < scount; i++) {
@@ -1244,7 +1271,7 @@ rglwidgetClass = function() {
 			} else {
 				if (obj.colorCount === 1) {
 					gl.disableVertexAttribArray( this.colLoc );
-				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.colors));
+				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.onecolor));
 				} else {
 					gl.enableVertexAttribArray( this.colLoc );
 					gl.vertexAttribPointer(this.colLoc, 4, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.cofs);
@@ -1640,10 +1667,15 @@ rglwidgetClass = function() {
     };
 
     this.initSphere = function(verts) {
-      var gl = this.gl;
-      result = {vb: new Float32Array(this.flatten(this.transpose(verts.vb))),
-              it: new Uint16Array(this.flatten(this.transpose(verts.it))),
-              sphereStride: 12};
+      var gl = this.gl, reuse = verts.reuse, result;
+      if (typeof reuse !== "undefined") {
+        var prev = document.getElementById(reuse).rglinstance.sphere;
+        result = {vb: prev.vb, it: prev.it};
+      } else {
+        result = {vb: new Float32Array(this.flatten(this.transpose(verts.vb))),
+              it: new Uint16Array(this.flatten(this.transpose(verts.it)))};
+      }
+      result.sphereStride = 12;
       result.sphereCount = result.it.length;
 	    result.buf = gl.createBuffer();
 	    gl.bindBuffer(gl.ARRAY_BUFFER, result.buf);
@@ -1678,6 +1710,12 @@ rglwidgetClass = function() {
 	    var objs = this.scene.objects,
 	        self = this;
 	    this.sphere = this.initSphere(this.scene.sphereVerts);
+	    Object.keys(objs).forEach(function(key){
+	      var id = parseInt(key, 10),
+	          obj = self.getObj(id);
+	      if (typeof obj.reuse !== "undefined")
+	        self.copyObj(id, obj.reuse);
+	    });
 	    Object.keys(objs).forEach(function(key){
 		    self.initObj(parseInt(key, 10));
 		  });

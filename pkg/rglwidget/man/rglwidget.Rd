@@ -10,7 +10,8 @@ provides the necessities to embed an \pkg{rgl} scene in one.
 }
 \usage{
 rglwidget(x = scene3d(), width = NULL, height = NULL,
-          controllers = NULL, snapshot = FALSE, ...)
+          controllers = NULL, snapshot = FALSE,
+          elementId = NULL, reuse = FALSE, ...)
 }
 \arguments{
   \item{x}{
@@ -25,7 +26,14 @@ associated with this scene.  See Details below.
   \item{snapshot}{Control of snapshot of scene.  See
 \code{\link{writeWebGL2}} for details.
 }
-  \item{...}{Additional arguments (e.g. \code{elementId})
+  \item{elementId}{The id to use on the HTML \code{div}
+component that will hold the scene.
+}
+  \item{reuse}{A logical variable indicating whether
+rgl objects from earlier scenes should be referenced. See
+the Details below.
+}
+  \item{...}{Additional arguments
 to pass to \code{htmlwidgets::\link{createWidget}}.}
 }
 \details{
@@ -39,6 +47,17 @@ the user.  In order to be sure that the initial value of the user control
 is reflected in the scene, you should list all controllers in the
 \code{controllers} argument.  See the sample application in
 \code{system.file("shinyDemo", package = "rglwidget")} for an example.
+
+If the \code{reuse} argument is \code{FALSE} (the default),
+earlier information will be
+cleared before drawing the new scene.  If \code{TRUE}, earlier
+data will be re-used in the current scene, so it may be smaller
+and faster to load.  In both cases information from the current
+scene (added to earlier information if \code{reuse=TRUE}) will
+be saved for possible use in a future scene.
+If \code{reuse=NA}, the saved information will neither be used
+nor updated.
+
 }
 \value{
 An object of class htmlwidget that will intelligently print itself into
@@ -46,8 +65,13 @@ HTML in a variety of contexts including the R console, within R Markdown
 documents, and within Shiny output bindings.
 
 It should also display
-in the RStudio viewer, but as of RStudio version 0.99.467 the viewer
-does not support WebGL.
+in the RStudio viewer.
+
+If \code{reuse = TRUE}, a record will be kept of objects in the scene
+and they need not be included in the HTML generated for later scenes.
+This is normally useful only in \pkg{knitr} documents which can have
+many \pkg{rgl} scenes; if the widget is displayed in RStudio,
+only one scene will be shown.
 }
 \author{
 Duncan Murdoch

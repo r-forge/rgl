@@ -113,6 +113,8 @@ shinyServer(function(input, output, session) {
 
   plot3d(surface)
   dev <- rgl.cur()
+  save <- options(rgl.inShiny = TRUE)
+  on.exit(options(save))
 
   session$onSessionEnded(function() {
     rgl.set(dev)
