@@ -31,16 +31,16 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
 
   scriptheader <- function() subst(
   '
-<div id="%prefix%div" class="rglWebGL"></div>
+<div id="%elementId%" class="rglWebGL"></div>
 <script type="text/javascript">
-	var div = document.getElementById("%prefix%div"),
+	var div = document.getElementById("%elementId%"),
       %prefix%rgl = new rglwidgetClass();
   div.width = %width%;
   div.height = %height%;
   %prefix%rgl.initialize(div,
                          %json%);
   %prefix%rgl.prefix = "%prefix%";
-</script>', prefix, json, width, height)
+</script>', prefix, elementId, json, width, height)
 
   footer <- function() subst('
 	<p id="%prefix%debug">
@@ -50,6 +50,8 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
   #  Execution starts here!
 
   # Do a few checks first
+
+  elementId <- paste0(prefix, "div")
 
   if (!file.exists(dir))
     dir.create(dir)
@@ -70,8 +72,11 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
   } else
     result <- header()
 
-  json <- toJSON(I(convertScene(width = width, height = height, reuse = reuse,
-                                snapshot = snapshot)),
+  scene <- convertScene(width = width, height = height,
+                        elementId = elementId, reuse = reuse,
+                        snapshot = snapshot)
+  reuse <- attr(scene, "reuse")
+  json <- toJSON(I(scene),
                  dataframe = "columns", null = "null", na = "null",
                  auto_unbox = TRUE, digits = getOption("shiny.json.digits",
                                                        7),
@@ -92,5 +97,5 @@ writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
 #     prefixes <- prefixes[!duplicated(prefixes$id),]
 #     attr(filename, "reuse") <- prefixes
 #   }
-  invisible(filename)
+  invisible(structure(filename, reuse = reuse))
 }

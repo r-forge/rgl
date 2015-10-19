@@ -16,3 +16,18 @@ instead of doing it ourselves; make sure files get cleaned up.
 
 Resizing isn't quite working:  canvas width and height need to be
 in pixels.  Put the canvas in a div and it should work. Done.
+
+Put bboxdeco rendering into Javascript.
+
+Get reuse working. DONE.
+
+Set it up so that rgl Suggests rglwidget, all the WebGL work is done here.
+
+Investigate whether grid displays can be converted to rgl objects.
+
+Add class to rgl function results so that RStudio they can automatically
+be made into widgets.
+
+Support play3d() for widget.
+
+

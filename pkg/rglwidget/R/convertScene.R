@@ -1,6 +1,6 @@
 
 convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NULL,
-                         snapshot = FALSE) {
+                         snapshot = FALSE, elementId = NULL) {
 
 	# Lots of utility functions and constants defined first; execution starts way down there...
 
@@ -103,7 +103,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	flagnames <- c("is_lit", "is_smooth", "has_texture", "is_indexed",
 		       "depth_sort", "fixed_quads", "is_transparent",
 		       "is_lines", "sprites_3d", "sprite_3d",
-		       "is_subscene", "is_clipplanes", "reuse")
+		       "is_subscene", "is_clipplanes")
 
 	getFlags <- function(id) {
 
@@ -142,7 +142,6 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 
 		result["fixed_quads"] <- type %in% c("text", "sprites") && !sprites_3d
 		result["is_lines"]    <- type %in% c("lines", "linestrip", "abclines")
-
 		result
 	}
 
@@ -259,14 +258,20 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 
 	# Do a few checks first
 
+	if (is.null(elementId))
+	  elementId <- ""
+
 	if (is.null(reuse) || isTRUE(reuse))
-		prefixes <- data.frame(id = numeric(), prefix = character(), texture = character(),
+		reuseDF <- data.frame(id = numeric(), elementId = character(), texture = character(),
 				       stringsAsFactors = FALSE)
 	else {
-		if (!is.data.frame(reuse) || !all(c("id", "prefix", "texture") %in% names(reuse)))
-			stop("'reuse' should be a dataframe with columns 'id', 'prefix', 'texture'")
-		prefixes <- reuse[,c("id", "prefix", "texture")]
-		prefixes$texture <- as.character(prefixes$texture)
+		if (!is.data.frame(reuse) || !all(c("id", "elementId", "texture") %in% names(reuse)))
+			stop("'reuse' should be a dataframe with columns 'id', 'elementId', 'texture'")
+		reuseDF <- reuse[reuse$elementId != elementId,
+		                 c("id", "elementId", "texture")]
+		reuseDF$id         <- as.numeric(reuseDF$id)
+		reuseDF$elementId  <- as.character(reuseDF$elementId)
+		reuseDF$texture    <- as.character(reuseDF$texture)
 	}
 
 	if (is.logical(snapshot) && snapshot) {
@@ -336,6 +341,18 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 		warning(gettextf("Object type(s) %s not handled",
 				 paste("'", unknowntypes, "'", sep="", collapse=", ")), domain = NA)
 
+	for (i in seq_along(ids)) {
+	  if (length(preventry <- which(reuseDF$id == ids[i]) ) ) {
+	    obj <- list(id = as.numeric(ids[i]), reuse = reuseDF$elementId[preventry[1]])
+	    setObj(as.character(ids[i]), obj)
+	    types[i] <- "reused"
+	  }
+	}
+	simple <- types %in% c("light", "background")
+	if (any(simple))
+	  reuseDF <- rbind(reuseDF, data.frame(id = ids[simple],
+	                                     elementId = elementId,
+	                                     texture = "", stringsAsFactors = FALSE))
 	keep <- types %in% setdiff(knowntypes, c("light", "background", "bboxdeco"))
 	ids <- ids[keep]
 	cids <- as.character(ids)
@@ -361,9 +378,21 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  obj <- getObj(cids[i])
 	  obj$flags <- nflags[i]
 	  if (obj$type != "subscene") {
-	    # FIXME:  could reuse the texture
-	    if (!is.null(obj$material) && !is.null(obj$material$texture))
-	      obj$material$uri <- image_uri(obj$material$texture)
+	    texturefile <- ""
+	    if (!is.null(obj$material) && !is.null(texture <- obj$material$texture)) {
+	      if (length(prev <- which(texture == reuseDF$texture))) {
+	        prev <- prev[1]
+	        if (reuseDF$elementId[prev] != elementId)
+	          obj$material$uriElementId <- reuseDF$elementId[prev]
+	        obj$material$uriId <- reuseDF$id[prev]
+	      } else {
+	        texturefile <- obj$material$texture
+	        obj$material$uri <- image_uri(texturefile)
+	      }
+	      obj$material$texture <- NULL
+	    }
+	    reuseDF <- rbind(reuseDF, data.frame(id = ids[i], elementId = elementId,
+	                                         texture = texturefile, stringsAsFactors = FALSE))
 	  } else if (obj$type == "subscene") {
 	    obj$par3d$viewport$x <- obj$par3d$viewport$x/fullviewport$width
 	    obj$par3d$viewport$width <- obj$par3d$viewport$width/fullviewport$width
@@ -373,12 +402,20 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	  setObj(cids[i], obj)
 	}
 
-	# Make model sphere
-	x <- subdivision3d(octahedron3d(),2)
-	r <- sqrt(x$vb[1,]^2 + x$vb[2,]^2 + x$vb[3,]^2)
-	x$vb <- t(t(x$vb[1:3,])/r)
-	x$it <- x$it-1
-  result$sphereVerts <- x
-	result
+	sphereId <- reuseDF$elementId[reuseDF$id == -1]
+	if (length(sphereId)) {
+	  result$sphereVerts <- list(reuse = sphereId[1])
+	} else {
+	  # Make model sphere
+	  x <- subdivision3d(octahedron3d(),2)
+	  r <- sqrt(x$vb[1,]^2 + x$vb[2,]^2 + x$vb[3,]^2)
+	  x$vb <- t(t(x$vb[1:3,])/r)
+	  x$it <- x$it-1
+    result$sphereVerts <- x
+    reuseDF <- rbind(reuseDF,
+                     data.frame(id = -1, elementId = elementId,
+                                texture = "", stringsAsFactors = FALSE))
+	}
+	structure(result, reuse = reuseDF)
 }
 
