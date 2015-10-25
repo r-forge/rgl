@@ -195,6 +195,7 @@ rglwidgetClass = function() {
           thelist = this.whichList(id);
           thesub.objects.push(id);
           thesub[thelist].push(id);
+          this.initObj(id);
         }
       }
     };
@@ -214,6 +215,7 @@ rglwidgetClass = function() {
           thelist = this.whichList(id);
           i = thesub[thelist].indexOf(id);
           thesub[thelist].splice(i, 1);
+          this.initObj(id);
         }
       }
     };
