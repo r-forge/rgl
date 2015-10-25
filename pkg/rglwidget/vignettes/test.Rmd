@@ -7,9 +7,48 @@ output: html_document
 
 This vignette is used for testing.
 
+```{r }
+source("setup.R")
+```
+```{r toggle, webgl=TRUE}
+sphereid <- with(subset(iris, Species == "setosa"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+                  col=as.numeric(Species),
+                  radius = 0.211))
+with(subset(iris, Species == "versicolor"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+               col=as.numeric(Species),
+     	       radius = 0.211))
+with(subset(iris, Species == "virginica"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+               col=as.numeric(Species),
+     	       radius = 0.211))
+aspect3d(1,1,1)
+axesid <- decorate3d()
+subid <- currentSubscene3d()
+delFromSubscene3d(sphereid)
+```
+
+```{r results="asis"}
+toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
+toggleButton(sphereid+1, label = "versicolor", prefix = "toggle", subscene = subid)
+toggleButton(sphereid+2, label = "virginica", prefix = "toggle", subscene = subid)
+```
+
+Note that we need to use `results="asis"` for the button code.  
+Normally we would also use `echo=FALSE`, though I didn't do so above;
+then the buttons will end up side-by-side.  We also add another button
+to toggle the axes:
+
+```{r results="asis", echo=FALSE}
+toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
+toggleButton(sphereid+1, label = "versicolor", prefix = "toggle", subscene = subid)
+toggleButton(sphereid+2, label = "virginica", prefix = "toggle", subscene = subid)
+toggleButton(axesid, label="axes", prefix = "toggle", subscene = subid)
+```
+
+
 ```{r fig.height=6,fig.width=6}
-library(rgl)
-library(rglwidget)
 
 example(spheres3d)
 rglwidget()
