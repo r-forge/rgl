@@ -1,15 +1,3 @@
-var min = Math.min,
-    max = Math.max,
-    sqrt = Math.sqrt,
-    sin = Math.sin,
-    acos = Math.acos,
-    tan = Math.tan,
-    SQRT2 = Math.SQRT2,
-    PI = Math.PI,
-    log = Math.log,
-    exp = Math.exp,
-    floor = Math.floor,
-    round = Math.round;
 
 rglwidgetClass = function() {
     this.canvas = null;
@@ -34,7 +22,7 @@ rglwidgetClass = function() {
     };
 
     this.vlen = function(v) {
-		  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		  return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 		};
 
 		this.xprod = function(a, b) {
@@ -588,11 +576,11 @@ rglwidgetClass = function() {
            ranges = [(bbox[1]-bbox[0])*scale[0]/2,
                      (bbox[3]-bbox[2])*scale[1]/2,
                      (bbox[5]-bbox[4])*scale[2]/2],
-           radius = sqrt(this.sumsq(ranges))*1.1; // A bit bigger to handle labels
+           radius = Math.sqrt(this.sumsq(ranges))*1.1; // A bit bigger to handle labels
        if (radius <= 0) radius = 1;
        var observer = subscene.par3d.observer,
            distance = observer[2],
-	         t = tan(subscene.par3d.FOV*PI/360),
+	         t = Math.tan(subscene.par3d.FOV*Math.PI/360),
 	         near = distance - radius,
 	         far = distance + radius,
 	         hlen = t*near,
@@ -690,7 +678,7 @@ rglwidgetClass = function() {
         for (i = 0; i < subscene.subscenes.length; i++) {
           if (result >= bound)
             break;
-          result = max(result, recurse(subscene.subscenes[i]));
+          result = Math.max(result, recurse(subscene.subscenes[i]));
         }
         return result;
       };
@@ -985,7 +973,7 @@ rglwidgetClass = function() {
 		if (is_indexed) {
       if ((type === "quads" || type === "text" ||
            type === "sprites") && !sprites_3d) {
-        nrows = floor(obj.vertexCount/4);
+        nrows = Math.floor(obj.vertexCount/4);
         f = Array(6*nrows);
         for (i=0; i < nrows; i++) {
           f[6*i] = 4*i;
@@ -997,7 +985,7 @@ rglwidgetClass = function() {
         }
         frowsize = 6;
       } else if (type === "triangles") {
-        nrows = floor(obj.vertexCount/3);
+        nrows = Math.floor(obj.vertexCount/3);
         f = Array(3*nrows);
         for (i=0; i < f.length; i++) {
           f[i] = i;
@@ -1416,19 +1404,19 @@ rglwidgetClass = function() {
 		  var viewport = this.getObj(activeSubscene).par3d.viewport,
 		    width = viewport.width*this.canvas.width,
 			  height = viewport.height*this.canvas.height,
-			  radius = max(width, height)/2.0,
+			  radius = Math.max(width, height)/2.0,
 			  cx = width/2.0,
 			  cy = height/2.0,
 			  px = (x-cx)/radius,
 			  py = (y-cy)/radius,
-			  plen = sqrt(px*px+py*py);
+			  plen = Math.sqrt(px*px+py*py);
 			if (plen > 1.e-6) {
 			  px = px/plen;
 			  py = py/plen;
 			}
-			var angle = (SQRT2 - plen)/SQRT2*PI/2,
-			  z = sin(angle),
-			  zlen = sqrt(1.0 - z*z);
+			var angle = (Math.SQRT2 - plen)/Math.SQRT2*Math.PI/2,
+			  z = Math.sin(angle),
+			  zlen = Math.sqrt(1.0 - z*z);
 			px = px * zlen;
 			py = py * zlen;
 			return [px, py, z];
@@ -1452,7 +1440,7 @@ rglwidgetClass = function() {
 				dot = rotBase[0]*rotCurrent[0] +
 						  rotBase[1]*rotCurrent[1] +
 			  	   	rotBase[2]*rotCurrent[2],
-				angle = acos( dot/this.vlen(rotBase)/this.vlen(rotCurrent) )*180.0/PI,
+				angle = Math.acos( dot/this.vlen(rotBase)/this.vlen(rotCurrent) )*180.0/Math.PI,
 				axis = this.xprod(rotBase, rotCurrent),
 				objects = this.scene.objects,
 				activeSub = this.getObj(activeSubscene),
@@ -1481,7 +1469,7 @@ rglwidgetClass = function() {
 		handlers.axismove = function(x,y) {
 		  var rotCurrent = this.screenToVector(x, this.canvas.height/2),
 		      rotBase = handlers.rotBase,
-					angle = (rotCurrent[0] - rotBase[0])*180/PI,
+					angle = (rotCurrent[0] - rotBase[0])*180/Math.PI,
 			    rotMat = new CanvasMatrix4();
 			rotMat.rotate(angle, handlers.axis[0], handlers.axis[1], handlers.axis[2]);
 			var activeSub = this.getObj(activeSubscene),
@@ -1505,7 +1493,7 @@ rglwidgetClass = function() {
 		  handlers.y0zoom = y;
 		  for (i = 0; i < l.length; i++) {
 			  activeSub = this.getObj(l[i]);
-			  activeSub.zoom0 = log(activeSub.par3d.zoom);
+			  activeSub.zoom0 = Math.log(activeSub.par3d.zoom);
 			}
 		};
     handlers.zoommove = function(x, y) {
@@ -1514,7 +1502,7 @@ rglwidgetClass = function() {
 			  i, l = activeProjection.par3d.listeners;
 			for (i = 0; i < l.length; i++) {
 			  activeSub = this.getObj(l[i]);
-			  activeSub.par3d.zoom = exp(activeSub.zoom0 + (y-handlers.y0zoom)/this.canvas.height);
+			  activeSub.par3d.zoom = Math.exp(activeSub.zoom0 + (y-handlers.y0zoom)/this.canvas.height);
 			}
 				this.drawScene();
 		  };
@@ -1537,7 +1525,7 @@ rglwidgetClass = function() {
 			  i, l = activeProjection.par3d.listeners;
 				for (i = 0; i < l.length; i++) {
 				  activeSub = this.getObj(l[i]);
-				  activeSub.par3d.FOV = max(1, min(179, activeSub.fov0 +
+				  activeSub.par3d.FOV = Math.max(1, Math.min(179, activeSub.fov0 +
 				     180*(y-handlers.y0fov)/this.canvas.height));
 				}
 				this.drawScene();
@@ -1867,7 +1855,7 @@ rglwidgetClass = function() {
           }
         }
       } else if (!direct) {
-        value = round(value);
+        value = Math.round(value);
       }
 
       propvals = getPropvals();
@@ -1932,7 +1920,7 @@ rglwidgetClass = function() {
         attributes = [].concat(control.attributes),
         value = control.value;
 
-      ncol = max(vertices.length, attributes.length);
+      ncol = Math.max(vertices.length, attributes.length);
 
       if (!ncol)
         return;
