@@ -1,0 +1,70 @@
+---
+title: "rglwidget internals"
+author: "Duncan Murdoch"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  rmarkdown::html_vignette:
+    toc: yes
+    fig_width: 5
+    fig_height: 5
+vignette: >
+  %\VignetteIndexEntry{rglwidget internals} 
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+# rglwidget()
+
+The `rglwidget()` function has static local storage `reuseDF` 
+to store information about objects for re-use in later widgets.
+This is `NULL` or a dataframe from the `reuse` attribute
+of the `convertScene()` result, containing columns `id`, 
+`elementId`, `texture`.
+
+If not running in Shiny and not specified in the call, it
+assigns a random `elementId` of the form `rglNNNNN`, where
+`NNNNN` is 1 to 5 digits.
+
+The value sent as `x` to `createWidget` is produced from
+a `scene3d()` record with the following changes:
+ 
+ - All objects including subscenes are included in the `objects` list.  The `rootSubscene` record is replaced with
+ its id.
+ 
+ - The `objects` list is named with character string versions
+ of the object ids.  They are also kept redundantly as a field
+ within the record.
+ 
+ - If an object is in the `reuseDF` dataframe, it is replaced
+ with `list(id = <id>, reuse = <elementId>)`.
+ 
+ - `bboxdeco` objects are replaced with primitive versions.
+ 
+ - `flags` are converted to numeric form.
+ 
+ - The model sphere is stored in `sphereVerts`.
+ 
+ - the `par3d$viewport` settings are adjusted in subscenes.
+ 
+ 
+# rglwidget.js
+
+The `createWidget()` call puts `x` into JSON and calls
+the `renderValue` function of the `rglwidget`.  This function
+initializes a new `rglwidgetClass` object using the 
+`<div>` element and `x`, then checks for uninitialized
+controllers and initializes them.
+
+Finally it draws the scene.
+
+# rglClass.src.js
+
+Most of the Javascript code handling drawing is present as
+methods of  `rglwidgetClass`.  Unlike the old
+`rgl::writeWebGL`, the shaders are generated in Javascript
+so changes to objects can result in new shaders being
+generated.  Each object is initialized once, then drawn
+many times as the viewpoint changes.  Adding or removing 
+an object from a scene causes it to be re-initialized.
+
+
+
