@@ -1,13 +1,17 @@
-rglcontroller <- function(sceneId, ..., respondTo = NULL) {
+rglcontroller <- function(sceneId, ..., elementId = NULL, respondTo = NULL) {
 
   # create widget
   controls = list(...)
+
+  if (is.null(elementId) && !inShiny())
+    elementId <- paste0("rgl", sample(100000, 1))
 
   htmlwidgets::createWidget(
     name = 'rglcontroller',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=controls),
     width = 0,
     height = 0,
+    elementId = elementId,
     package = 'rglwidget'
   )
 }
@@ -161,6 +165,22 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
        objid = as.integer(objid),
        param = param - 1,       # Javascript 0-based indexing
        interp = interp)
+}
+
+playControl <- function(..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
+                        buttons = c("Reverse", "Play", "Pause", "Forward", "Stop"),
+                        loop = FALSE){
+  if (!is.finite(stop)) stop <- NULL
+  actions <- list(...)
+  buttons <- match.arg(buttons, several.ok = TRUE)
+  list(type = "player",
+       actions = actions,
+       start = start,
+       stop = stop,
+       interval = interval,
+       rate = rate,
+       buttons = buttons,
+       loop = loop)
 }
 
 # This is a bridge to the old system

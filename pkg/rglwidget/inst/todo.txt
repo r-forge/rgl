@@ -26,7 +26,8 @@ Other browsers need to be tested. Done on OSX.
 Get rmarkdown to do the base64 conversion of embedded images
 instead of doing it ourselves; make sure files get cleaned up.
 
-Put bboxdeco rendering into Javascript.
+Put bboxdeco rendering into Javascript.  -- looks really time
+consuming.
 
 Set it up so that rgl Suggests rglwidget, all the WebGL work is done here.  Functions remain in rgl, but they check whether they can requireNamespace(rglwidgets), and give instructions if not.
 
@@ -38,7 +39,8 @@ be made into widgets.
 Support play3d() for widget.  This could be done like the
 sliders in Shiny:  attach the player to the slider, or we could
 have an invisible player object which is controlled by buttons,
-and which optionally controls a slider.
+and which optionally controls a slider. Partially done.  Needs
+testing, documentation, etc.
 
 Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it.

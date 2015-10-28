@@ -1,0 +1,44 @@
+---
+title: "test"
+author: "Duncan Murdoch"
+date: "August 30, 2015"
+output: html_document
+---
+
+This vignette is used for testing.
+
+```{r }
+source("setup.R")
+```
+```{r}
+ids <- plot3d((-10):10, rnorm(21), rnorm(21), type="l", col=rep("red", 21))
+control <- ageControl(value=0,
+             births=rep(0, 21),
+             ages = c(-5,0,5),
+             colors = c("green", "yellow", "red"),
+             objids = ids["data"])
+rglwidget(elementId = "rglplot")
+rglcontroller("rglplot", playControl(control, start = -5, stop = 5, rate = 3, loop = TRUE))
+```
+```{r toggle, webgl=TRUE}
+sphereid <- with(subset(iris, Species == "setosa"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+                  col=as.numeric(Species),
+                  radius = 0.211))
+with(subset(iris, Species == "versicolor"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+               col=as.numeric(Species),
+     	       radius = 0.211))
+with(subset(iris, Species == "virginica"), 
+     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+               col=as.numeric(Species),
+     	       radius = 0.211))
+aspect3d(1,1,1)
+axesid <- decorate3d()
+subid <- currentSubscene3d()
+delFromSubscene3d(sphereid)
+```
+
+```{r results="asis"}
+toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
+```

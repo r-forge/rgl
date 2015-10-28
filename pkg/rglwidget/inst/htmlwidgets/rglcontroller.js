@@ -18,7 +18,7 @@ HTMLWidgets.widget({
 
         var scene = window[x.sceneId].rglinstance;
         if (typeof scene !== "undefined") {
-          scene.applyControls(x.controls);
+          scene.applyControls(el, x.controls);
           instance.initialized = true;
         } else {
           instance.controls = x.controls;
@@ -26,6 +26,7 @@ HTMLWidgets.widget({
         }
       };
 
+    instance.el = el;
     el.rglcontroller = instance;
 
     if (x.respondTo !== null) {

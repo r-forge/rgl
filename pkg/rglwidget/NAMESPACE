@@ -2,6 +2,7 @@ export(rglwidget, renderRglwidget, rglwidgetOutput,
        rglcontroller, renderRglcontroller, rglcontrollerOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
        ageSetter, par3dinterpSetter, propertySetter, vertexSetter,
+       playControl,
        propertySlider,
        writeWebGL2, setupKnitr2, elementId2Prefix,
        registerSceneChange, sceneChange)
