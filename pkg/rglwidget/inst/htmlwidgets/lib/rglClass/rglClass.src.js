@@ -738,7 +738,7 @@ rglwidgetClass = function() {
         if (typeof prevobj[fields[i]] !== "undefined")
           obj[fields[i]] = prevobj[fields[i]];
       }
-    }
+    };
 
     this.initObj = function(id) {
 	    var obj = this.getObj(id),
@@ -1721,7 +1721,7 @@ rglwidgetClass = function() {
 	      this.debug("");
 		  }
 		  this.drawInstance();
-		}
+		};
 
 		this.debug = function(msg, img) {
 		  if (typeof this.debugelement !== "undefined") {
@@ -1741,7 +1741,7 @@ rglwidgetClass = function() {
 	      img.alt = "Snapshot";
 	    }
 	    return img;
-    }
+    };
 
     this.initGL0 = function() {
 	    if (!window.WebGLRenderingContext){
@@ -1788,7 +1788,7 @@ rglwidgetClass = function() {
 			gl.flush();
 		};
 
-		this.subsetSetter = function(control) {
+		this.subsetSetter = function(el, control) {
 		  if (typeof control.subscenes === "undefined" ||
 		      control.subscenes === null)
         control.subscenes = this.scene.rootSubscene;
@@ -1819,7 +1819,7 @@ rglwidgetClass = function() {
       }
 		};
 
-		this.propertySetter = function(control)  {
+		this.propertySetter = function(el, control)  {
 		  var value = control.value,
 		      values = [].concat(control.values),
 		      svals = [].concat(control.param),
@@ -1898,7 +1898,7 @@ rglwidgetClass = function() {
       }
     };
 
-    this.vertexSetter = function(control)  {
+    this.vertexSetter = function(el, control)  {
       var svals = [].concat(control.param),
           j, k, p, propvals, stride, ofs, obj,
           attrib,
@@ -1979,7 +1979,7 @@ rglwidgetClass = function() {
       }
     };
 
-    this.ageSetter = function(control) {
+    this.ageSetter = function(el, control) {
       var objids = [].concat(control.objids),
           nobjs = objids.length,
           time = control.value,
@@ -2054,7 +2054,7 @@ rglwidgetClass = function() {
       }
 		};
 
-		this.oldBridge = function(control) {
+		this.oldBridge = function(el, control) {
 		  var attrname, global = window[control.prefix + "rgl"];
 		  if (typeof global !== "undefined")
         for (attrname in global)
@@ -2062,14 +2062,48 @@ rglwidgetClass = function() {
       window[control.prefix + "rgl"] = this;
 		};
 
-		this.applyControls = function(x) {
+		this.player = function(el, control) {
+		  var
+		    form = document.createElement("form"),
+		    self = this,
+		    Tick = function(nominal) { /* "this" will be a timer */
+		      var i;
+		      for (i=0; i < this.actions.length; i++) {
+		        this.actions[i].value = nominal;
+		      }
+		      self.applyControls(el, this.actions);
+		    },
+		    buttons = [].concat(control.buttons),
+		    addButton = function(label) {
+		      var button = document.createElement("input"),
+		      		actions = {Reverse: function() { this.rgltimer.reverse();},
+	 	               Play: function() { this.rgltimer.play(); },
+		               Pause: function() { this.rgltimer.pause(); },
+		               Forward: function() { this.rgltimer.fastforward(); },
+		               Stop: function() { this.rgltimer.stop(); }};
+		      button.rgltimer = el.rgltimer;
+		      button.type = "button";
+		      button.value = label;
+		      button.onclick = actions[label];
+		      button.style.display = "inline-block";
+          form.appendChild(button);
+		    };
+		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.rate, control.loop, control.actions);
+        for (var i=0; i < buttons.length; i++)
+          addButton(buttons[i]);
+        el.style.width = "auto";
+        el.style.height = "auto";
+        el.appendChild(form);
+		};
+
+		this.applyControls = function(el, x) {
 		  var self = this;
 	    Object.keys(x).forEach(function(key){
 		    var control = x[key],
 		        type = control.type;
 		    if (typeof type === "undefined")
 		      return;
-		    self[type](control);
+		    self[type](el, control);
 		  });
 		  self.drawScene();
 		};
@@ -2120,10 +2154,101 @@ rglwidgetClass = function() {
 		    self.initSubscene(allsubs[i]);
 		  }
 		  if (typeof skipRedraw !== "undefined") {
-		    var root = self.getObj(self.scene.rootSubscene);
+		    root = self.getObj(self.scene.rootSubscene);
 		    root.par3d.skipRedraw = skipRedraw;
 		  }
 		  if (redraw)
 	      self.drawScene();
-		}
+		};
 }).call(rglwidgetClass.prototype);
+
+rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, actions) {
+  this.enabled = false;
+  this.timerId = 0;
+  this.startTime = startTime;         /* nominal start time in seconds */
+  this.current = startTime;           /* current nominal time */
+  this.interval = interval;           /* seconds between updates */
+  this.stopTime = stopTime;           /* nominal stop time */
+  this.rate = rate;                   /* nominal units per second */
+  this.loop = loop;                   /* "none", "cycle", or "oscillate" */
+  this.realStart = undefined;         /* real world start time */
+  this.multiplier = 1;                /* multiplier for fast-forward
+                                         or reverse */
+  this.buttons = [];
+  this.actions = actions;
+  this.Tick = Tick;
+};
+
+(function() {
+
+  this.play = function() {
+    this.newmultiplier(1);
+    if (this.enabled) return;
+    var tick = function(self) {
+      var now = new Date();
+      self.current = self.multiplier*self.rate*(now - self.realStart)/1000 + self.startTime;
+      if (self.current > self.stopTime || self.current < self.startTime) {
+        if (!self.loop) {
+          self.stop();
+        } else {
+          var cycle = self.stopTime - self.startTime,
+              realcycle = 1000*cycle/self.multiplier/self.rate;
+          while (self.current > self.stopTime) {
+            self.current -= cycle;
+            self.realStart += realcycle;
+          }
+          while (self.current < self.startTime) {
+            self.current += cycle;
+            self.realStart -= realcycle;
+          }
+        }
+      }
+      if (typeof self.Tick !== "undefined") {
+        self.Tick(self.current);
+      }
+
+    };
+    this.realStart = new Date() - 1000*(this.current - this.startTime)/this.rate;
+    this.timerId = window.setInterval(tick, 1000*this.interval, this);
+    this.enabled = true;
+  };
+
+  this.stop = function() {
+    this.current = this.startTime;
+    if (!this.enabled) return;
+    if (typeof this.Tick !== "undefined") {
+        this.Tick(this.current);
+    }
+    this.pause();
+  };
+
+  this.pause = function() {
+    if (!this.enabled) return;
+    this.enabled = false;
+    window.clearInterval(this.timerId);
+    this.timerId = 0;
+  };
+
+  this.fastforward = function() {
+    if (!this.enabled || this.multiplier < 0)
+      this.play();
+    this.newmultiplier(2*this.multiplier);
+  };
+
+  this.reverse = function() {
+    if (!this.enabled || this.multiplier > 0) {
+      this.play();
+      this.newmultiplier(-1);
+      return;
+    }
+    this.newmultiplier(2*this.multiplier);
+  };
+
+  this.newmultiplier = function(newmult) {
+    if (newmult != this.multiplier) {
+      this.realStart += 1000*(this.current - this.startTime)/this.rate*(1/this.multiplier - 1/newmult);
+      this.multiplier = newmult;
+    }
+  };
+
+}).call(rgltimerClass.prototype);

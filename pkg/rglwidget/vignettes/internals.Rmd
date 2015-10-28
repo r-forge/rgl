@@ -12,9 +12,16 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
+# Introduction
+
+The `htmlwidget` framework includes both R and Javascript
+code.  We'll describe each part in turn, from the top (R level) down.
+
 # rglwidget()
 
-The `rglwidget()` function has static local storage `reuseDF` 
+The `rglwidget()` function adds an `rgl` scene to the final web page.
+
+It has static local storage `reuseDF` 
 to store information about objects for re-use in later widgets.
 This is `NULL` or a dataframe from the `reuse` attribute
 of the `convertScene()` result, containing columns `id`, 
@@ -66,5 +73,8 @@ generated.  Each object is initialized once, then drawn
 many times as the viewpoint changes.  Adding or removing 
 an object from a scene causes it to be re-initialized.
 
+# rglcontroller()
 
-
+The `rglcontroller()` function adds a controller to the page.
+Most of the controllers are not visible; they are mainly
+for use by Shiny controls to affect an `rglwidget()` scene.
