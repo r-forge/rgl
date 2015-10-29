@@ -10,7 +10,7 @@ animations.
 \usage{
 playControl(...,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
-            buttons = c("Reverse", "Play", "Pause", "Forward", "Stop"),
+            buttons = c("Reverse", "Play", "Pause", "Slower", "Faster", "Stop"),
             loop = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -45,7 +45,8 @@ They have the following behaviour:
 again for higher speed.}
 \item{Play}{Play forward at normal speed.}
 \item{Pause}{Pause the animation.}
-\item{Forward}{Increase the forward playing speed.}
+\item{Slower}{Decrease the forward playing speed.}
+\item{Faster}{Increase the forward playing speed.}
 \item{Stop}{Stop the animation and reset to the start value.}
 }
 }

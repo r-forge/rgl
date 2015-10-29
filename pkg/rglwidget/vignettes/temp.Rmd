@@ -11,16 +11,24 @@ This vignette is used for testing.
 source("setup.R")
 ```
 ```{r}
-ids <- plot3d((-10):10, rnorm(21), rnorm(21), type="l", col=rep("red", 21))
-control <- ageControl(value=0,
-             births=rep(0, 21),
-             ages = c(-5,0,5),
-             colors = c("green", "yellow", "red"),
+xyz <- cbind((-10):10, rnorm(21), rnorm(21))
+ids <- plot3d(xyz, type="l", col=rep("green", 21))
+sphereid <- spheres3d(xyz[1,,drop=FALSE], col="red")
+control1 <- ageControl(value=-10,
+             births=-10:10,
+             ages = c(-2,0,2),
+             colors = c("green", "red", "green"),
              objids = ids["data"])
+control2 <- ageControl(value=-10,
+             births = -10,
+             ages = 0:20,
+             vertices = xyz, 
+             objids = sphereid)
+             
 rglwidget(elementId = "rglplot")
-rglcontroller("rglplot", playControl(control, start = -5, stop = 5, rate = 3, loop = TRUE))
+rglcontroller("rglplot", playControl(control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE))
 ```
-```{r toggle, webgl=TRUE}
+```{r toggle, webgl=TRUE, rgl.newwindow=TRUE}
 sphereid <- with(subset(iris, Species == "setosa"), 
      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
                   col=as.numeric(Species),

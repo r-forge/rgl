@@ -168,7 +168,7 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
 }
 
 playControl <- function(..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
-                        buttons = c("Reverse", "Play", "Pause", "Forward", "Stop"),
+                        buttons = c("Reverse", "Play", "Pause", "Slower", "Faster", "Stop"),
                         loop = FALSE){
   if (!is.finite(stop)) stop <- NULL
   actions <- list(...)
