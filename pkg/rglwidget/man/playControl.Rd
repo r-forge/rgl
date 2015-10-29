@@ -10,7 +10,7 @@ animations.
 \usage{
 playControl(...,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
-            buttons = c("Reverse", "Play", "Pause", "Slower", "Faster", "Stop"),
+            buttons = c("Reverse", "Play", "Slower", "Faster", "Reset"),
             loop = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -41,13 +41,11 @@ should it loop back to the beginning?
 The buttons will be displayed in the order given in \code{buttons}.
 They have the following behaviour:
 \describe{
-\item{Reverse}{Play the animation in reverse.  Hit it
-again for higher speed.}
-\item{Play}{Play forward at normal speed.}
-\item{Pause}{Pause the animation.}
-\item{Slower}{Decrease the forward playing speed.}
-\item{Faster}{Increase the forward playing speed.}
-\item{Stop}{Stop the animation and reset to the start value.}
+\item{Reverse}{Reverse the direction.}
+\item{Play}{Play the animation.}
+\item{Slower}{Decrease the playing speed.}
+\item{Faster}{Increase the playing speed.}
+\item{Reset}{Stop the animation and reset to the start value.}
 }
 }
 \value{
