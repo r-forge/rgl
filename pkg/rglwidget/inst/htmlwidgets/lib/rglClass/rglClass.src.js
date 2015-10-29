@@ -2076,14 +2076,16 @@ rglwidgetClass = function() {
 		    addButton = function(label) {
 		      var button = document.createElement("input"),
 		      		onclicks = {Reverse: function() { this.rgltimer.reverse();},
-	 	               Play: function() { this.rgltimer.play(); },
-		               Pause: function() { this.rgltimer.pause(); },
+	 	               Play: function() { this.rgltimer.play();
+	 	                                  this.value = this.rgltimer.enabled ? "Pause" : "Play"; },
 		               Slower: function() { this.rgltimer.slower(); },
 		               Faster: function() { this.rgltimer.faster(); },
-		               Stop: function() { this.rgltimer.stop(); }};
+		               Reset: function() { this.rgltimer.reset(); }};
 		      button.rgltimer = el.rgltimer;
 		      button.type = "button";
 		      button.value = label;
+		      if (label === "Play")
+		        button.rgltimer.PlayButton = button;
 		      button.onclick = onclicks[label];
 		      button.style.display = "inline-block";
           el.appendChild(button);
@@ -2181,14 +2183,18 @@ rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, action
 (function() {
 
   this.play = function() {
-    this.newmultiplier(1);
-    if (this.enabled) return;
+    if (this.enabled) {
+      this.enabled = false;
+      window.clearInterval(this.timerId);
+      this.timerId = 0;
+      return;
+    }
     var tick = function(self) {
       var now = new Date();
       self.value = self.multiplier*self.rate*(now - self.realStart)/1000 + self.startTime;
       if (self.value > self.stopTime || self.value < self.startTime) {
         if (!self.loop) {
-          self.stop();
+          self.reset();
         } else {
           var cycle = self.stopTime - self.startTime,
               realcycle = 1000*cycle/self.multiplier/self.rate;
@@ -2207,43 +2213,32 @@ rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, action
       }
 
     };
-    this.realStart = new Date() - 1000*(this.value - this.startTime)/this.rate;
+    this.realStart = new Date() - 1000*(this.value - this.startTime)/this.rate/this.multiplier;
     this.timerId = window.setInterval(tick, 1000*this.interval, this);
     this.enabled = true;
   };
 
-  this.stop = function() {
+  this.reset = function() {
     this.value = this.startTime;
+    this.newmultiplier(1);
     if (typeof this.Tick !== "undefined") {
         this.Tick(this.value);
     }
-    if (!this.enabled) return;
-    this.pause();
-  };
-
-  this.pause = function() {
-    if (!this.enabled) return;
-    this.enabled = false;
-    window.clearInterval(this.timerId);
-    this.timerId = 0;
+    if (this.enabled)
+      this.play();  /* really pause... */
+    if (typeof this.PlayButton !== "undefined")
+      this.PlayButton.value = "Play";
   };
 
   this.faster = function() {
-    if (!this.enabled)
-      this.play();
     this.newmultiplier(Math.SQRT2*this.multiplier);
   };
 
   this.slower = function() {
-    if (!this.enabled)
-      this.play();
     this.newmultiplier(this.multiplier/Math.SQRT2);
   };
 
   this.reverse = function() {
-    if (!this.enabled) {
-      this.play();
-    }
     this.newmultiplier(-this.multiplier);
   };
 
