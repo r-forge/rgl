@@ -47,3 +47,4 @@ we need to write Javascript sometimes, but we can make less use of it.
 
 Style the controls using CSS, not Javascript.
 
+Drop rglcontroller widget, have playwidget work with Shiny.
