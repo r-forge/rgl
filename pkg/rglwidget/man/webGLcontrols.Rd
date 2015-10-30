@@ -53,6 +53,6 @@ Duncan Murdoch
 \seealso{
 \code{\link{rglcontroller}} for how to embed this in a Shiny app,
 \code{\link[rgl]{subsetSetter}} for a way to embed a pure Javascript
-control, and \code{\link{playControl}} for a way to use these
+control, and \code{\link{playwidget}} for a way to use these
 in animations.
 }

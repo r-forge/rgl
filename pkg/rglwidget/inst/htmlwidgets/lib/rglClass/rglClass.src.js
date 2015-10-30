@@ -2258,15 +2258,12 @@ rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, action
           self.reset();
         } else {
           var cycle = self.stopTime - self.startTime,
-              realcycle = 1000*cycle/self.multiplier/self.rate;
-          while (self.value > self.stopTime) {
-            self.value -= cycle;
-            self.realStart += realcycle;
+              newval = (self.value - self.startTime) % cycle + self.startTime;
+          if (newval < self.startTime) {
+            newval += cycle;
           }
-          while (self.value < self.startTime) {
-            self.value += cycle;
-            self.realStart -= realcycle;
-          }
+          self.realStart += (self.value - newval)*1000/self.multiplier/self.rate;
+          self.value = newval;
         }
       }
       if (typeof self.Tick !== "undefined") {
