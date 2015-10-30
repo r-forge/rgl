@@ -5,7 +5,7 @@ Provide a link to a Shiny control.
 }
 \description{
 This function produces an object which can be used in the output
-of a Shiny app, to control an \code{\link{rglwidget}}.
+of a Shiny app or in animations, to control an \code{\link{rglwidget}}.
 }
 \usage{
 rglcontroller(sceneId, ..., elementId = NULL, respondTo = NULL)
