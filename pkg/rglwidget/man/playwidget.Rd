@@ -15,7 +15,7 @@ playwidget(sceneId, ...,
             loop = TRUE,
             step = 1, labels = seq(from = start, to = stop, by = step),
             precision = 3, width = "auto",
-            elementId = NULL)
+            elementId = NULL, respondTo = NULL)
 }
 \arguments{
   \item{sceneId}{
@@ -60,6 +60,10 @@ The CSS specification for the width of the slider.
 The HTML id of the generated widget, containing buttons,
 slider, etc.
 }
+
+  \item{respondTo}{
+The HTML ID of an input control (e.g. a \code{\link[shiny]{sliderInput}}
+control) to respond to.}
 }
 \details{
 The \code{components} are buttons to control the animation,
@@ -74,6 +78,9 @@ The buttons have the following behaviour:
 \item{Faster}{Increase the playing speed.}
 \item{Reset}{Stop the animation and reset to the start value.}
 }
+
+If \code{respondTo} is used, the \code{components} are cleared.
+It makes more sense to use \code{\link{rglcontroller}}.
 }
 \value{
 A widget suitable for use in an \pkg{Rmarkdown}-generated web

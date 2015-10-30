@@ -21,6 +21,9 @@ and which optionally controls a slider. DONE using playControl.
 
 playControl should generate a widget, not be a controller. DONE
 
+Drop rglcontroller widget, have playwidget work with Shiny. Partially
+DONE: playwidget works with Shiny, but rglcontroller has been kepts.
+
 NOT DONE:
 
 On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
@@ -46,5 +49,3 @@ Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it.
 
 Style the controls using CSS, not Javascript.
-
-Drop rglcontroller widget, have playwidget work with Shiny.

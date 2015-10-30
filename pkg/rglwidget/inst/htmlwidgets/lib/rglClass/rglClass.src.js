@@ -2141,7 +2141,7 @@ rglwidgetClass = function() {
           el.appendChild(button);
 		    };
 
-		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.rate, control.loop, control.actions);
+		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.value, control.rate, control.loop, control.actions);
         for (var i=0; i < components.length; i++) {
           switch(components[i]) {
             case "Slider": addSlider(control.start, control.stop,
@@ -2225,11 +2225,11 @@ rglwidgetClass = function() {
 		};
 }).call(rglwidgetClass.prototype);
 
-rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, actions) {
+rgltimerClass = function(Tick, startTime, interval, stopTime, value, rate, loop, actions) {
   this.enabled = false;
   this.timerId = 0;
   this.startTime = startTime;         /* nominal start time in seconds */
-  this.value = startTime;             /* current nominal time */
+  this.value = value;                 /* current nominal time */
   this.interval = interval;           /* seconds between updates */
   this.stopTime = stopTime;           /* nominal stop time */
   this.rate = rate;                   /* nominal units per second */

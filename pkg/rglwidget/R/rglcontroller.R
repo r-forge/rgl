@@ -170,25 +170,36 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
                        loop = TRUE,
                        step = 1, labels = seq(from = start, to = stop, by = step),
                        precision = 3, width = "auto",
-                       elementId = NULL) {
+                       elementId = NULL, respondTo = NULL) {
 
   if (is.null(elementId) && !inShiny())
     elementId <- paste0("play", sample(100000, 1))
 
+  if (!is.null(respondTo))
+    components <- NULL
+
   if (length(stop) != 1 || !is.finite(stop)) stop <- NULL
 
   actions <- list(...)
-  components <- match.arg(components, several.ok = TRUE)
+  if (!length(components))
+    components <- character()
+  else
+    components <- match.arg(components, several.ok = TRUE)
 
   if (is.null(stop)) {
-    warning("Cannot have slider with non-finite values")
-    components <- setdiff(components, "Slider")
+    if ("Slider" %in% components) {
+      warning("Cannot have slider with non-finite limits")
+      components <- setdiff(components, "Slider")
+    }
+    if (!missing(labels) && length(labels))
+      warning("Cannot have labels with non-finite limits")
     labels <- NULL
   }
   control <- list(type = "player",
        actions = actions,
        start = start,
        stop = stop,
+       value = start,
        interval = interval,
        rate = rate,
        components = components,
@@ -200,7 +211,7 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
 
   createWidget(
     name = 'rglcontroller',
-    x = list(sceneId = sceneId, respondTo = NULL, controls=list(control)),
+    x = list(sceneId = sceneId, respondTo = respondTo, controls=list(control)),
     elementId = elementId,
     package = 'rglwidget'
   )

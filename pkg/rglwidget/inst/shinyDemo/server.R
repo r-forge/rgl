@@ -150,17 +150,17 @@ shinyServer(function(input, output, session) {
   output$thecontroller <-
     renderRglcontroller({
       if (length(path$subsets))
-        rglcontroller("thewidget", respondTo = "Slider",
-                          subsetControl(1, path$subsets),
-                          sceneId = "thewidget")
+        # It makes more sense to use rglcontroller as below, but
+        # this works...
+        playwidget("thewidget", respondTo = "Slider",
+                   subsetControl(1, path$subsets))
       })
 
   output$thecontroller2 <-
     renderRglcontroller({
       if (length(path$subsets))
         rglcontroller("thewidget", respondTo = "Slider2",
-                          subsetControl(1, path$subsets, accumulate = TRUE),
-                          sceneId = "thewidget")
+                          subsetControl(1, path$subsets, accumulate = TRUE))
       })
 })
 
