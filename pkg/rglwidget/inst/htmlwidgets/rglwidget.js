@@ -25,7 +25,7 @@ HTMLWidgets.widget({
         if (typeof controller !== "undefined") {
           controller = controller.rglcontroller;
           if (typeof controller !== "undefined" && !controller.initialized) {
-            rgl.applyControls(controller.controls);
+            rgl.applyControls(el, controller.controls);
             controller.initialized = true;
           }
         }
