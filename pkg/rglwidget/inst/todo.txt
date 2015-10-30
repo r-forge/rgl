@@ -19,6 +19,8 @@ sliders in Shiny:  attach the player to the slider, or we could
 have an invisible player object which is controlled by buttons,
 and which optionally controls a slider. DONE using playControl.
 
+playControl should generate a widget, not be a controller. DONE
+
 NOT DONE:
 
 On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
@@ -44,3 +46,4 @@ Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it.
 
 Style the controls using CSS, not Javascript.
+

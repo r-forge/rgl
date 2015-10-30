@@ -26,27 +26,27 @@ control2 <- ageControl(value=-10,
              objids = sphereid)
              
 rglwidget(elementId = "rglplot")
-rglcontroller("rglplot", playControl(control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE, labels = NULL))
+playwidget("rglplot", control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE, labels = NULL)
 ```
-```{r toggle, webgl=TRUE, rgl.newwindow=TRUE}
-sphereid <- with(subset(iris, Species == "setosa"), 
-     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-                  col=as.numeric(Species),
-                  radius = 0.211))
-with(subset(iris, Species == "versicolor"), 
-     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-               col=as.numeric(Species),
-     	       radius = 0.211))
-with(subset(iris, Species == "virginica"), 
-     spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-               col=as.numeric(Species),
-     	       radius = 0.211))
-aspect3d(1,1,1)
-axesid <- decorate3d()
-subid <- currentSubscene3d()
-delFromSubscene3d(sphereid)
+```{r toggle, webgl=TRUE}
+# sphereid <- with(subset(iris, Species == "setosa"), 
+#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+#                   col=as.numeric(Species),
+#                   radius = 0.211))
+# with(subset(iris, Species == "versicolor"), 
+#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+#                col=as.numeric(Species),
+#      	       radius = 0.211))
+# with(subset(iris, Species == "virginica"), 
+#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
+#                col=as.numeric(Species),
+#      	       radius = 0.211))
+# aspect3d(1,1,1)
+# axesid <- decorate3d()
+# subid <- currentSubscene3d()
+# delFromSubscene3d(sphereid)
 ```
 
 ```{r results="asis"}
-toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
+# toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
 ```

@@ -6,11 +6,9 @@ rglcontroller <- function(sceneId, ..., elementId = NULL, respondTo = NULL) {
   if (is.null(elementId) && !inShiny())
     elementId <- paste0("rgl", sample(100000, 1))
 
-  htmlwidgets::createWidget(
+  createWidget(
     name = 'rglcontroller',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=controls),
-    width = 0,
-    height = 0,
     elementId = elementId,
     package = 'rglwidget'
   )
@@ -167,20 +165,27 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
        interp = interp)
 }
 
-playControl <- function(..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
-                        components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
-                        loop = TRUE,
-                        step = 1, labels = seq(from = start, to = stop, by = step),
-                        precision = 3, width = "auto") {
-  if (!is.finite(stop)) stop <- NULL
+playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
+                       components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
+                       loop = TRUE,
+                       step = 1, labels = seq(from = start, to = stop, by = step),
+                       precision = 3, width = "auto",
+                       elementId = NULL) {
+
+  if (is.null(elementId) && !inShiny())
+    elementId <- paste0("play", sample(100000, 1))
+
+  if (length(stop) != 1 || !is.finite(stop)) stop <- NULL
+
   actions <- list(...)
   components <- match.arg(components, several.ok = TRUE)
-  if (!is.finite(stop)) {
+
+  if (is.null(stop)) {
     warning("Cannot have slider with non-finite values")
     components <- setdiff(components, "Slider")
     labels <- NULL
   }
-  list(type = "player",
+  control <- list(type = "player",
        actions = actions,
        start = start,
        stop = stop,
@@ -192,6 +197,13 @@ playControl <- function(..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
        labels = labels,
        precision = precision,
        width = width)
+
+  createWidget(
+    name = 'rglcontroller',
+    x = list(sceneId = sceneId, respondTo = NULL, controls=list(control)),
+    elementId = elementId,
+    package = 'rglwidget'
+  )
 }
 
 # This is a bridge to the old system

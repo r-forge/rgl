@@ -1,23 +1,26 @@
-\name{playControl}
-\alias{playControl}
+\name{playwidget}
+\alias{playwidget}
 \title{
-Add a control to play animations.
+Add a widget to play animations.
 }
 \description{
-This is a control that can be put in a web page to allow
-animations.
+This is a widget that can be put in a web page to allow
+animations without needing Shiny.
 }
 \usage{
-playControl(...,
+playwidget(sceneId, ...,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
             components = c("Reverse", "Play", "Slower", "Faster",
                            "Reset", "Slider", "Label"),
             loop = TRUE,
             step = 1, labels = seq(from = start, to = stop, by = step),
-            precision = 3, width = "auto")
+            precision = 3, width = "auto",
+            elementId = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
+  \item{sceneId}{
+The HTML id of the rgl scene being controlled.
+}
   \item{\dots}{
 A number of controller functions, e.g. \code{\link{propertyControl}}.
 }
@@ -53,11 +56,15 @@ timer values.
   \item{width}{
 The CSS specification for the width of the slider.
 }
+  \item{elementId}{
+The HTML id of the generated widget, containing buttons,
+slider, etc.
+}
 }
 \details{
 The \code{components} are buttons to control the animation,
 a slider for manual control, and a label to show the current
-value.  They will be displayed in the order given in \code{components}.
+value.  They will be displayed in the order given in \code{components}.  Not all need be included.
 
 The buttons have the following behaviour:
 \describe{
@@ -69,22 +76,28 @@ The buttons have the following behaviour:
 }
 }
 \value{
-A list suitable for use in \code{\link{rglcontroller}}.
+A widget suitable for use in an \pkg{Rmarkdown}-generated web
+page.
 }
 \author{
 Duncan Murdoch
 }
 \seealso{
-\code{\link{rglcontroller}} for embedding this in a Shiny
-app or \pkg{knitr} document; \code{\link{subsetControl}},
+\code{\link{rglcontroller}} for embedding controls in a Shiny
+app. \code{\link{subsetControl}},
 \code{\link{propertyControl}}, \code{\link{ageControl}} and
 \code{\link{vertexControl}} are possible controls to use.
 }
 \examples{
+saveopts <- options(rgl.useNULL = TRUE)
+library(rgl)
+example(plot3d)
+rglwidget(elementId = "theplot")
 control <- ageControl(value=0,
              births=rep(0, 21),
              ages = c(-5,0,5),
              colors = c("green", "yellow", "red"),
              objids = 123)
-playControl(control, start = -5, stop = 5, rate = 3, loop = TRUE)
+playwidget("theplot", control, start = -5, stop = 5, rate = 3, loop = TRUE)
+options(saveopts)
 }
