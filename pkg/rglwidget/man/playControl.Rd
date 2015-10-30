@@ -10,8 +10,11 @@ animations.
 \usage{
 playControl(...,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
-            buttons = c("Reverse", "Play", "Slower", "Faster", "Reset"),
-            loop = FALSE)
+            components = c("Reverse", "Play", "Slower", "Faster",
+                           "Reset", "Slider", "Label"),
+            loop = TRUE,
+            step = 1, labels = seq(from = start, to = stop, by = step),
+            precision = 3, width = "auto")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -29,17 +32,34 @@ may occur at longer intervals.
 The number of units of \dQuote{nominal} time per real world
 second.
 }
-  \item{buttons}{
-Which buttons should be displayed?
+  \item{components}{
+Which components should be displayed?  See Details below.
 }
   \item{loop}{
 When the player reaches the end of the interval,
 should it loop back to the beginning?
 }
+  \item{step}{
+Step size in the slider.
+}
+  \item{labels}{
+Optional labels to use, corresponding to slider steps.  Set to
+\code{NULL} for auto-generated labels.
+}
+  \item{precision}{
+If \code{labels=NULL}, the precision to use when displaying
+timer values.
+}
+  \item{width}{
+The CSS specification for the width of the slider.
+}
 }
 \details{
-The buttons will be displayed in the order given in \code{buttons}.
-They have the following behaviour:
+The \code{components} are buttons to control the animation,
+a slider for manual control, and a label to show the current
+value.  They will be displayed in the order given in \code{components}.
+
+The buttons have the following behaviour:
 \describe{
 \item{Reverse}{Reverse the direction.}
 \item{Play}{Play the animation.}

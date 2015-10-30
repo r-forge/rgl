@@ -5,7 +5,7 @@
 Controls to use with rglcontroller.
 }
 \description{
-This is a setter function to produce actions in a Shiny app,
+These are setter functions to produce actions in a Shiny app,
 or in an animation.
 }
 \usage{
@@ -53,6 +53,6 @@ Duncan Murdoch
 \seealso{
 \code{\link{rglcontroller}} for how to embed this in a Shiny app,
 \code{\link[rgl]{subsetSetter}} for a way to embed a pure Javascript
-control, \code{\link{playControl}} for a way to use these
+control, and \code{\link{playControl}} for a way to use these
 in animations.
 }

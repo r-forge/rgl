@@ -26,7 +26,7 @@ control2 <- ageControl(value=-10,
              objids = sphereid)
              
 rglwidget(elementId = "rglplot")
-rglcontroller("rglplot", playControl(control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE))
+rglcontroller("rglplot", playControl(control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE, labels = NULL))
 ```
 ```{r toggle, webgl=TRUE, rgl.newwindow=TRUE}
 sphereid <- with(subset(iris, Species == "setosa"), 

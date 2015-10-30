@@ -2065,14 +2065,64 @@ rglwidgetClass = function() {
 		this.player = function(el, control) {
 		  var
 		    self = this,
-		    Tick = function(nominal) { /* "this" will be a timer */
-		      var i;
+		    components = [].concat(control.components),
+
+		    Tick = function() { /* "this" will be a timer */
+		      var i,
+		          nominal = this.value,
+		          slider = this.Slider,
+		      	  labels = this.outputLabels,
+		          output = this.Output;
+		      if (typeof slider !== "undefined" && nominal != slider.value)
+		        slider.value = nominal;
+		      if (typeof output !== "undefined") {
+		        if (labels !== null) {
+		          output.innerHTML = labels[Math.round((nominal - output.sliderMin)/output.sliderStep)];
+		        } else {
+		          output.innerHTML = nominal.toPrecision(output.outputPrecision);
+		        }
+		      }
 		      for (i=0; i < this.actions.length; i++) {
 		        this.actions[i].value = nominal;
 		      }
 		      self.applyControls(el, this.actions);
 		    },
-		    buttons = [].concat(control.buttons),
+
+        OnSliderInput = function() { /* "this" will be the slider */
+          this.rgltimer.value = Number(this.value);
+		      this.rgltimer.Tick();
+        },
+
+		    addSlider = function(min, max, step, value) {
+		      var slider = document.createElement("input");
+		      slider.type = "range";
+		      slider.min = min;
+		      slider.max = max;
+		      slider.step = step;
+		      slider.value = value;
+		      slider.oninput = OnSliderInput;
+		      slider.sliderActions = control.actions;
+		      slider.sliderScene = this;
+		      slider.style.display = "inline";
+		      slider.style.width = control.width;
+		      el.rgltimer.Slider = slider;
+		      slider.rgltimer = el.rgltimer;
+		      el.appendChild(slider);
+		    },
+
+		    addLabel = function(labels, min, step, precision) {
+		      var output = document.createElement("output");
+		      output.style.display = "inline";
+		      output.style["padding-left"] = "6px";
+		      output.style["padding-right"] = "6px";
+		      output.sliderMin = min;
+		      output.sliderStep = step;
+		      output.outputPrecision = precision;
+		      el.rgltimer.Output = output;
+		      el.rgltimer.outputLabels = labels;
+		      el.appendChild(output);
+		    },
+
 		    addButton = function(label) {
 		      var button = document.createElement("input"),
 		      		onclicks = {Reverse: function() { this.rgltimer.reverse();},
@@ -2090,9 +2140,21 @@ rglwidgetClass = function() {
 		      button.style.display = "inline-block";
           el.appendChild(button);
 		    };
+
 		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.rate, control.loop, control.actions);
-        for (var i=0; i < buttons.length; i++)
-          addButton(buttons[i]);
+        for (var i=0; i < components.length; i++) {
+          switch(components[i]) {
+            case "Slider": addSlider(control.start, control.stop,
+                                   control.step, control.value);
+              break;
+            case "Label": addLabel(control.labels, control.start,
+                                   control.step, control.precision);
+              break;
+            default:
+              addButton(components[i]);
+          }
+        }
+        el.rgltimer.Tick();
         el.style.width = "auto";
         el.style.height = "auto";
 		};
@@ -2175,7 +2237,6 @@ rgltimerClass = function(Tick, startTime, interval, stopTime, rate, loop, action
   this.realStart = undefined;         /* real world start time */
   this.multiplier = 1;                /* multiplier for fast-forward
                                          or reverse */
-  this.buttons = [];
   this.actions = actions;
   this.Tick = Tick;
 };

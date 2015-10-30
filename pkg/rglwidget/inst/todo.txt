@@ -43,3 +43,4 @@ be made into widgets.
 Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it.
 
+Style the controls using CSS, not Javascript.

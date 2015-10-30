@@ -168,19 +168,30 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
 }
 
 playControl <- function(..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
-                        buttons = c("Reverse", "Play", "Slower", "Faster", "Reset"),
-                        loop = FALSE){
+                        components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
+                        loop = TRUE,
+                        step = 1, labels = seq(from = start, to = stop, by = step),
+                        precision = 3, width = "auto") {
   if (!is.finite(stop)) stop <- NULL
   actions <- list(...)
-  buttons <- match.arg(buttons, several.ok = TRUE)
+  components <- match.arg(components, several.ok = TRUE)
+  if (!is.finite(stop)) {
+    warning("Cannot have slider with non-finite values")
+    components <- setdiff(components, "Slider")
+    labels <- NULL
+  }
   list(type = "player",
        actions = actions,
        start = start,
        stop = stop,
        interval = interval,
        rate = rate,
-       buttons = buttons,
-       loop = loop)
+       components = components,
+       loop = loop,
+       step = step,
+       labels = labels,
+       precision = precision,
+       width = width)
 }
 
 # This is a bridge to the old system
