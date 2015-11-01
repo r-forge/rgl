@@ -5,7 +5,7 @@ library(rglwidget, warn.conflicts = FALSE)
 if (requireNamespace("rmarkdown") && !rmarkdown::pandoc_available("1.13.1"))
   warning("These vignettes assume pandoc version 1.13.1; older versions may give poor formatting.")
 
-setupKnitr2()
+.setupKnitr()
 
 documentedfns <- c()
 indexfns <- function(fns, text = paste0("`", fns, "`"), show = TRUE) {

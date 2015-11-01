@@ -6,7 +6,7 @@ subsetSlider <- function(subsets, labels = names(subsets),
                          fullset = Reduce(union, subsets),
                          subscenes = currentSubscene3d(), prefixes = "",
                          accumulate = FALSE, ...) {
-  propertySlider(subsetSetter(subsets, fullset = fullset,
+  .propertySlider(subsetSetter(subsets, fullset = fullset,
                               subscenes = subscenes, prefixes = prefixes,
                               accumulate = accumulate),
                  labels = labels, ...)
@@ -82,12 +82,12 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
 			      ...) {
   values <- cbind(a = a, b = b, c = c, d = d)
   col <- which(colnames(values) == letters[1:4]) - 1
-  propertySlider(values = values, entries = 4*(plane-1) + col,
+  .propertySlider(values = values, entries = 4*(plane-1) + col,
   	         properties = "vClipplane", objids = clipplaneids,
   	         prefixes = prefixes, labels = labels, ...)
 }
 
-propertySlider <- function(setter = propertySetter,
+.propertySlider <- function(setter = .propertySetter,
                            minS = min(param), maxS = max(param), step = 1, init = minS,
                            labels = displayVals(sliderVals),
                            id = basename(tempfile("input")), name = id,
@@ -155,7 +155,7 @@ oninput = "%prefix%rgl.%id%(this.valueAsNumber)">%outputfield%',
   invisible(id)
 }
 
-propertySetter <- function(values = NULL, entries, properties, objids, prefixes = "",
+.propertySetter <- function(values = NULL, entries, properties, objids, prefixes = "",
                            param = seq_len(NROW(values)), interp = TRUE,
 			   digits = 7)  {
   direct <- is.null(values)
@@ -268,7 +268,7 @@ propertySetter <- function(values = NULL, entries, properties, objids, prefixes 
   result
 }
 
-vertexSetter <- function(values = NULL, vertices = 1, attributes, objid, prefix = "",
+.vertexSetter <- function(values = NULL, vertices = 1, attributes, objid, prefix = "",
 			 param = seq_len(NROW(values)), interp = TRUE,
 			 digits = 7)  {
   attribofs <- c(x = 'vofs', y = 'vofs', z = 'vofs',
@@ -379,7 +379,7 @@ vertexSetter <- function(values = NULL, vertices = 1, attributes, objid, prefix 
 }
 
 
-par3dinterpSetter <- function(fn, from, to, steps, subscene = f0$subscene,
+.par3dinterpSetter <- function(fn, from, to, steps, subscene = f0$subscene,
 			      omitConstant = TRUE, rename = character(), ...) {
   times <- seq(from, to, length.out = steps+1)
   fvals <- lapply(times, fn)
@@ -408,7 +408,7 @@ par3dinterpSetter <- function(fn, from, to, steps, subscene = f0$subscene,
   if (omitConstant) keep <- apply(values, 2, var) > 0
   else keep <- TRUE
 
-  propertySetter(values = values[,keep], entries = entries[keep],
+  .propertySetter(values = values[,keep], entries = entries[keep],
 		 properties = paste0("par3d.", properties[keep]),
 		 objids = subscene, param = times, ...)
 }
@@ -428,7 +428,7 @@ matrixSetter <- function(fns, from, to, steps, subscene = currentSubscene3d(), m
      var fns = new Array();', prefix, settername)
   product <- ''
   for (i in seq_len(n)) {
-    setter <- par3dinterpSetter(fns[[i]], from[i], to[i], steps[i],
+    setter <- .par3dinterpSetter(fns[[i]], from[i], to[i], steps[i],
     			        omitConstant = TRUE, subscene = i-1, prefixes = prefix,
     			        rename = c(userMatrix = propname), ...)
     result <- c(result, subst(
@@ -459,7 +459,7 @@ print.indexedSetter <- function(x, inScript = FALSE, ...) {
   if (!inScript) cat("\n</script>")
 }
 
-ageSetter <- function(births, ages, colors = NULL, alpha = NULL,
+.ageSetter <- function(births, ages, colors = NULL, alpha = NULL,
 		      radii = NULL, vertices = NULL, normals = NULL,
 		      origins = NULL, texcoords = NULL, objids, prefixes = "",
 		      digits = 7, param = seq(floor(min(births)), ceiling(max(births))))  {

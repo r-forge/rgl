@@ -116,7 +116,7 @@ hook_webgl <- local({
 
     prefix <- gsub('[^[:alnum:]]', '_', options$label) # identifier for JS, better be alnum
     prefix <- sub('^([^[:alpha:]])', '_\\1', prefix) # should start with letters or _
-    res <- writeWebGL2(dir = dirname(name),
+    res <- .writeWebGL(dir = dirname(name),
                     filename = name,
                     snapshot = !rgl.useNULL(),
                     template = NULL,
@@ -176,7 +176,7 @@ save_rgl <- function(name, devices) {
   )
 }
 
-setupKnitr2 <- function() {
+.setupKnitr <- function() {
   if (requireNamespace("knitr")) {
     knit_hooks$set(webgl = hook_webgl)
     knit_hooks$set(webGL = hook_webgl)

@@ -10,6 +10,7 @@ rglcontroller <- function(sceneId, ..., elementId = NULL, respondTo = NULL) {
     name = 'rglcontroller',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=controls),
     elementId = elementId,
+    width = 0, height = 0,
     package = 'rglwidget'
   )
 }
