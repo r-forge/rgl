@@ -22,7 +22,8 @@ and which optionally controls a slider. DONE using playControl.
 playControl should generate a widget, not be a controller. DONE
 
 Drop rglcontroller widget, have playwidget work with Shiny. Partially
-DONE: playwidget works with Shiny, but rglcontroller has been kepts.
+DONE: playwidget works with Shiny, but rglcontroller has been kept,
+because it doesn't really make sense to use playwidget.
 
 NOT DONE:
 

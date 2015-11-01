@@ -24,7 +24,7 @@ The width and height of the display in pixels.
 associated with this scene.  See Details below.
 }
   \item{snapshot}{Control of snapshot of scene.  See
-\code{\link{writeWebGL2}} for details.
+\code{\link{writeWebGL}} for details.
 }
   \item{elementId}{The id to use on the HTML \code{div}
 component that will hold the scene.

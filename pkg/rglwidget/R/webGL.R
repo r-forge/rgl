@@ -13,7 +13,7 @@ subst <- function(strings, ..., digits=7) {
   strings
 }
 
-writeWebGL2 <- function(dir="webGL", filename=file.path(dir, "index.html"),
+.writeWebGL <- function(dir="webGL", filename=file.path(dir, "index.html"),
                        template = system.file(file.path("WebGL", "template.html"), package = "rgl"),
                        prefix = "",
                        snapshot = TRUE, commonParts = TRUE, reuse = NULL,

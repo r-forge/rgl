@@ -1,10 +1,10 @@
 export(rglwidget, renderRglwidget, rglwidgetOutput,
        rglcontroller, renderRglcontroller, rglcontrollerOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
-       ageSetter, par3dinterpSetter, propertySetter, vertexSetter,
+       .ageSetter, .par3dinterpSetter, .propertySetter, .vertexSetter,
        playwidget,
-       propertySlider,
-       writeWebGL2, setupKnitr2, elementId2Prefix,
+       .propertySlider,
+       .writeWebGL, .setupKnitr, elementId2Prefix,
        registerSceneChange, sceneChange)
 importFrom(htmlwidgets, createWidget, shinyRenderWidget, shinyWidgetOutput)
 importFrom(rgl, scene3d, points3d, axis3d, box3d, open3d, rgl.set, rgl.close,

@@ -1712,7 +1712,7 @@ rglwidgetClass = function() {
 		  this.setMouseHandlers();
 		};
 
-		/* this is only used by writeWebGL2; rglwidget has
+		/* this is only used by .writeWebGL; rglwidget has
 		   no debug element and does the drawing in rglwidget.js */
 
 		this.start = function() {

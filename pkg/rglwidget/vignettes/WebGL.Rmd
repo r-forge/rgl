@@ -163,7 +163,7 @@ M <- r3dDefaults$userMatrix
 fn <- par3dinterp(time = (0:2)*0.75, userMatrix = list(M,
                                      rotate3d(M, pi/2, 1, 0, 0),
                                      rotate3d(M, pi/2, 0, 1, 0) ) )
-propertySlider(setter = par3dinterpSetter(fn, 0, 1.5, steps=15, 
+.propertySlider(setter = par3dinterpSetter(fn, 0, 1.5, steps=15, 
 					   prefix = "userMatrix", 
 					   subscene = subid),
 	       step = 0.01)
@@ -200,8 +200,8 @@ its colour from black to white,
 setosa <- subset(iris, Species == "setosa")
 which <- which.min(setosa$Sepal.Width)
 init <- setosa$Sepal.Length[which]
-propertySlider(
-	vertexSetter(values = matrix(c(init,8,0,1,0,1,0,1), nrow=2),
+.propertySlider(
+	.vertexSetter(values = matrix(c(init,8,0,1,0,1,0,1), nrow=2),
 	             attributes=c("x", "r", "g", "b"), 
 		     vertices = which, objid = sphereid, 
 		     prefix = "vertex"), 
@@ -226,10 +226,10 @@ lineid <- plot3d(xyz, type="l", col = c("black", "black"))["data"]
 sphereid <- spheres3d(xyz[1, , drop=FALSE], radius = 8, col = "red")
 ```
 ```{r results="asis"}
-propertySlider( list(ageSetter(births = time, ages = c(0, 0, 50),
+.propertySlider( list(ageSetter(births = time, ages = c(0, 0, 50),
 			  colors = c("gray", "red", "gray"),
 			  objids = lineid, prefixes = "curve"),
-		     ageSetter(births = 0, ages = time,
+		     .ageSetter(births = 0, ages = time,
 		     	  vertices = xyz, objids = sphereid,
 		     	  prefixes = "curve")),
 		     maxS = max(time) + 50)
