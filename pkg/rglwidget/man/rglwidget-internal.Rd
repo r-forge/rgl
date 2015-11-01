@@ -6,6 +6,8 @@
 \alias{.propertySlider}
 \alias{.setupKnitr}
 \alias{.writeWebGL}
+\alias{.hook_rgl}
+\alias{.hook_webgl}
 \title{
 rglwidget internals
 }
@@ -36,7 +38,11 @@ are not meant to be called directly by the user.
                 id = basename(tempfile("input")), name = id,
                 outputid = paste0(id, "text"), index = NULL, ...)
 
-.setupKnitr
+.setupKnitr()
+
+.hook_rgl(before, options, envir)
+
+.hook_webgl(before, options, envir)
 
 .writeWebGL(dir = "webGL", filename = file.path(dir, "index.html"),
            template = system.file(file.path("WebGL", "template.html"), package = "rgl"),
