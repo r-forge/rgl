@@ -3,6 +3,7 @@
 \alias{.par3dinterpSetter}
 \alias{.propertySetter}
 \alias{.vertexSetter}
+\alias{.subsetSetter}
 \alias{.propertySlider}
 \alias{.setupKnitr}
 \alias{.writeWebGL}
@@ -21,7 +22,7 @@ are not meant to be called directly by the user.
            texcoords = NULL, objids, prefixes = "", digits = 7,
            param = seq(floor(min(births)), ceiling(max(births))))
 
-.par3dinterpSetter(fn, from, to, steps, subscene = f0$subscene,
+.par3dinterpSetter(fn, from, to, steps, subscene = NULL,
            omitConstant = TRUE, rename = character(), ...)
 
 .propertySetter(values = NULL, entries, properties, objids,
@@ -32,9 +33,13 @@ are not meant to be called directly by the user.
               prefix = "", param = seq_len(NROW(values)),
               interp = TRUE, digits = 7)
 
+.subsetSetter(subsets, subscenes = currentSubscene3d(), prefixes = "",
+			 fullset = Reduce(union, subsets),
+			 accumulate = FALSE)
+
 .propertySlider(setter = .propertySetter,
-                minS = min(param), maxS = max(param),
-                step = 1, init = minS, labels = displayVals(sliderVals),
+                minS = NULL, maxS = NULL,
+                step = 1, init = NULL, labels,
                 id = basename(tempfile("input")), name = id,
                 outputid = paste0(id, "text"), index = NULL, ...)
 
@@ -54,7 +59,9 @@ are not meant to be called directly by the user.
         texcoords, objids, prefixes, digits, param, ceiling,
         fn, from, to, steps, subscene, omitConstant, rename, ...,
         values, entries, properties, interp,
-        attributes, objid, prefix, setter, minS, maxS, step,
+        attributes, objid, prefix,
+        subsets, subscenes, fullset, accumulate,
+        setter, minS, maxS, step,
         init, labels, id, name, outputid, index,
         dir, filename, template, snapshot, commonParts, reuse,
         font, width, height,

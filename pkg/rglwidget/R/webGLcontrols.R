@@ -1,18 +1,5 @@
 
-# This displays an HTML5 input widget to show a subset of objects.  It assigns a random id
-# and returns that invisibly.
-
-subsetSlider <- function(subsets, labels = names(subsets),
-                         fullset = Reduce(union, subsets),
-                         subscenes = currentSubscene3d(), prefixes = "",
-                         accumulate = FALSE, ...) {
-  .propertySlider(subsetSetter(subsets, fullset = fullset,
-                              subscenes = subscenes, prefixes = prefixes,
-                              accumulate = accumulate),
-                 labels = labels, ...)
-}
-
-subsetSetter <- function(subsets, subscenes = currentSubscene3d(), prefixes = "",
+.subsetSetter <- function(subsets, subscenes = currentSubscene3d(), prefixes = "",
 			 fullset = Reduce(union, subsets),
 			 accumulate = FALSE) {
   nsubs <- max(length(subscenes), length(prefixes))
@@ -88,8 +75,8 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
 }
 
 .propertySlider <- function(setter = .propertySetter,
-                           minS = min(param), maxS = max(param), step = 1, init = minS,
-                           labels = displayVals(sliderVals),
+                           minS = NULL, maxS = NULL, step = 1, init = NULL,
+                           labels,
                            id = basename(tempfile("input")), name = id,
 			   outputid = paste0(id, "text"),
 			   index = NULL,
@@ -114,7 +101,12 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
   }
   prefix <- prefixes[1]
 
+  if (is.null(minS)) minS <- min(param)
+  if (is.null(maxS)) maxS <- max(param)
+  if (is.null(init)) init <- minS
+  
   sliderVals <- seq(minS, maxS, by = step)
+  if (missing(labels)) labels <- displayVals(sliderVals)
   if (is.null(outputid) || is.null(labels)) outputfield <- setoutput <- ""
   else {
     outputfield <- subst('<output id="%outputid%" for="%id%">%label%</output>',
@@ -379,7 +371,7 @@ oninput = "%prefix%rgl.%id%(this.valueAsNumber)">%outputfield%',
 }
 
 
-.par3dinterpSetter <- function(fn, from, to, steps, subscene = f0$subscene,
+.par3dinterpSetter <- function(fn, from, to, steps, subscene = NULL,
 			      omitConstant = TRUE, rename = character(), ...) {
   times <- seq(from, to, length.out = steps+1)
   fvals <- lapply(times, fn)
@@ -407,6 +399,8 @@ oninput = "%prefix%rgl.%id%(this.valueAsNumber)">%outputfield%',
   }
   if (omitConstant) keep <- apply(values, 2, var) > 0
   else keep <- TRUE
+  
+  if (is.null(subscene)) subscene <- f0$subscene
 
   .propertySetter(values = values[,keep], entries = entries[keep],
 		 properties = paste0("par3d.", properties[keep]),

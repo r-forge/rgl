@@ -3,7 +3,7 @@ export(rglwidget, renderRglwidget, rglwidgetOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
        .ageSetter, .par3dinterpSetter, .propertySetter, .vertexSetter,
        playwidget,
-       .propertySlider,
+       .propertySlider, .subsetSetter,
        .writeWebGL, .setupKnitr, .hook_webgl, .hook_rgl,
        elementId2Prefix, registerSceneChange, sceneChange)
 
