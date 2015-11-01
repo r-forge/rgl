@@ -57,7 +57,8 @@ are not meant to be called directly by the user.
         attributes, objid, prefix, setter, minS, maxS, step,
         init, labels, id, name, outputid, index,
         dir, filename, template, snapshot, commonParts, reuse,
-        font, width, height}{
+        font, width, height,
+        before, options, envir}{
 See the corresponding \pkg{rgl} function (i.e. leave off the \dQuote{.}
 prefix) for a description of the arguments.
 }
