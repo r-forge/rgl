@@ -697,6 +697,10 @@ rglwidgetClass = function() {
     this.initSubscene = function(id) {
       var sub = this.getObj(id),
           i, obj;
+
+      if (sub.type !== "subscene")
+        return;
+
       sub.par3d.userMatrix = this.toCanvasMatrix4(sub.par3d.userMatrix);
       sub.par3d.listeners = [].concat(sub.par3d.listeners);
       sub.backgroundId = undefined;
@@ -759,7 +763,7 @@ rglwidgetClass = function() {
       alert("initObj id is "+typeof id);
     }
 
-    if (type === "background" || type === "bboxdeco")
+    if (type === "background" || type === "bboxdeco" || type === "subscene")
       return;
 
     if (type === "light") {
@@ -767,11 +771,6 @@ rglwidgetClass = function() {
       obj.diffuse = new Float32Array(obj.colors[1].slice(0,3));
       obj.specular = new Float32Array(obj.colors[2].slice(0,3));
       obj.lightDir = new Float32Array(obj.vertices[0]);
-      return;
-    }
-
-    if (type === "subscene") {
-      this.initSubscene(id);
       return;
     }
 
@@ -1446,7 +1445,8 @@ rglwidgetClass = function() {
 				axis = this.xprod(rotBase, rotCurrent),
 				objects = this.scene.objects,
 				activeSub = this.getObj(activeSubscene),
-				l = activeSub.par3d.listeners,
+				activeModel = this.getObj(this.useid(activeSub.id, "model")),
+				l = activeModel.par3d.listeners,
 				i;
 		  for (i = 0; i < l.length; i++) {
 		    activeSub = this.getObj(l[i]);
@@ -1705,6 +1705,9 @@ rglwidgetClass = function() {
 	          obj = self.getObj(id);
 	      if (typeof obj.reuse !== "undefined")
 	        self.copyObj(id, obj.reuse);
+	    });
+	    Object.keys(objs).forEach(function(key){
+	      self.initSubscene(parseInt(key, 10));
 	    });
 	    Object.keys(objs).forEach(function(key){
 		    self.initObj(parseInt(key, 10));
