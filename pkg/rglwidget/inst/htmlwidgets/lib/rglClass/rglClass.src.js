@@ -38,7 +38,7 @@ rglwidgetClass = function() {
     };
 
     this.flatten = function(a) {
-      return a.reduce(function(x, y) { return x.concat(y); });
+      return [].concat.apply([], a);
     };
 
     this.transpose = function(a) {
@@ -757,7 +757,7 @@ rglwidgetClass = function() {
 		      sprite_3d = flags & this.f_sprite_3d,
 		      gl = this.gl,
           texinfo, drawtype, nclipplanes, f, frowsize, nrows,
-          i,j,v, mat, uri;
+          i,j,v, mat, uri, matobj;
 
     if (typeof id !== "number") {
       alert("initObj id is "+typeof id);
@@ -827,9 +827,14 @@ rglwidgetClass = function() {
 		  mat = obj.material;
 		  if (typeof mat.uri !== "undefined")
 		    uri = mat.uri;
-		  else if (typeof mat.uriElementId === "undefined")
-		    uri = this.getObj(mat.uriId).material.uri;
-		  else
+		  else if (typeof mat.uriElementId === "undefined") {
+		    matobj = this.getObj(mat.uriId);
+		    if (typeof matobj !== "undefined") {
+		      uri = matobj.material.uri;
+		    } else {
+		      uri = "";
+		    }
+		  } else
 		    uri = document.getElementById(mat.uriElementId).rglinstance.getObj(mat.uriId).material.uri;
 
 			this.loadImageToTexture(uri, obj.texture);

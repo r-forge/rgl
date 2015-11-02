@@ -395,6 +395,8 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	      }
 	      obj$material$texture <- NULL
 	    }
+	    if (!is.null(obj$material)) # Never use material$color
+	      obj$material$color <- NULL
 	    reuseDF <- rbind(reuseDF, data.frame(id = ids[i], elementId = elementId,
 	                                         texture = texturefile, stringsAsFactors = FALSE))
 	  } else if (obj$type == "subscene") {

@@ -33,11 +33,11 @@ subst <- function(strings, ..., digits=7) {
   '
 <div id="%elementId%" class="rglWebGL"></div>
 <script type="text/javascript">
-	var div = document.getElementById("%elementId%"),
+	var %prefix%div = document.getElementById("%elementId%"),
       %prefix%rgl = new rglwidgetClass();
-  div.width = %width%;
-  div.height = %height%;
-  %prefix%rgl.initialize(div,
+  %prefix%div.width = %width%;
+  %prefix%div.height = %height%;
+  %prefix%rgl.initialize(%prefix%div,
                          %json%);
   %prefix%rgl.prefix = "%prefix%";
 </script>', prefix, elementId, json, width, height)
