@@ -305,7 +305,11 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	height <- hfactor*rheight;
 
   result <- NULL
+
 	initResult()
+
+	result$width <- width
+	result$height <- height
 
 	types <- vapply(result$objects, function(x) x$type, character(1))
 	if (any(types == "bboxdeco")) {

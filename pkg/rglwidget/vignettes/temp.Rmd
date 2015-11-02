@@ -10,43 +10,47 @@ This vignette is used for testing.
 ```{r }
 source("setup.R")
 ```
-```{r}
-xyz <- cbind((-10):10, rnorm(21), rnorm(21))
-ids <- plot3d(xyz, type="l", col=rep("green", 21))
-sphereid <- spheres3d(xyz[1,,drop=FALSE], col="red")
-control1 <- ageControl(value=-10,
-             births=-10:10,
-             ages = c(-2,0,2),
-             colors = c("green", "red", "green"),
-             objids = ids["data"])
-control2 <- ageControl(value=-10,
-             births = -10,
-             ages = 0:20,
-             vertices = xyz, 
-             objids = sphereid)
-             
-rglwidget(elementId = "rglplot")
-playwidget("rglplot", control1, control2, start = -10, stop = 10, rate = 5, loop = TRUE, labels = NULL)
-```
-```{r toggle, webgl=TRUE}
-# sphereid <- with(subset(iris, Species == "setosa"), 
-#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-#                   col=as.numeric(Species),
-#                   radius = 0.211))
-# with(subset(iris, Species == "versicolor"), 
-#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-#                col=as.numeric(Species),
-#      	       radius = 0.211))
-# with(subset(iris, Species == "virginica"), 
-#      spheres3d(Sepal.Length, Sepal.Width, Petal.Length, 
-#                col=as.numeric(Species),
-#      	       radius = 0.211))
-# aspect3d(1,1,1)
-# axesid <- decorate3d()
-# subid <- currentSubscene3d()
-# delFromSubscene3d(sphereid)
+```{r earth, echo=TRUE, eval=TRUE}
+lat <- matrix(seq(90,-90, len=50)*pi/180, 50, 50, byrow=TRUE)
+long <- matrix(seq(-180, 180, len=50)*pi/180, 50, 50)
+
+r <- 6378.1 # radius of Earth in km
+x <- r*cos(lat)*cos(long)
+y <- r*cos(lat)*sin(long)
+z <- r*sin(lat)
+
+obj <- persp3d(x, y, z, col="white", 
+       texture=system.file("textures/world.png",package="rgl"), 
+       specular="black", axes=FALSE, box=FALSE, 
+       xlab="", ylab="", zlab="",
+       normal_x=x, normal_y=y, normal_z=z)
+#rglwidget()
 ```
 
-```{r results="asis"}
-# toggleButton(sphereid, label = "setosa", prefix = "toggle", subscene = subid)
+## Clipping continued
+
+- Next, draw some nested spheres inside (not shown)
+```{r echo=FALSE}
+cols <- c(rep("chocolate4",4), rep("burlywood1", 4), "darkgoldenrod1")
+rs <- c(6350, 5639, 4928.5, 4207, 3486, 
+                         (3486+2351)/2, 2351, (2351+1216)/2, 1216)
+for (i in seq_along(rs)) obj <- c(obj, spheres3d(0,0,col = cols[i], radius = rs[i]))
 ```
+- Now create a subscene which is a copy of the original,
+but with a clipping plane.  
+```{r clipping}
+root <- currentSubscene3d()
+
+newSubscene3d(model = "inherit",  
+	      projection = "inherit", 
+	      viewport = "inherit",
+	      copyShapes = TRUE, parent = root)
+currentSubscene3d()
+bg3d("white") # Hides the original one
+clipplanes3d(-1,0,0,1)
+rglwidget()
+```
+Here is the writeWebGL version:
+```{r webgl=TRUE,echo=FALSE}
+```
+

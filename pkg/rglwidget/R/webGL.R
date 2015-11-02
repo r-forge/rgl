@@ -18,7 +18,7 @@ subst <- function(strings, ..., digits=7) {
                        prefix = "",
                        snapshot = TRUE, commonParts = TRUE, reuse = NULL,
 		       font="Arial",
-                       width = 512, height = 512) {
+                       width = NULL, height = NULL) {
 
   # Lots of utility functions and constants defined first; execution starts way down there...
 
@@ -75,6 +75,9 @@ subst <- function(strings, ..., digits=7) {
   scene <- convertScene(width = width, height = height,
                         elementId = elementId, reuse = reuse,
                         snapshot = snapshot)
+  if (is.null(width)) width <- scene$width
+  if (is.null(height)) height <- scene$height
+
   reuse <- attr(scene, "reuse")
   json <- toJSON(I(scene),
                  dataframe = "columns", null = "null", na = "null",
