@@ -52,7 +52,7 @@ are not meant to be called directly by the user.
 .writeWebGL(dir = "webGL", filename = file.path(dir, "index.html"),
            template = system.file(file.path("WebGL", "template.html"), package = "rgl"),
            prefix = "", snapshot = TRUE, commonParts = TRUE,
-           reuse = NULL, font = "Arial", width = 512, height = 512)
+           reuse = NULL, font = "Arial", width = NULL, height = NULL)
 }
 \arguments{
   \item{births, ages, colors, alpha, radii, vertices, normals, origins,
