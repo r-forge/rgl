@@ -97,8 +97,7 @@ app. \code{\link{subsetControl}},
 }
 \examples{
 saveopts <- options(rgl.useNULL = TRUE)
-library(rgl)
-example(plot3d)
+example("plot3d", "rgl")
 rglwidget(elementId = "theplot")
 control <- ageControl(value=0,
              births=rep(0, 21),
