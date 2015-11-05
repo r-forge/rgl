@@ -85,7 +85,7 @@ Duncan Murdoch
 \examples{
 save <- getOption("rgl.useNULL")
 options(rgl.useNULL=TRUE)
-example(plot3d)
+example("plot3d", "rgl")
 rglwidget()
 }
 
