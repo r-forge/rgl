@@ -195,7 +195,6 @@ rglwidgetClass = function() {
           thelist = this.whichList(id);
           thesub.objects.push(id);
           thesub[thelist].push(id);
-          this.initObj(id);
         }
       }
     };
@@ -215,7 +214,6 @@ rglwidgetClass = function() {
           thelist = this.whichList(id);
           i = thesub[thelist].indexOf(id);
           thesub[thelist].splice(i, 1);
-          this.initObj(id);
         }
       }
     };
@@ -243,7 +241,7 @@ rglwidgetClass = function() {
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      nclipplanes = this.countClipplanes(id);
+		      nclipplanes = this.countClipplanes();
 
 		  if (type === "clipplanes" || sprites_3d) return;
 
@@ -323,7 +321,7 @@ rglwidgetClass = function() {
 		      has_texture = flags & this.f_has_texture,
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
-		      nclipplanes = this.countClipplanes(id), i,
+		      nclipplanes = this.countClipplanes(), i,
           texture_format, nlights;
 
 		  if (type === "clipplanes" || sprites_3d) return;
@@ -349,7 +347,7 @@ rglwidgetClass = function() {
 				result = result + "	uniform vec4 vClipplane"+i+";\n";
 
 			if (is_lit) {
-			  nlights = this.countLights(id);
+			  nlights = this.countLights();
 			  if (nlights)
 			      result = result + "	uniform mat4 mvMatrix;\n";
 			  else
@@ -644,54 +642,24 @@ rglwidgetClass = function() {
 	     this.prmvMatrix.multRight( this.prMatrix );
 	   };
 
-    this.countClipplanes = function(id) {
-      return this.countObjs(id, "clipplanes");
+    this.countClipplanes = function() {
+      return this.countObjs("clipplanes");
     };
 
-    this.countLights = function(id) {
-      return this.countObjs(id, "light");
+    this.countLights = function() {
+      return this.countObjs("light");
     };
 
-    this.countObjs = function(id, type) {
+    this.countObjs = function(type) {
       var self = this,
-          bound = 0, obj,
-        recurse = function(subsceneid) {
-        var result = 0,
-          subscene = self.getObj(subsceneid),
-          subids = subscene.objects,
-          i, ids;
-        for (i = 0; i < subids.length; i++) {
-          obj = self.getObj(subids[i]);
-          if (obj.type == "sprites" && typeof obj.ids !== "undefined")
-            subids = subids.concat(self.flatten(obj.ids));
-        }
-        i = subids.indexOf(parseInt(id, 10));
-        if (i >= 0) {
-          if (type === "light" && typeof subscene.lights !== "undefined")
-            result += subscene.lights.length;
-          else if (type === "clipplanes") {
-            ids = subscene.clipplanes;
-            for (j=0; j < ids.length; j++) {
-              obj = self.getObj(ids[j]);
-              result += obj.offsets.length;
-            }
-          }
-        }
-        for (i = 0; i < subscene.subscenes.length; i++) {
-          if (result >= bound)
-            break;
-          result = Math.max(result, recurse(subscene.subscenes[i]));
-        }
-        return result;
-      };
+          bound = 0;
+
       Object.keys(this.scene.objects).forEach(
         function(key) {
           if (self.getObj(parseInt(key, 10)).type === type)
             bound = bound + 1;
         });
-      if (bound <= 0)
-        return 0;
-      return recurse(self.scene.rootSubscene);
+      return bound;
     };
 
     this.initSubscene = function(id) {
@@ -775,7 +743,7 @@ rglwidgetClass = function() {
     }
 
     if (type === "clipplanes") {
-      obj.vClipplane = this.cbind(obj.normals, obj.offsets);
+      obj.vClipplane = this.flatten(this.cbind(obj.normals, obj.offsets));
       return;
     }
 
@@ -945,7 +913,7 @@ rglwidgetClass = function() {
 			 obj.normLoc = gl.getAttribLocation(obj.prog, "aNorm");
     }
 
-    nclipplanes = this.countClipplanes(id);
+    nclipplanes = this.countClipplanes();
 		if (nclipplanes && !sprites_3d) {
 		  obj.clipLoc = [];
 		  for (i=0; i < nclipplanes; i++)
@@ -957,7 +925,7 @@ rglwidgetClass = function() {
 		  obj.emission = new Float32Array(this.stringToRgb(this.getMaterial(id, "emission")));
 		  obj.shininessLoc = gl.getUniformLocation(obj.prog, "shininess");
 		  obj.shininess = this.getMaterial(id, "shininess");
-		  obj.nlights = this.countLights(id);
+		  obj.nlights = this.countLights();
 		  obj.ambientLoc = [];
 		  obj.ambient = new Float32Array(this.stringToRgb(this.getMaterial(id, "ambient")));
 		  obj.specularLoc = [];
@@ -1094,7 +1062,7 @@ rglwidgetClass = function() {
 			  count = obj.offsets.length;
 			  var IMVClip = [];
 			  for (i=0; i < count; i++) {
-				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane[i]);
+				  IMVClip[i] = this.multMV(this.invMatrix, obj.vClipplane.slice(4*i, 4*(i+1)));
  			  }
  			  obj.IMVClip = IMVClip;
         return;
@@ -1152,6 +1120,9 @@ rglwidgetClass = function() {
 			  }
 			  clipcheck += clip.offsets.length;
 			}
+			if (typeof obj.clipLoc !== "undefined")
+			  for (i=clipcheck; i < obj.clipLoc.length; i++)
+			    gl.uniform4f(obj.clipLoc[i], 0,0,0,0);
 
 			if (is_lit) {
 			  gl.uniformMatrix4fv( obj.normMatLoc, false, new Float32Array(this.normMatrix.getAsArray()) );

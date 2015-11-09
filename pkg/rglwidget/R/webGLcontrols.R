@@ -104,7 +104,7 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
   if (is.null(minS)) minS <- min(param)
   if (is.null(maxS)) maxS <- max(param)
   if (is.null(init)) init <- minS
-  
+
   sliderVals <- seq(minS, maxS, by = step)
   if (missing(labels)) labels <- displayVals(sliderVals)
   if (is.null(outputid) || is.null(labels)) outputfield <- setoutput <- ""
@@ -115,8 +115,15 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
   label = document.getElementById(\'%outputid%\');
   if (label !== null) label.value = labels[lvalue];', outputid)
   }
+  # We don't want to respond to a change in the middle of a
+  # previous response, but we don't want to lose it either.
   result <- subst(
-'<script>%prefix%rgl.%id% = function(value){', prefix, id)
+'<script>%prefix%rgl.%id% = function(value){
+  var busy = (typeof %prefix%rgl.%id%.busy !== "undefined"),
+      lvalue, labels;
+  %prefix%rgl.%id%.busy = value;
+  if (busy) return;
+  do {', prefix, id)
   for (i in seq_along(setters)) {
     setter <- setters[[i]]
     if (inherits(setter, "indexedSetter")) {
@@ -126,16 +133,18 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
     result <- c(result,
 
       if (!inherits(setter, "indexedSetter")) subst(
-'   (%setter%)(value);', setter)
+'     (%setter%)(value);', setter)
       else subst(
-'   %settername%(value, %index%);', settername, index=index-1))
+'     %settername%(value, %index%);', settername, index=index-1))
   }
   for (p in unique(prefixes))
     result <- c(result, subst(
-'   %prefix%rgl.drawScene();', prefix = p))
+'     %prefix%rgl.drawScene();', prefix = p))
   result <- c(result, subst(
-'   var lvalue = Math.round((value - %minS%)/%step%);
-   var labels = [%labels%]; %setoutput%
+'     lvalue = Math.round((value - %minS%)/%step%);
+     labels = [%labels%]; %setoutput%
+   } while (%prefix%rgl.%id%.busy !== value);
+   %prefix%rgl.%id%.busy = undefined;
 };
 %prefix%rgl.%id%(%init%);</script>
 <input type="range" min="%minS%" max="%maxS%" step="%step%" value="%init%" id="%id%" name="%name%"
@@ -399,7 +408,7 @@ oninput = "%prefix%rgl.%id%(this.valueAsNumber)">%outputfield%',
   }
   if (omitConstant) keep <- apply(values, 2, var) > 0
   else keep <- TRUE
-  
+
   if (is.null(subscene)) subscene <- f0$subscene
 
   .propertySetter(values = values[,keep], entries = entries[keep],

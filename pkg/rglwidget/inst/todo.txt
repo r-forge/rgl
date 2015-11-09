@@ -25,6 +25,12 @@ Drop rglcontroller widget, have playwidget work with Shiny. Partially
 DONE: playwidget works with Shiny, but rglcontroller has been kept,
 because it doesn't really make sense to use playwidget.
 
+Set it up so that rgl Suggests rglwidget, all the WebGL work is done
+here.  Functions remain in rgl, but they check whether they can
+requireNamespace(rglwidgets), and give instructions if not.  DONE
+here, not committed in rgl yet.
+
+
 NOT DONE:
 
 On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
@@ -38,8 +44,6 @@ instead of doing it ourselves; make sure files get cleaned up.
 
 Put bboxdeco rendering into Javascript.  -- looks really time
 consuming.
-
-Set it up so that rgl Suggests rglwidget, all the WebGL work is done here.  Functions remain in rgl, but they check whether they can requireNamespace(rglwidgets), and give instructions if not.
 
 Investigate whether grid displays can be converted to rgl objects.
 
