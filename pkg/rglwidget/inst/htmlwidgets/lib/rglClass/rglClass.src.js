@@ -1673,6 +1673,8 @@ rglwidgetClass = function() {
 		  this.resize(el);
 		  el.appendChild(this.canvas);
 		  this.initGL0();
+		  if (!this.gl)
+		    return;
 	    var objs = this.scene.objects,
 	        self = this;
 	    this.sphere = this.initSphere(this.scene.sphereVerts);
@@ -1724,7 +1726,7 @@ rglwidgetClass = function() {
 
     this.initGL0 = function() {
 	    if (!window.WebGLRenderingContext){
-	      debug("Your browser does not support WebGL. See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>", this.getSnapshot());
+	      this.debug("Your browser does not support WebGL. See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>", this.getSnapshot());
 	      return;
 	    }
 	    try {
@@ -1732,7 +1734,7 @@ rglwidgetClass = function() {
 	    }
 	    catch(e) {}
 	    if ( !this.gl ) {
-	      debug("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>",
+	      this.debug("Your browser appears to support WebGL, but did not create a WebGL context.  See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>",
 	            this.getSnapshot());
 	      return;
 	    }
@@ -1741,8 +1743,6 @@ rglwidgetClass = function() {
     this.initGL = function() {
 	   this.gl = this.canvas.getContext("webgl") ||
 	               this.canvas.getContext("experimental-webgl");
-	   if (debug)
-	     this.gl = WebGLDebugUtils.makeDebugContext(this.gl, throwOnGLError, logAndValidate);
 	 };
 
     this.resize = function(el) {
@@ -1752,12 +1752,14 @@ rglwidgetClass = function() {
 
 		this.drawInstance = function() {
 	    var gl = this.gl;
-		  gl.enable(gl.DEPTH_TEST);
-	    gl.depthFunc(gl.LEQUAL);
-	    gl.clearDepth(1.0);
-	    gl.clearColor(1,1,1,1);
-	    this.drag  = 0;
-      this.drawScene();
+	    if (gl) {
+		    gl.enable(gl.DEPTH_TEST);
+	      gl.depthFunc(gl.LEQUAL);
+	      gl.clearDepth(1.0);
+	      gl.clearColor(1,1,1,1);
+	      this.drag  = 0;
+        this.drawScene();
+	    }
 		};
 
     this.drawScene = function() {
