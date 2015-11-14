@@ -32,7 +32,7 @@ assigns a random `elementId` of the form `rglNNNNN`, where
 `NNNNN` is 1 to 5 digits.
 
 The value sent as `x` to `createWidget` is produced from
-a `scene3d()` record with the following changes:
+a `scene3d()` record with the following changes made by `convertScene()`:
  
  - All objects including subscenes are included in the `objects` list.  The `rootSubscene` record is replaced with
  its id.
@@ -42,7 +42,9 @@ a `scene3d()` record with the following changes:
  within the record.
  
  - If an object is in the `reuseDF` dataframe, it is replaced
- with `list(id = <id>, reuse = <elementId>)`.
+ with `list(id = <id>, reuse = <elementId>)`.  (This relies
+ on the fact that we only reuse objects with the same id, we
+ never try to match others.)
  
  - `bboxdeco` objects are replaced with primitive versions.
  
@@ -117,7 +119,10 @@ methods of  `rglwidgetClass`.  Unlike the old
 so changes to objects can result in new shaders being
 generated.  Each object is initialized once, then drawn
 many times as the viewpoint changes.  Adding or removing 
-an object from a scene causes it to be re-initialized.
+an object from a scene may require it to be re-initialized,
+but this is not done automatically (because it tends to
+lead to flashy updates, where we try to
+display partially incomplete objects).
 
 The `scene.applyControls` method is also part of this class.
 It directs handling to separate functions depending on the
@@ -125,3 +130,18 @@ value of the `type` field in the control.
 
 The `rglTimerClass` is a class to manage a timer created
 by `playwidget()`.  
+
+# setupKnitr()
+
+There are currently two ways to include `rgl` scenes in a
+`knitr`/`Rmarkdown` document.  The old way requires
+`setupKnitr()` to be called to install hooks into `knitr`;
+the newer way is to call `rglwidget()` to insert each image.
+
+The `knitr` hooks do the following:
+
+ - Looks at the `options` argument to the hook.
+ - Possibly opens a new rgl window before the plot.
+ - Works out the requested size of plot.
+ - Calls `.writeWebGL` to write it.
+ - Stores information for future re-use in a local static variable.
