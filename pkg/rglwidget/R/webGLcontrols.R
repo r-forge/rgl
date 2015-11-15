@@ -121,9 +121,10 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
 '<script>%prefix%rgl.%id% = function(value){
   var busy = (typeof %prefix%rgl.%id%.busy !== "undefined"),
       lvalue, labels;
-  %prefix%rgl.%id%.busy = value;
-  if (busy) return;
-  do {', prefix, id)
+  try {
+    %prefix%rgl.%id%.busy = value;
+    if (busy) return;
+    do {', prefix, id)
   for (i in seq_along(setters)) {
     setter <- setters[[i]]
     if (inherits(setter, "indexedSetter")) {
@@ -131,20 +132,23 @@ clipplaneSlider <- function(a=NULL, b=NULL, c=NULL, d=NULL,
       settername <- attr(setter, "name")
     }
     result <- c(result,
-
       if (!inherits(setter, "indexedSetter")) subst(
-'     (%setter%)(value);', setter)
+'       (%setter%)(value);', setter)
       else subst(
-'     %settername%(value, %index%);', settername, index=index-1))
+'       %settername%(value, %index%);', settername, index=index-1))
   }
   for (p in unique(prefixes))
     result <- c(result, subst(
-'     %prefix%rgl.drawScene();', prefix = p))
+'       %prefix%rgl.drawScene();', prefix = p))
   result <- c(result, subst(
-'     lvalue = Math.round((value - %minS%)/%step%);
-     labels = [%labels%]; %setoutput%
-   } while (%prefix%rgl.%id%.busy !== value);
-   %prefix%rgl.%id%.busy = undefined;
+'       lvalue = Math.round((value - %minS%)/%step%);
+       labels = [%labels%]; %setoutput%
+     } while (%prefix%rgl.%id%.busy !== value);
+  }
+  finally {
+    if (!busy)
+      %prefix%rgl.%id%.busy = undefined;
+  }
 };
 %prefix%rgl.%id%(%init%);</script>
 <input type="range" min="%minS%" max="%maxS%" step="%step%" value="%init%" id="%id%" name="%name%"
