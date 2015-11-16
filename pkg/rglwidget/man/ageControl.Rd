@@ -5,7 +5,7 @@ Set attributes of vertices based on their age.
 }
 \description{
 This is a function to produce actions in a Shiny app.  The
-mental model is that all of the vertices of some object have
+mental model is that each of the vertices of some object has
 a certain birth time; a control sets the current time, so that
 vertices have ages depending on the control setting.
 Attributes of those vertices can then be changed.
