@@ -1023,6 +1023,20 @@ rglwidgetClass = function() {
 		}
   };
 
+    this.setDepthTest = function(id) {
+      var gl = this.gl,
+          tests = {never: gl.NEVER,
+                   less:  gl.LESS,
+                   equal: gl.EQUAL,
+                   lequal:gl.LEQUAL,
+                   greater: gl.GREATER,
+                   notequal: gl.NOTEQUAL,
+                   gequal: gl.GEQUAL,
+                   always: gl.ALWAYS},
+           test = tests[this.getMaterial(id, "depth_test")];
+      gl.depthFunc(test);
+    };
+
 	  this.mode4type = {points : "POINTS",
 							       linestrip : "LINE_STRIP",
 							       abclines : "LINES",
@@ -1067,6 +1081,8 @@ rglwidgetClass = function() {
  			  obj.IMVClip = IMVClip;
         return;
 			}
+
+      this.setDepthTest(id);
 
       if (sprites_3d) {
 			  var norigs = obj.vertices.length,
