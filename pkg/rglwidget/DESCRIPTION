@@ -1,7 +1,7 @@
 Package: rglwidget
 Type: Package
 Title: 'rgl' in 'htmlwidgets' Framework
-Version: 0.1.1410
+Version: 0.1.1412
 Author: Duncan Murdoch
 Maintainer: Duncan Murdoch <murdoch.duncan@gmail.com>
 Description: Provides an 'htmlwidgets' framework for the 'rgl' package.
