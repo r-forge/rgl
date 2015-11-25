@@ -30,21 +30,21 @@ renderRglcontroller <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
 
-subsetControl <- function(value, subsets, subscenes = NULL,
+subsetControl <- function(value = 1, subsets, subscenes = NULL,
                          fullset = Reduce(union, subsets),
                          accumulate = FALSE) {
   subsets <- lapply(subsets, as.integer)
   fullset <- as.integer(fullset)
   list(type = "subsetSetter",
-       value = value,
+       value = value - 1,
        subsets = subsets,
        subscenes = subscenes,
        fullset = fullset,
        accumulate = accumulate)
 }
 
-propertyControl <- function(value, entries, properties, objids, values = NULL,
-                            param = seq_len(NROW(values)), interp = TRUE) {
+propertyControl <- function(value = 0, entries, properties, objids, values = NULL,
+                            param = seq_len(NROW(values)) - 1, interp = TRUE) {
   objids <- as.integer(objids)
   list(type = "propertySetter",
        value = value,
@@ -134,8 +134,8 @@ ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = N
   result
 }
 
-vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
-                          param = seq_len(NROW(values)), interp = TRUE) {
+vertexControl <- function(value = 0, values = NULL, vertices = 1, attributes, objid,
+                          param = seq_len(NROW(values)) - 1, interp = TRUE) {
   attributes <- match.arg(attributes,
                           choices = c("x", "y", "z",
                                       "red", "green", "blue", "alpha",
@@ -158,11 +158,12 @@ vertexControl <- function(values = NULL, vertices = 1, attributes, objid,
   }
 
   list(type = "vertexSetter",
+       value = value,
        values = values,
        vertices = vertices - 1, # Javascript 0-based indexing
        attributes = attributes,
        objid = as.integer(objid),
-       param = param - 1,       # Javascript 0-based indexing
+       param = param,       # Javascript 0-based indexing
        interp = interp)
 }
 
@@ -195,7 +196,11 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
     if (!missing(labels) && length(labels))
       warning("Cannot have labels with non-finite limits")
     labels <- NULL
+  } else {
+    if (stop == start)
+      warning("'stop' and 'start' are both ", start)
   }
+
   control <- list(type = "player",
        actions = actions,
        start = start,

@@ -9,10 +9,12 @@ input control (e.g. a \code{\link[shiny]{sliderInput}} control)
 sets a value which controls attributes of a selection of vertices.
 }
 \usage{
-vertexControl(values = NULL, vertices = 1, attributes,
-              objid, param = seq_len(NROW(values)), interp = TRUE)
+vertexControl(value = 0, values = NULL, vertices = 1, attributes,
+              objid, param = seq_len(NROW(values)) - 1, interp = TRUE)
 }
 \arguments{
+  \item{value}{The value to use for input (typically \code{input$value}
+  in a Shiny app.)}
   \item{values}{
 A matrix of values, each row corresponding to an input value.
 }
@@ -49,6 +51,10 @@ If only one attribute of one vertex is specified, \code{values} may
 be given as a vector and will be treated as a one-column matrix.  Otherwise
 \code{values} must be given as a matrix with \code{ncol(values) == max(length(vertices),
 length(attributes))}.
+
+The \code{value} argument is translated into a row (or two rows if
+\code{interp = TRUE}) of \code{values}
+by finding its location in \code{param}.
 }
 \value{
 A list of cleaned up parameter values, to be used in an rgl controller.
