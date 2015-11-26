@@ -184,6 +184,13 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
   if (length(stop) != 1 || !is.finite(stop)) stop <- NULL
 
   actions <- list(...)
+  types <- vapply(actions, typeof, "")
+  if (any(bad <- types != "list")) {
+    bad <- which(bad)[1]
+    stop("Actions should be controllers, action ", bad, " is ", types[bad])
+  }
+  names(actions) <- NULL
+
   if (!length(components))
     components <- character()
   else
