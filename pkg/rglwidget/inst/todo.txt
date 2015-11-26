@@ -43,7 +43,10 @@ Get rmarkdown to do the base64 conversion of embedded images
 instead of doing it ourselves; make sure files get cleaned up.
 
 Put bboxdeco rendering into Javascript.  -- looks really time
-consuming.
+consuming, but is necessary, as bboxdeco objects change their appearance
+depending on the subscene they are displayed in.  The alternative would
+be to get scene3d() to generate new bboxdeco objects for each
+subscene.
 
 Investigate whether grid displays can be converted to rgl objects.
 
