@@ -60,3 +60,5 @@ Style the controls using CSS, not Javascript.
 
 Get rid of old style Javascript insertion of controls, always use
 widget.
+
+Planes should be rendered in Javascript.
