@@ -170,8 +170,9 @@ vertexControl <- function(value = 0, values = NULL, vertices = 1, attributes, ob
 playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
                        components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
                        loop = TRUE,
-                       step = 1, labels = seq(from = start, to = stop, by = step),
-                       precision = 3, width = "auto",
+                       step = 1, labels = NULL,
+                       precision = 3,
+                       buttonWidth = "8%", sliderWidth = "30%", labelWidth = "auto",
                        elementId = NULL, respondTo = NULL) {
 
   if (is.null(elementId) && !inShiny())
@@ -213,7 +214,9 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
        step = step,
        labels = labels,
        precision = precision,
-       width = width)
+       buttonWidth = buttonWidth,
+       sliderWidth = sliderWidth,
+       labelWidth = labelWidth)
 
   createWidget(
     name = 'rglcontroller',

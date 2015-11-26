@@ -13,8 +13,10 @@ playwidget(sceneId, ...,
             components = c("Reverse", "Play", "Slower", "Faster",
                            "Reset", "Slider", "Label"),
             loop = TRUE,
-            step = 1, labels = seq(from = start, to = stop, by = step),
-            precision = 3, width = "auto",
+            step = 1, labels = NULL,
+            precision = 3,
+            buttonWidth = "8\%", sliderWidth = "30\%", labelWidth = "auto",
+
             elementId = NULL, respondTo = NULL)
 }
 \arguments{
@@ -53,8 +55,8 @@ Optional labels to use, corresponding to slider steps.  Set to
 If \code{labels=NULL}, the precision to use when displaying
 timer values.
 }
-  \item{width}{
-The CSS specification for the width of the slider.
+  \item{buttonWidth, sliderWidth, labelWidth}{
+The CSS specifications for the widths of the buttons, slider and label.
 }
   \item{elementId}{
 The HTML id of the generated widget, containing buttons,

@@ -2069,14 +2069,17 @@ rglwidgetClass = function() {
 		          nominal = this.value,
 		          slider = this.Slider,
 		      	  labels = this.outputLabels,
-		          output = this.Output;
+		          output = this.Output,
+		          step;
 		      if (typeof slider !== "undefined" && nominal != slider.value)
 		        slider.value = nominal;
 		      if (typeof output !== "undefined") {
+		        step = Math.round((nominal - output.sliderMin)/output.sliderStep);
 		        if (labels !== null) {
-		          output.innerHTML = labels[Math.round((nominal - output.sliderMin)/output.sliderStep)];
+		          output.innerHTML = labels[step];
 		        } else {
-		          output.innerHTML = nominal.toPrecision(output.outputPrecision);
+		          step = step*output.sliderStep + output.sliderMin;
+		          output.innerHTML = step.toPrecision(output.outputPrecision);
 		        }
 		      }
 		      for (i=0; i < this.actions.length; i++) {
@@ -2101,7 +2104,7 @@ rglwidgetClass = function() {
 		      slider.sliderActions = control.actions;
 		      slider.sliderScene = this;
 		      slider.style.display = "inline";
-		      slider.style.width = control.width;
+		      slider.style.width = control.sliderWidth;
 		      el.rgltimer.Slider = slider;
 		      slider.rgltimer = el.rgltimer;
 		      el.appendChild(slider);
@@ -2115,6 +2118,7 @@ rglwidgetClass = function() {
 		      output.sliderMin = min;
 		      output.sliderStep = step;
 		      output.outputPrecision = precision;
+		      output.style.width = control.labelWidth;
 		      el.rgltimer.Output = output;
 		      el.rgltimer.outputLabels = labels;
 		      el.appendChild(output);
@@ -2135,6 +2139,7 @@ rglwidgetClass = function() {
 		        button.rgltimer.PlayButton = button;
 		      button.onclick = onclicks[label];
 		      button.style.display = "inline-block";
+		      button.style.width = control.buttonWidth;
           el.appendChild(button);
 		    };
 
