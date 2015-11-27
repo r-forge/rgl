@@ -69,9 +69,9 @@ controllers and initializes them.
 
 Finally it draws the scene.
 
-# rglcontroller()
+# playwidget()
 
-The `rglcontroller()` function adds a controller to the page.
+The `playwidget()` function adds a widget holding controllers to the page.
 Most of the controllers are not visible; they are mainly
 for use by Shiny controls to affect an `rglwidget()` scene.
 
@@ -83,25 +83,18 @@ and the Shiny control to respond to, respectively.  These and
 a list of individual controls are put into a list and passed
 as `x` to `createWidget()`.
 
-# playwidget()
-
-This function is similar to `rglcontroller()`, but it always inserts
-a `type = "player"` control.  That control inserts buttons, a 
-slider, and a label into the web page, and uses them
-to control a timer.
-
 
 # subsetControl, propertyControl, ageControl, vertexControl
 
-These are the controls that can be passed in `rglcontroller()` or
-`playwidget()`.  Each of them sets up data and returns a list
+These are the controls that can be passed in `playwidget()`.  
+Each of them sets up data and returns a list
 with a field `type` to identify the control and various other
 fields to hold data.
 
-# rglcontroller.js
+# playwidget.js
 
 The `createWidget()` call puts `x` into JSON and calls
-the `renderValue` function of the `rglcontroller`.  This function
+the `renderValue` function of the `playwidget`.  This function
 attempts to call the `scene.applyControls` corresponding to the
 `sceneId`, but it is possible the scene doesn't exist yet.  In that
 case we just save the information in the instance data.

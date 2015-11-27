@@ -21,9 +21,8 @@ and which optionally controls a slider. DONE using playControl.
 
 playControl should generate a widget, not be a controller. DONE
 
-Drop rglcontroller widget, have playwidget work with Shiny. Partially
-DONE: playwidget works with Shiny, but rglcontroller has been kept,
-because it doesn't really make sense to use playwidget.
+Drop rglcontroller widget, have playwidget work with Shiny.
+DONE
 
 Set it up so that rgl Suggests rglwidget, all the WebGL work is done
 here.  Functions remain in rgl, but they check whether they can
@@ -33,6 +32,13 @@ here, not committed in rgl yet.
 rglwidget should get a "close" argument, to close the current
 rgl window, so all those rgl.close calls aren't needed.
 WONT DO.  KISS.
+
+playwidget should pass ... to createWidget, and take the
+controls in an explicit arg.  DONE
+
+rglwidget doesn't need the height and width args. NOT DONE, it does need them for convertScene.
+
+Drop rglcontroller(), always use playwidget(). DONE
 
 NOT DONE:
 
@@ -67,9 +73,4 @@ widget.
 Planes should be rendered in Javascript.  Note that "offsets" is
 used both for the plane offsets and internal offsets -- change to planeOfs.
 
-rglwidget doesn't need the height and width args.
-
-playwidget should pass ... to createWidget, and take the
-controls in an explicit arg.
-
-Drop rglcontroller(), always use playwidget().
+Maybe depth_test = "lequal" should be the default?  Or figure out why "less" messes up the display.

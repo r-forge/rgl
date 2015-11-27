@@ -2,7 +2,7 @@
 \alias{subsetControl}
 \alias{propertyControl}
 \title{
-Controls to use with rglcontroller.
+Controls to use with playwidget().
 }
 \description{
 These are setter functions to produce actions in a Shiny app,
@@ -33,7 +33,7 @@ propertyControl(value = 0, entries, properties, objids, values = NULL,
   values}
 }
 \details{
-\code{subsetControl} produces data for \code{\link{rglcontroller}} to
+\code{subsetControl} produces data for \code{\link{playwidget}} to
 display subsets of the object in one or more subscenes.  This code will not
 touch objects in the
 subscenes if they
@@ -57,8 +57,7 @@ Duncan Murdoch
 }
 
 \seealso{
-\code{\link{rglcontroller}} for how to embed this in a Shiny app,
 \code{\link[rgl]{subsetSetter}} for a way to embed a pure Javascript
 control, and \code{\link{playwidget}} for a way to use these
-in animations.
+in animations (including Shiny).
 }
