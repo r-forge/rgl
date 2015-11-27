@@ -8,7 +8,7 @@ This is a widget that can be put in a web page to allow
 animations without needing Shiny.
 }
 \usage{
-playwidget(sceneId, ...,
+playwidget(sceneId, controls,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
             components = c("Reverse", "Play", "Slower", "Faster",
                            "Reset", "Slider", "Label"),
@@ -17,17 +17,20 @@ playwidget(sceneId, ...,
             precision = 3,
             buttonWidth = "8\%", sliderWidth = "30\%", labelWidth = "auto",
 
-            elementId = NULL, respondTo = NULL)
+            elementId = NULL, respondTo = NULL,
+            ...)
 }
 \arguments{
   \item{sceneId}{
 The HTML id of the rgl scene being controlled.
 }
-  \item{\dots}{
-A number of controller functions, e.g. \code{\link{propertyControl}}.
+  \item{controls}{
+A single \code{"rglControl"} object, e.g. \code{\link{propertyControl}}, or a list of several.
 }
   \item{start, stop}{
-The starting and stopping values of the animation.
+The starting and stopping values of the animation.  If
+\code{labels} is supplied \code{stop} will default to step
+through the labels.
 }
   \item{interval}{
 The requested interval (in seconds) between updates.  Updates
@@ -66,6 +69,9 @@ slider, etc.
   \item{respondTo}{
 The HTML ID of an input control (e.g. a \code{\link[shiny]{sliderInput}}
 control) to respond to.}
+
+  \item{...}{Additional arguments
+to pass to \code{htmlwidgets::\link{createWidget}}.}
 }
 \details{
 The \code{components} are buttons to control the animation,

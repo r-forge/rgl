@@ -41,7 +41,7 @@ Like \code{rgl::\link[rgl:propertySetter]{vertexSetter}}, this function
 modifies attributes of vertices in a single
 object.  The \code{attributes} are properties of each vertex
 in a scene; not all are applicable to all objects. In order,
-the are: coordinates of the vertex \code{"x", "y", "z"}, color
+they are: coordinates of the vertex \code{"x", "y", "z"}, color
 of the vertex \code{"red", "green", "blue", "alpha"}, normal at the vertex
 \code{"nx", "ny", "nz"}, radius of a sphere at the vertex
 \code{"radius"}, origin within a texture \code{"ox", "oy"} and
@@ -57,7 +57,8 @@ The \code{value} argument is translated into a row (or two rows if
 by finding its location in \code{param}.
 }
 \value{
-A list of cleaned up parameter values, to be used in an rgl controller.
+A list of class \code{"rglControl"} of cleaned up parameter
+values, to be used in an rgl widget.
 }
 \author{
 Duncan Murdoch

@@ -49,7 +49,8 @@ of \code{values} is determined by the position of \code{value}
 in \code{param}.
 }
 \value{
-These functions return controller data in a list.
+These functions return controller data in a list of class
+\code{"rglControl"}.
 }
 \author{
 Duncan Murdoch
