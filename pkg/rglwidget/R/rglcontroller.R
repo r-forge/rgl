@@ -35,25 +35,27 @@ subsetControl <- function(value = 1, subsets, subscenes = NULL,
                          accumulate = FALSE) {
   subsets <- lapply(subsets, as.integer)
   fullset <- as.integer(fullset)
-  list(type = "subsetSetter",
+  structure(list(type = "subsetSetter",
        value = value - 1,
        subsets = subsets,
        subscenes = subscenes,
        fullset = fullset,
-       accumulate = accumulate)
+       accumulate = accumulate),
+      class = "rglControl")
 }
 
 propertyControl <- function(value = 0, entries, properties, objids, values = NULL,
                             param = seq_len(NROW(values)) - 1, interp = TRUE) {
   objids <- as.integer(objids)
-  list(type = "propertySetter",
+  structure(list(type = "propertySetter",
        value = value,
        values = values,
        entries = entries,
        properties = properties,
        objids = objids,
        param = param,
-       interp = interp)
+       interp = interp),
+      class = "rglControl")
 }
 
 ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = NULL,
@@ -131,7 +133,7 @@ ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = N
   if (!is.null(blue))
     result <- c(result, list(blue = blue[rows]))
 
-  result
+  structure(result, class = "rglControl")
 }
 
 vertexControl <- function(value = 0, values = NULL, vertices = 1, attributes, objid,
@@ -157,23 +159,25 @@ vertexControl <- function(value = 0, values = NULL, vertices = 1, attributes, ob
     values <- rbind(values[1,], values, values[nrow(values),])
   }
 
-  list(type = "vertexSetter",
+  structure(list(type = "vertexSetter",
        value = value,
        values = values,
        vertices = vertices - 1, # Javascript 0-based indexing
        attributes = attributes,
        objid = as.integer(objid),
        param = param,       # Javascript 0-based indexing
-       interp = interp)
+       interp = interp),
+      class = "rglControl")
 }
 
-playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  rate = 1,
+playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05,  rate = 1,
                        components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
                        loop = TRUE,
                        step = 1, labels = NULL,
                        precision = 3,
                        buttonWidth = "8%", sliderWidth = "30%", labelWidth = "auto",
-                       elementId = NULL, respondTo = NULL) {
+                       elementId = NULL, respondTo = NULL,
+                       ...) {
 
   if (is.null(elementId) && !inShiny())
     elementId <- paste0("play", sample(100000, 1))
@@ -183,26 +187,31 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
 
   if (length(stop) != 1 || !is.finite(stop)) stop <- NULL
 
-  actions <- list(...)
-  types <- vapply(actions, typeof, "")
-  if (any(bad <- types != "list")) {
+  stopifnot(is.list(controls))
+
+  if (inherits(controls, "rglControl"))
+    controls <- list(controls)
+
+  types <- vapply(controls, class, "")
+  if (any(bad <- types != "rglControl")) {
     bad <- which(bad)[1]
-    stop("Actions should be controllers, action ", bad, " is ", types[bad])
+    stop("Controls should be of class 'rglControl', control ", bad, " is ", types[bad])
   }
-  names(actions) <- NULL
+  names(controls) <- NULL
 
   if (!length(components))
     components <- character()
   else
     components <- match.arg(components, several.ok = TRUE)
 
+  if (is.null(stop) && !missing(labels) && length(labels))
+    stop <- start + (length(labels) - 1)*step
+
   if (is.null(stop)) {
     if ("Slider" %in% components) {
       warning("Cannot have slider with non-finite limits")
       components <- setdiff(components, "Slider")
     }
-    if (!missing(labels) && length(labels))
-      warning("Cannot have labels with non-finite limits")
     labels <- NULL
   } else {
     if (stop == start)
@@ -210,7 +219,7 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
   }
 
   control <- list(type = "player",
-       actions = actions,
+       actions = controls,
        start = start,
        stop = stop,
        value = start,
@@ -229,7 +238,8 @@ playwidget <- function(sceneId, ..., start = 0, stop = Inf, interval = 0.05,  ra
     name = 'rglcontroller',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=list(control)),
     elementId = elementId,
-    package = 'rglwidget'
+    package = 'rglwidget',
+    ...
   )
 }
 

@@ -30,6 +30,9 @@ here.  Functions remain in rgl, but they check whether they can
 requireNamespace(rglwidgets), and give instructions if not.  DONE
 here, not committed in rgl yet.
 
+rglwidget should get a "close" argument, to close the current
+rgl window, so all those rgl.close calls aren't needed.
+WONT DO.  KISS.
 
 NOT DONE:
 
@@ -51,14 +54,22 @@ subscene.
 Investigate whether grid displays can be converted to rgl objects.
 
 Add class to rgl function results so that in RStudio they can automatically
-be made into widgets.
+be made into widgets and displayed.
 
 Do away with subst(), use tags.  Can't completely do away with it,
-we need to write Javascript sometimes, but we can make less use of it.
+we need to write Javascript sometimes, but we can make less use of it, especially as we emphasize controls over setters.
 
 Style the controls using CSS, not Javascript.
 
 Get rid of old style Javascript insertion of controls, always use
 widget.
 
-Planes should be rendered in Javascript.
+Planes should be rendered in Javascript.  Note that "offsets" is
+used both for the plane offsets and internal offsets -- change to planeOfs.
+
+rglwidget doesn't need the height and width args.
+
+playwidget should pass ... to createWidget, and take the
+controls in an explicit arg.
+
+Drop rglcontroller(), always use playwidget().

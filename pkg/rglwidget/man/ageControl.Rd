@@ -43,7 +43,8 @@ If a \code{births} entry is \code{NA}, no change will be made to that
 vertex.
 }
 \value{
-A list of cleaned up parameter values, to be used in an rgl controller.
+A list of class \code{"rglControl"} of cleaned up parameter
+values, to be used in an rgl widget.
 }
 \author{
 Duncan Murdoch
