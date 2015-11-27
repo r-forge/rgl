@@ -5,7 +5,7 @@ Add a widget to play animations.
 }
 \description{
 This is a widget that can be put in a web page to allow
-animations without needing Shiny.
+animations with or without Shiny.
 }
 \usage{
 playwidget(sceneId, controls,
@@ -67,7 +67,7 @@ slider, etc.
 }
 
   \item{respondTo}{
-The HTML ID of an input control (e.g. a \code{\link[shiny]{sliderInput}}
+The HTML ID of a Shiny input control (e.g. a \code{\link[shiny]{sliderInput}}
 control) to respond to.}
 
   \item{...}{Additional arguments
@@ -87,8 +87,7 @@ The buttons have the following behaviour:
 \item{Reset}{Stop the animation and reset to the start value.}
 }
 
-If \code{respondTo} is used, the \code{components} are cleared.
-It makes more sense to use \code{\link{rglcontroller}}.
+If \code{respondTo} is used, no \code{components} are shown, as Shiny will provide the UI components.
 }
 \value{
 A widget suitable for use in an \pkg{Rmarkdown}-generated web
@@ -98,8 +97,7 @@ page.
 Duncan Murdoch
 }
 \seealso{
-\code{\link{rglcontroller}} for embedding controls in a Shiny
-app. \code{\link{subsetControl}},
+\code{\link{subsetControl}},
 \code{\link{propertyControl}}, \code{\link{ageControl}} and
 \code{\link{vertexControl}} are possible controls to use.
 }

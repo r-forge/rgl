@@ -62,7 +62,7 @@ message to change the scene.  Use
 Duncan Murdoch
 }
 \seealso{
-\code{\link{rglcontroller}} for a different approach to modifying
+\code{\link{playwidget}} for a different approach to modifying
 scenes that can be much faster, but may be less flexible.  The
 Shiny demo in this package makes use of all of these approaches.
 }

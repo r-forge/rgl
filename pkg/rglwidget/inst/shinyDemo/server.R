@@ -92,7 +92,7 @@ showsimplex <- function(x, f, col="blue") {
   # This is tricky:
 
   # 1. draw all lines, taking vertices two at a time:
-  c(segments3d(xyz[as.numeric(combn(n, 2)),]),
+  c(segments3d(xyz[as.numeric(combn(n, 2)),], col="black", depth_test = "lequal"),
     # 2. draw all faces, taking vertices three at a time:
     triangles3d(xyz[as.numeric(combn(n, 3)),], col=col, alpha=0.3))
 }
@@ -144,23 +144,22 @@ shinyServer(function(input, output, session) {
   })
 
   output$thewidget <- renderRglwidget({
-    rglwidget(controllers="thecontroller")
+    rglwidget(controllers=c("thecontroller", "thecontroller2"))
   })
 
   output$thecontroller <-
-    renderRglcontroller({
+    renderPlaywidget({
       if (length(path$subsets))
-        # It makes more sense to use rglcontroller as below, but
-        # this works...
         playwidget("thewidget", respondTo = "Slider",
-                   subsetControl(1, path$subsets))
+                   subsetControl(1, path$subsets),
+                   start = 1, stop = length(path$subsets))
       })
 
   output$thecontroller2 <-
-    renderRglcontroller({
+    renderPlaywidget({
       if (length(path$subsets))
-        rglcontroller("thewidget", respondTo = "Slider2",
-                          subsetControl(1, path$subsets, accumulate = TRUE))
+        playwidget("thewidget", respondTo = "Slider2",
+                   subsetControl(1, path$subsets, accumulate = TRUE))
       })
 })
 

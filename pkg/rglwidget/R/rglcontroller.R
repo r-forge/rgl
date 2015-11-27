@@ -1,31 +1,15 @@
-rglcontroller <- function(sceneId, ..., elementId = NULL, respondTo = NULL) {
-
-  # create widget
-  controls = list(...)
-
-  if (is.null(elementId) && !inShiny())
-    elementId <- paste0("rgl", sample(100000, 1))
-
-  createWidget(
-    name = 'rglcontroller',
-    x = list(sceneId = sceneId, respondTo = respondTo, controls=controls),
-    elementId = elementId,
-    width = 0, height = 0,
-    package = 'rglwidget'
-  )
-}
 
 #' Widget output function for use in Shiny
 #'
 #' @export
-rglcontrollerOutput <- function(outputId, width = '0px', height = '0px'){
-  shinyWidgetOutput(outputId, 'rglcontroller', width, height, package = 'rglwidget')
+playwidgetOutput <- function(outputId, width = '0px', height = '0px'){
+  shinyWidgetOutput(outputId, 'playwidget', width, height, package = 'rglwidget')
 }
 
 #' Widget render function for use in Shiny
 #'
 #' @export
-renderRglcontroller <- function(expr, env = parent.frame(), quoted = FALSE) {
+renderPlaywidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   if (!quoted) { expr <- substitute(expr) } # force quoted
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
@@ -235,7 +219,7 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
        labelWidth = labelWidth)
 
   createWidget(
-    name = 'rglcontroller',
+    name = 'playwidget',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=list(control)),
     elementId = elementId,
     package = 'rglwidget',
@@ -253,7 +237,8 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
 
 elementId2Prefix <- function(elementId, prefix = elementId) {
   cat(paste0("<script>var ", prefix, "rgl = {};</script>"))
-  rglcontroller(elementId, list(type = "oldBridge", prefix = prefix))
+  playwidget(elementId, list(type = "oldBridge", prefix = prefix),
+             components = character(0))
 }
 
 # This puts together a custom message for a more extensive change

@@ -1,8 +1,7 @@
 export(rglwidget, renderRglwidget, rglwidgetOutput,
-       rglcontroller, renderRglcontroller, rglcontrollerOutput,
+       playwidget, renderPlaywidget, playwidgetOutput,
        subsetControl, propertyControl, ageControl, vertexControl,
        .ageSetter, .par3dinterpSetter, .propertySetter, .vertexSetter,
-       playwidget,
        .propertySlider, .subsetSetter,
        .writeWebGL, .setupKnitr, .hook_webgl, .hook_rgl,
        elementId2Prefix, registerSceneChange, sceneChange)
