@@ -4,7 +4,8 @@
 Set attributes of vertices.
 }
 \description{
-This is a function to produce actions in a Shiny app.  A Shiny
+This is a function to produce actions in a web display.  A
+\code{\link{playwidget}} or Shiny
 input control (e.g. a \code{\link[shiny]{sliderInput}} control)
 sets a value which controls attributes of a selection of vertices.
 }
@@ -14,7 +15,7 @@ vertexControl(value = 0, values = NULL, vertices = 1, attributes,
 }
 \arguments{
   \item{value}{The value to use for input (typically \code{input$value}
-  in a Shiny app.)}
+  in a Shiny app.)  Not needed with \code{\link{playwidget}}.}
   \item{values}{
 A matrix of values, each row corresponding to an input value.
 }
