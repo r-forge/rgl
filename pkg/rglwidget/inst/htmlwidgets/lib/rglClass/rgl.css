@@ -1,0 +1,21 @@
+.rglPlayer {
+  width: auto;
+  height: auto;
+}
+
+.rgl-button {
+  width: auto;
+  display: inline-block;
+  font-size: 75%;
+}
+
+.rgl-slider {
+  display: inline-block;
+  width: 30%;
+}
+
+.rgl-label {
+  display: inline;
+  padding-left: 6px;
+  padding-right: 6px;
+}

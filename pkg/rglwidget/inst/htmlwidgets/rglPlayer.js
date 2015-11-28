@@ -1,6 +1,6 @@
 HTMLWidgets.widget({
 
-  name: 'playwidget',
+  name: 'rglPlayer',
 
   type: 'output',
 
@@ -27,7 +27,7 @@ HTMLWidgets.widget({
       };
 
     instance.el = el;
-    el.playwidget = instance;
+    el.rglPlayer = instance;
 
     if (x.respondTo !== null) {
       var control = window[x.respondTo];
