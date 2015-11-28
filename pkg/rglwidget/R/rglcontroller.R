@@ -42,6 +42,16 @@ propertyControl <- function(value = 0, entries, properties, objids, values = NUL
       class = "rglControl")
 }
 
+clipplaneControl <- function(a=NULL, b=NULL, c=NULL, d=NULL,
+                            plane = 1, clipplaneids,
+                            ...) {
+  values <- cbind(a = a, b = b, c = c, d = d)
+  col <- which(colnames(values) == letters[1:4]) - 1
+  propertyControl(values = values, entries = 4*(plane-1) + col,
+                  properties = "vClipplane", objids = clipplaneids,
+                  ...)
+}
+
 ageControl <- function(births, ages, objids, value = 0, colors = NULL, alpha = NULL,
                        radii = NULL, vertices = NULL, normals = NULL,
                        origins = NULL, texcoords = NULL,
@@ -219,8 +229,14 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
     x = list(sceneId = sceneId, respondTo = respondTo, controls=list(control)),
     elementId = elementId,
     package = 'rglwidget',
+    sizingPolicy = sizingPolicy(defaultWidth = "auto",
+                                defaultHeight = "auto"),
     ...
   )
+}
+
+rglPlayer_html <- function(id, style, class, ...) {
+  tags$span(id = id, class = class)
 }
 
 # This is a bridge to the old system
