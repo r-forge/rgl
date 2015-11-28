@@ -26,7 +26,7 @@ rglwidget <- local({
     x$controllers = controllers
   # create widget
   structure(htmlwidgets::createWidget(
-    name = 'rglwidget',
+    name = 'rglWebGL',
     x = x,
     width = width,
     height = height,
@@ -41,7 +41,7 @@ rglwidget <- local({
 #'
 #' @export
 rglwidgetOutput <- function(outputId, width = '512px', height = '512px'){
-  shinyWidgetOutput(outputId, 'rglwidget', width, height, package = 'rglwidget')
+  shinyWidgetOutput(outputId, 'rglWebGL', width, height, package = 'rglwidget')
 }
 
 #' Widget render function for use in Shiny

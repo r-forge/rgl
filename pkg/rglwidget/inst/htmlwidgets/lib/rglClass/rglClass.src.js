@@ -2103,8 +2103,8 @@ rglwidgetClass = function() {
 		      slider.oninput = OnSliderInput;
 		      slider.sliderActions = control.actions;
 		      slider.sliderScene = this;
-		      slider.style.display = "inline";
-		      slider.style.width = control.sliderWidth;
+		      slider.className = "rgl-slider";
+		      slider.id = el.id + "-slider";
 		      el.rgltimer.Slider = slider;
 		      slider.rgltimer = el.rgltimer;
 		      el.appendChild(slider);
@@ -2112,13 +2112,11 @@ rglwidgetClass = function() {
 
 		    addLabel = function(labels, min, step, precision) {
 		      var output = document.createElement("output");
-		      output.style.display = "inline";
-		      output.style["padding-left"] = "6px";
-		      output.style["padding-right"] = "6px";
 		      output.sliderMin = min;
 		      output.sliderStep = step;
 		      output.outputPrecision = precision;
-		      output.style.width = control.labelWidth;
+		      output.className = "rgl-label";
+		      output.id = el.id + "-label";
 		      el.rgltimer.Output = output;
 		      el.rgltimer.outputLabels = labels;
 		      el.appendChild(output);
@@ -2138,8 +2136,8 @@ rglwidgetClass = function() {
 		      if (label === "Play")
 		        button.rgltimer.PlayButton = button;
 		      button.onclick = onclicks[label];
-		      button.style.display = "inline-block";
-		      button.style.width = control.buttonWidth;
+		      button.className = "rgl-button";
+		      button.id = el.id + "-" + label;
           el.appendChild(button);
 		    };
 
@@ -2157,8 +2155,6 @@ rglwidgetClass = function() {
           }
         }
         el.rgltimer.Tick();
-        el.style.width = "auto";
-        el.style.height = "auto";
 		};
 
 		this.applyControls = function(el, x) {

@@ -76,6 +76,15 @@ This is normally useful only in \pkg{knitr} documents which can have
 many \pkg{rgl} scenes; if the widget is displayed in RStudio,
 only one scene will be shown.
 }
+\section{Appearance}{
+The appearance of the display is set by the stylesheet
+in \code{system.file("htmlwidgets/lib/rglClass/rgl.css")}.
+
+The widget is of class \code{rglWebGL}, with id
+set according to \code{elementId}.  (As of this writing,
+no special settings are given for class \code{rglWebGL},
+but you can add your own.)
+}
 \author{
 Duncan Murdoch
 }

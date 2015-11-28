@@ -15,8 +15,6 @@ playwidget(sceneId, controls,
             loop = TRUE,
             step = 1, labels = NULL,
             precision = 3,
-            buttonWidth = "8\%", sliderWidth = "30\%", labelWidth = "auto",
-
             elementId = NULL, respondTo = NULL,
             ...)
 }
@@ -58,14 +56,10 @@ Optional labels to use, corresponding to slider steps.  Set to
 If \code{labels=NULL}, the precision to use when displaying
 timer values.
 }
-  \item{buttonWidth, sliderWidth, labelWidth}{
-The CSS specifications for the widths of the buttons, slider and label.
-}
   \item{elementId}{
 The HTML id of the generated widget, containing buttons,
 slider, etc.
 }
-
   \item{respondTo}{
 The HTML ID of a Shiny input control (e.g. a \code{\link[shiny]{sliderInput}}
 control) to respond to.}
@@ -88,6 +82,20 @@ The buttons have the following behaviour:
 }
 
 If \code{respondTo} is used, no \code{components} are shown, as Shiny will provide the UI components.
+}
+\section{Appearance}{
+The appearance of the controls is set by the stylesheet
+in \code{system.file("htmlwidgets/lib/rglClass/rgl.css")}.
+
+The overall widget is of class \code{rglPlayer}, with id
+set according to \code{elementId}.
+
+The buttons are of HTML class \code{rgl-button}, the
+slider is of class \code{rgl-slider}, and the label is of
+class \code{rgl-label}.  Each element has an id prefixed
+by the widget id, e.g. \code{elementId-button-Reverse},
+\code{elementId-slider}, etc. (where \code{elementId}
+should be replaced by the actual id).
 }
 \value{
 A widget suitable for use in an \pkg{Rmarkdown}-generated web

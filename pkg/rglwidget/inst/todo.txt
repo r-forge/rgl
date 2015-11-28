@@ -40,6 +40,10 @@ rglwidget doesn't need the height and width args. NOT DONE, it does need them fo
 
 Drop rglcontroller(), always use playwidget(). DONE
 
+Style the controls using CSS, not Javascript. DONE.
+Renamed (in Javascript) rglwidget to rglWebGL for consistency with writeWebGL,
+playwidget to rglPlayer for namespace reasons.
+
 NOT DONE:
 
 On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
@@ -64,8 +68,6 @@ be made into widgets and displayed.
 
 Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it, especially as we emphasize controls over setters.
-
-Style the controls using CSS, not Javascript.
 
 Get rid of old style Javascript insertion of controls, always use
 widget.

@@ -3,7 +3,7 @@
 #'
 #' @export
 playwidgetOutput <- function(outputId, width = '0px', height = '0px'){
-  shinyWidgetOutput(outputId, 'playwidget', width, height, package = 'rglwidget')
+  shinyWidgetOutput(outputId, 'rglPlayer', width, height, package = 'rglwidget')
 }
 
 #' Widget render function for use in Shiny
@@ -159,12 +159,11 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
                        loop = TRUE,
                        step = 1, labels = NULL,
                        precision = 3,
-                       buttonWidth = "8%", sliderWidth = "30%", labelWidth = "auto",
                        elementId = NULL, respondTo = NULL,
                        ...) {
 
   if (is.null(elementId) && !inShiny())
-    elementId <- paste0("play", sample(100000, 1))
+    elementId <- paste0("rgl-play", sample(100000, 1))
 
   if (!is.null(respondTo))
     components <- NULL
@@ -213,13 +212,10 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
        loop = loop,
        step = step,
        labels = labels,
-       precision = precision,
-       buttonWidth = buttonWidth,
-       sliderWidth = sliderWidth,
-       labelWidth = labelWidth)
+       precision = precision)
 
   createWidget(
-    name = 'playwidget',
+    name = 'rglPlayer',
     x = list(sceneId = sceneId, respondTo = respondTo, controls=list(control)),
     elementId = elementId,
     package = 'rglwidget',

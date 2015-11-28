@@ -1,6 +1,6 @@
 HTMLWidgets.widget({
 
-  name: 'rglwidget',
+  name: 'rglWebGL',
 
   type: 'output',
 
@@ -23,7 +23,7 @@ HTMLWidgets.widget({
       for (i = 0; i<x.controllers.length; i++) {
         controller = window[x.controllers[i]];
         if (typeof controller !== "undefined") {
-          controller = controller.playwidget;
+          controller = controller.rglPlayer;
           if (typeof controller !== "undefined" && !controller.initialized) {
             rgl.applyControls(el, controller.controls);
             controller.initialized = true;
