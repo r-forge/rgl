@@ -249,7 +249,9 @@ rglPlayer_html <- function(id, style, class, ...) {
 
 elementId2Prefix <- function(elementId, prefix = elementId) {
   cat(paste0("<script>var ", prefix, "rgl = {};</script>"))
-  playwidget(elementId, list(type = "oldBridge", prefix = prefix),
+  playwidget(elementId, structure(list(type = "oldBridge",
+                                       prefix = prefix),
+                                  class = "rglControl"),
              components = character(0))
 }
 

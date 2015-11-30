@@ -12,6 +12,7 @@ library(rgl)
 library(rglwidget)
 plot3d(matrix(rnorm(300), ncol=3))
 ids <- rgl.ids()$id
+planes3d(1,2,3, 4)
 rglwidget(elementId = "testID")
 playwidget("testID", subsetControl(subsets=as.list(ids)),
            labels=seq_along(ids))

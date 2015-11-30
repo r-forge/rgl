@@ -22,8 +22,12 @@ rglwidgetClass = function() {
     };
 
     this.vlen = function(v) {
-		  return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+		  return Math.sqrt(this.dotprod(v, v));
 		};
+
+    this.dotprod = function(a, b) {
+      return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    }
 
 		this.xprod = function(a, b) {
 			return [a[1]*b[2] - a[2]*b[1],
@@ -35,6 +39,12 @@ rglwidgetClass = function() {
       return a.map(function(currentValue, index, array) {
             return currentValue.concat(b[index]);
       });
+    };
+
+    this.swap = function(a, i, j) {
+      var temp = a[i];
+      a[i] = a[j];
+      a[j] = temp;
     };
 
     this.flatten = function(a) {
@@ -676,7 +686,6 @@ rglwidgetClass = function() {
       sub.clipplanes = [];
       sub.transparent = [];
       sub.opaque = [];
-      sub.clipplanes = [];
       sub.lights = [];
       for (i=0; i < sub.objects.length; i++) {
         obj = this.getObj(sub.objects[i]);
@@ -710,6 +719,80 @@ rglwidgetClass = function() {
         if (typeof prevobj[fields[i]] !== "undefined")
           obj[fields[i]] = prevobj[fields[i]];
       }
+    };
+
+    this.planeUpdateTriangles = function(id, bbox) {
+      var perms = [[0,0,1], [1,2,2], [2,1,0]],
+          x, xrow, elem, A, d, nhits, i, j, k, u, v, w, intersect, which, v0, v2, vx, reverse,
+          face1 = [], face2 = [], normals = [],
+          obj = this.getObj(id),
+          nPlanes = obj.normals.length;
+      obj.bbox = bbox;
+      obj.vertices = [];
+      for (elem = 0; elem < nPlanes; elem++) {
+//    Vertex Av = normal.getRecycled(elem);
+        x = [];
+        A = obj.normals[elem];
+        d = obj.offsets[elem][0];
+        nhits = 0;
+        for (i=0; i<3; i++)
+          for (j=0; j<2; j++)
+            for (k=0; k<2; k++) {
+              u = perms[0][i];
+              v = perms[1][i];
+              w = perms[2][i];
+              if (A[w] != 0.0) {
+                intersect = -(d + A[u]*bbox[j+2*u] + A[v]*bbox[k+2*v])/A[w];
+  	            if (bbox[2*w] < intersect && intersect < bbox[1+2*w]) {
+  	              xrow = [];
+  	              xrow[u] = bbox[j+2*u];
+  	              xrow[v] = bbox[k+2*v];
+  	              xrow[w] = intersect;
+  	              x.push(xrow);
+  	              face1[nhits] = j + 2*u;
+  	              face2[nhits] = k + 2*v;
+  	              nhits++;
+  	            }
+  	          }
+            }
+
+            if (nhits > 3) {
+            /* Re-order the intersections so the triangles work */
+              for (i=0; i<nhits-2; i++) {
+                which = 0; /* initialize to suppress warning */
+                for (j=i+1; j<nhits; j++) {
+                  if (face1[i] == face1[j] || face1[i] == face2[j]
+                      || face2[i] == face1[j] || face2[i] == face2[j] ) {
+                    which = j;
+                    break;
+                  }
+                }
+                if (which > i+1) {
+                  this.swap(x, i+1, which);
+                  this.swap(face1, i+1, which);
+                  this.swap(face2, i+1, which);
+                }
+              }
+            }
+            if (nhits >= 3) {
+      /* Put in order so that the normal points out the FRONT of the faces */
+              v0 = [x[0][0] - x[1][0] , x[0][1] - x[1][1], x[0][2] - x[1][2]];
+              v2 = [x[2][0] - x[1][0] , x[2][1] - x[1][1], x[2][2] - x[1][2]];
+              /* cross-product */
+              vx = this.xprod(v0, v2);
+              reverse = this.dotprod(vx, A) > 0;
+
+              for (i=0; i<nhits-2; i++) {
+                obj.vertices.push(x[0]);
+                normals.push(A);
+                for (j=1; j<3; j++) {
+                  obj.vertices.push(x[i + (reverse ? 3-j : j)]);
+                  normals.push(A);
+                }
+              }
+            }
+      }
+      obj.pnormals = normals;
     };
 
     this.initObj = function(id) {
@@ -814,6 +897,7 @@ rglwidgetClass = function() {
 
     v = obj.vertices;
     obj.vertexCount = v.length;
+    if (!obj.vertexCount) return;
 
     var stride = 3, nc, cofs, nofs, radofs, oofs, tofs, vnew, v1;
 
@@ -830,7 +914,7 @@ rglwidgetClass = function() {
     if (typeof obj.normals !== "undefined") {
     	nofs = stride;
     	stride = stride + 3;
-    	v = this.cbind(v, obj.normals);
+    	v = this.cbind(v, typeof obj.pnormals !== "undefined" ? obj.pnormals : obj.normals);
     } else
     	nofs = -1;
 
@@ -899,7 +983,7 @@ rglwidgetClass = function() {
       alert("problem in stride calculation");
     }
 
-    obj.offsets = {vofs:0, cofs:cofs, nofs:nofs, radofs:radofs, oofs:oofs, tofs:tofs, stride:stride};
+    obj.vOffsets = {vofs:0, cofs:cofs, nofs:nofs, radofs:radofs, oofs:oofs, tofs:tofs, stride:stride};
 
     obj.values = new Float32Array(this.flatten(v));
 
@@ -1082,6 +1166,13 @@ rglwidgetClass = function() {
         return;
 			}
 
+			if (type === "planes") {
+			  if (obj.bbox !== subscene.par3d.bbox) {
+			    this.planeUpdateTriangles(id, subscene.par3d.bbox);
+			    this.initObj(id);
+			  }
+			}
+
       this.setDepthTest(id);
 
       if (sprites_3d) {
@@ -1223,12 +1314,12 @@ rglwidgetClass = function() {
 			    sphereMV = new CanvasMatrix4();
 
 			  	if (depth_sort) {
-				    baseofs = faces[i]*obj.offsets.stride;
+				    baseofs = faces[i]*obj.vOffsets.stride;
 				  } else {
-				    baseofs = i*obj.offsets.stride;
+				    baseofs = i*obj.vOffsets.stride;
 				  }
 
-          ofs = baseofs + obj.offsets.radofs;
+          ofs = baseofs + obj.vOffsets.radofs;
 				  sscale = obj.values[ofs];
 
 				  sphereMV.scale(sscale/scale[0], sscale/scale[1], sscale/scale[2]);
@@ -1239,7 +1330,7 @@ rglwidgetClass = function() {
 				  gl.uniformMatrix4fv( obj.mvMatLoc, false, new Float32Array(sphereMV.getAsArray()) );
 
 				  if (nc > 1) {
-				    ofs = baseofs + obj.offsets.cofs;
+				    ofs = baseofs + obj.vOffsets.cofs;
 					  gl.vertexAttrib4f( this.colLoc, obj.values[ofs],
 					   		                       obj.values[ofs+1],
                                        obj.values[ofs+2],
@@ -1255,18 +1346,18 @@ rglwidgetClass = function() {
 				  gl.vertexAttrib4fv( this.colLoc, new Float32Array(obj.onecolor));
 				} else {
 					gl.enableVertexAttribArray( this.colLoc );
-					gl.vertexAttribPointer(this.colLoc, 4, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.cofs);
+					gl.vertexAttribPointer(this.colLoc, 4, gl.FLOAT, false, 4*obj.vOffsets.stride, 4*obj.vOffsets.cofs);
 				}
       }
 
-			if (is_lit && obj.offsets.nofs > 0) {
+			if (is_lit && obj.vOffsets.nofs > 0) {
 				gl.enableVertexAttribArray( obj.normLoc );
-				gl.vertexAttribPointer(obj.normLoc, 3, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.nofs);
+				gl.vertexAttribPointer(obj.normLoc, 3, gl.FLOAT, false, 4*obj.vOffsets.stride, 4*obj.vOffsets.nofs);
 			}
 
 			if (has_texture || type === "text") {
 				gl.enableVertexAttribArray( obj.texLoc );
-				gl.vertexAttribPointer(obj.texLoc, 2, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.tofs);
+				gl.vertexAttribPointer(obj.texLoc, 2, gl.FLOAT, false, 4*obj.vOffsets.stride, 4*obj.vOffsets.tofs);
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, obj.texture);
 				gl.uniform1i( obj.sampler, 0);
@@ -1274,7 +1365,7 @@ rglwidgetClass = function() {
 
 			if (fixed_quads) {
 				gl.enableVertexAttribArray( obj.ofsLoc );
-				gl.vertexAttribPointer(obj.ofsLoc, 2, gl.FLOAT, false, 4*obj.offsets.stride, 4*obj.offsets.oofs);
+				gl.vertexAttribPointer(obj.ofsLoc, 2, gl.FLOAT, false, 4*obj.vOffsets.stride, 4*obj.vOffsets.oofs);
 			}
 
 			var mode = this.mode4type[type];
@@ -1289,7 +1380,7 @@ rglwidgetClass = function() {
 				gl.lineWidth( this.getMaterial(id, "lwd") );
 			}
 
-			gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, 4*obj.offsets.stride,  4*obj.offsets.vofs);
+			gl.vertexAttribPointer(this.posLoc,  3, gl.FLOAT, false, 4*obj.vOffsets.stride,  4*obj.vOffsets.vofs);
 
 			if (is_indexed) {
 			  gl.drawElements(gl[mode], count, gl.UNSIGNED_SHORT, 0);
@@ -1954,11 +2045,11 @@ rglwidgetClass = function() {
       for (k=0; k<ncol; k++) {
         attrib = attributes[k];
         vertex = vertices[k];
-        ofs = obj.offsets[ofss[attrib]];
+        ofs = obj.vOffsets[ofss[attrib]];
         if (ofs < 0)
           alert("Attribute '"+attrib+"' not found in object "+control.objid);
         else {
-          stride = obj.offsets.stride;
+          stride = obj.vOffsets.stride;
           ofs = vertex*stride + ofs + pos[attrib];
           if (direct) {
             propvals[ofs] = value;
@@ -2023,11 +2114,11 @@ rglwidgetClass = function() {
         objid = objids[l];
         obj = this.getObj(objid);
         propvals = obj.values;
-        stride = obj.offsets.stride;
+        stride = obj.vOffsets.stride;
         for (k = 0; k < attribs.length; k++) {
           attrib = control[attribs[k]];
           if (typeof attrib !== "undefined") {
-            ofs = obj.offsets[ofss[k]];
+            ofs = obj.vOffsets[ofss[k]];
             if (ofs >= 0) {
               dim = dims[k];
               ofs = ofs + pos[k];

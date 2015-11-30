@@ -47,6 +47,10 @@ playwidget to rglPlayer for namespace reasons.
 Do away with subst(), use tags.  Can't completely do away with it,
 we need to write Javascript sometimes, but we can make less use of it, especially as we emphasize controls over setters.
 
+
+Planes should be rendered in Javascript.  Note that "offsets" is
+used both for the plane offsets and internal offsets -- change internals to vOffsets. DONE
+
 NOT DONE:
 
 On Windows, the 3d sprites flash annoyingly.  This might be caused by the mouse
@@ -71,8 +75,5 @@ be made into widgets and displayed.
 
 Get rid of old style Javascript insertion of controls, always use
 widget.
-
-Planes should be rendered in Javascript.  Note that "offsets" is
-used both for the plane offsets and internal offsets -- change to planeOfs.
 
 Maybe depth_test = "lequal" should be the default?  Or figure out why "less" messes up the display.
