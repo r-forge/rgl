@@ -51,6 +51,18 @@ rglwidgetClass = function() {
       return [].concat.apply([], a);
     };
 
+    /* set element of 1d or 2d array as if it was flattened.  Column major, zero based! */
+    this.setElement = function(a, i, value) {
+      if (Array.isArray(a[0])) {
+        var dim = a.length,
+            col = Math.floor(i/dim),
+            row = i % dim;
+        a[row][col] = value;
+      } else {
+        a[i] = value;
+      }
+    };
+
     this.transpose = function(a) {
       var newArray = [],
           n = a.length,
@@ -814,6 +826,8 @@ rglwidgetClass = function() {
       alert("initObj id is "+typeof id);
     }
 
+    obj.initialized = true;
+
     if (type === "background" || type === "bboxdeco" || type === "subscene")
       return;
 
@@ -1153,6 +1167,15 @@ rglwidgetClass = function() {
 		    alert("drawObj id is "+typeof id);
 		  }
 
+			if (type === "planes") {
+			  if (obj.bbox !== subscene.par3d.bbox || !obj.initialized) {
+			    this.planeUpdateTriangles(id, subscene.par3d.bbox);
+			  }
+			}
+
+      if (!obj.initialized)
+        this.initObj(id);
+
       if (type === "light" || type === "bboxdeco")
         return;
 
@@ -1164,13 +1187,6 @@ rglwidgetClass = function() {
  			  }
  			  obj.IMVClip = IMVClip;
         return;
-			}
-
-			if (type === "planes") {
-			  if (obj.bbox !== subscene.par3d.bbox) {
-			    this.planeUpdateTriangles(id, subscene.par3d.bbox);
-			    this.initObj(id);
-			  }
 			}
 
       this.setDepthTest(id);
@@ -1920,6 +1936,7 @@ rglwidgetClass = function() {
 		      property = properties[0], objid = objids[0],
 		      obj = this.getObj(objid),
 		      propvals, i, v1, v2, p, entry, gl, needsBinding,
+		      newprop, newid,
 
 		      getPropvals = function() {
             if (property === "userMatrix")
@@ -1964,11 +1981,11 @@ rglwidgetClass = function() {
         if (control.interp) {
           v1 = values[ncol*(i-1) + j];
           v2 = values[ncol*i + j];
-          propvals[entry] = p*v1 + (1-p)*v2;
+          this.setElement(propvals, entry, p*v1 + (1-p)*v2);
         } else if (!direct) {
-          propvals[entry] = values[ncol*value + j];
+          this.setElement(propvals, entry, values[ncol*value + j]);
         } else {
-          propvals[entry] = value[j];
+          this.setElement(propvals, entry, value[j]);
         }
       }
       needsBinding = [];
@@ -2232,6 +2249,9 @@ rglwidgetClass = function() {
           el.appendChild(button);
 		    };
 
+        if (typeof control.reinit !== "null") {
+          control.actions.reinit = control.reinit;
+        }
 		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.value, control.rate, control.loop, control.actions);
         for (var i=0; i < components.length; i++) {
           switch(components[i]) {
@@ -2249,14 +2269,17 @@ rglwidgetClass = function() {
 		};
 
 		this.applyControls = function(el, x) {
-		  var self = this;
-	    Object.keys(x).forEach(function(key){
-		    var control = x[key],
-		        type = control.type;
-		    if (typeof type === "undefined")
-		      return;
+		  var self = this, reinit = x.reinit, i, obj, control, type;
+		  for (i = 0; i < x.length; i++) {
+		    control = x[i];
+		    type = control.type;
 		    self[type](el, control);
-		  });
+		  };
+		  if (typeof reinit !== "undefined" && reinit !== null) {
+		    reinit = [].concat(reinit);
+		    for (i = 0; i < reinit.length; i++)
+		      self.getObj(reinit[i]).initialized = false;
+		  }
 		  self.drawScene();
 		};
 

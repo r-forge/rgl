@@ -170,6 +170,7 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
                        step = 1, labels = NULL,
                        precision = 3,
                        elementId = NULL, respondTo = NULL,
+                       reinit = NULL,
                        ...) {
 
   if (is.null(elementId) && !inShiny())
@@ -191,6 +192,12 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
     stop("Controls should be of class 'rglControl', control ", bad, " is ", types[bad])
   }
   names(controls) <- NULL
+
+  if (length(reinit)) {
+    bad <- vapply(controls, function(x) x$type == "vertexSetter" && length(intersect(reinit, x$objid)), FALSE)
+    if (any(bad))
+      warning("'vertexControl' is incompatible with re-initialization")
+  }
 
   if (!length(components))
     components <- character()
@@ -222,7 +229,8 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
        loop = loop,
        step = step,
        labels = labels,
-       precision = precision)
+       precision = precision,
+       reinit = reinit)
 
   createWidget(
     name = 'rglPlayer',
