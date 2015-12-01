@@ -10,10 +10,10 @@ output: ioslides_presentation
 ```{r echo=FALSE}
 library(rgl)
 library(rglwidget)
-plot3d(matrix(rnorm(300), ncol=3))
-ids <- rgl.ids()$id
-planes3d(1,2,3, 4)
+dataid <- plot3d(matrix(rnorm(300), ncol=3))["data"]
+planeid = planes3d(1,2,3, 4, col="red")
 rglwidget(elementId = "testID")
-playwidget("testID", subsetControl(subsets=as.list(ids)),
-           labels=seq_along(ids))
+playwidget("testID", controls = propertyControl(values=0:10, entries = 0, properties = "normals", objids = planeid),
+                       reinit = planeid,
+           start = 0, stop=10, step=0.1)
 ```

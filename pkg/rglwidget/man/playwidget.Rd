@@ -16,6 +16,7 @@ playwidget(sceneId, controls,
             step = 1, labels = NULL,
             precision = 3,
             elementId = NULL, respondTo = NULL,
+            reinit = NULL,
             ...)
 }
 \arguments{
@@ -64,6 +65,11 @@ slider, etc.
 The HTML ID of a Shiny input control (e.g. a \code{\link[shiny]{sliderInput}}
 control) to respond to.}
 
+  \item{reinit}{
+A vector of ids that will need re-initialization before
+being drawn again.
+}
+
   \item{...}{Additional arguments
 to pass to \code{htmlwidgets::\link{createWidget}}.}
 }
@@ -96,6 +102,14 @@ class \code{rgl-label}.  Each element has an id prefixed
 by the widget id, e.g. \code{elementId-button-Reverse},
 \code{elementId-slider}, etc. (where \code{elementId}
 should be replaced by the actual id).
+
+The \code{reinit} parameter handles the case where
+an object needs re-initialization after each change.  For
+example, plane objects may need this if their intersection
+with the bounding box changes shape.  Note that
+re-initialization is generally incompatible with
+the \code{\link{vertexControl}} as it modifies values
+which are set during initialization.
 }
 \value{
 A widget suitable for use in an \pkg{Rmarkdown}-generated web
