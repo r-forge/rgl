@@ -741,6 +741,7 @@ rglwidgetClass = function() {
           nPlanes = obj.normals.length;
       obj.bbox = bbox;
       obj.vertices = [];
+      obj.initialized = false;
       for (elem = 0; elem < nPlanes; elem++) {
 //    Vertex Av = normal.getRecycled(elem);
         x = [];
