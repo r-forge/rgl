@@ -106,7 +106,7 @@ rglwidgetClass = function() {
 
     this.componentProduct = function(x, y) {
       if (typeof y === "undefined") {
-        alert("Bad arg to componentProduct");
+        this.alertOnce("Bad arg to componentProduct");
       }
       var result = new Float32Array(3), i;
       for (i = 0; i<3; i++)
@@ -134,6 +134,13 @@ rglwidgetClass = function() {
 	    while (arr.length < len/2)
 	      arr = arr.concat(arr);
 	    return arr.concat(arr.slice(0, len - arr.length));
+	  };
+
+	  this.alertOnce = function(msg) {
+	    if (typeof this.alerted !== "undefined")
+	      return;
+	    this.alerted = true;
+	    alert(msg);
 	  };
 
     this.f_is_lit = 1;
@@ -165,7 +172,7 @@ rglwidgetClass = function() {
 
     this.getObj = function(id) {
       if (typeof id !== "number") {
-		    alert("getObj id is "+typeof id);
+		    this.alertOnce("getObj id is "+typeof id);
       }
       return this.scene.objects[id];
     };
@@ -263,7 +270,8 @@ rglwidgetClass = function() {
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      sprite_3d = flags & this.f_sprite_3d,
-		      nclipplanes = this.countClipplanes();
+		      nclipplanes = this.countClipplanes(),
+		      result;
 
 		  if (type === "clipplanes" || sprites_3d) return;
 
@@ -344,7 +352,8 @@ rglwidgetClass = function() {
 		      fixed_quads = flags & this.f_fixed_quads,
 		      sprites_3d = flags & this.f_sprites_3d,
 		      nclipplanes = this.countClipplanes(), i,
-          texture_format, nlights;
+          texture_format, nlights,
+          result;
 
 		  if (type === "clipplanes" || sprites_3d) return;
 
@@ -824,7 +833,7 @@ rglwidgetClass = function() {
           i,j,v, mat, uri, matobj;
 
     if (typeof id !== "number") {
-      alert("initObj id is "+typeof id);
+      this.alertOnce("initObj id is "+typeof id);
     }
 
     obj.initialized = true;
@@ -995,7 +1004,7 @@ rglwidgetClass = function() {
     }
 
     if (stride !== v[0].length) {
-      alert("problem in stride calculation");
+      this.alertOnce("problem in stride calculation");
     }
 
     obj.vOffsets = {vofs:0, cofs:cofs, nofs:nofs, radofs:radofs, oofs:oofs, tofs:tofs, stride:stride};
@@ -1165,7 +1174,7 @@ rglwidgetClass = function() {
 		      faces;
 
 		  if (typeof id !== "number") {
-		    alert("drawObj id is "+typeof id);
+		    this.alertOnce("drawObj id is "+typeof id);
 		  }
 
 			if (type === "planes") {
@@ -1910,7 +1919,7 @@ rglwidgetClass = function() {
       for (i=0; i < subscenes.length; i++) {
         subsceneid = subscenes[i];
         if (typeof this.getObj(subsceneid) === "undefined")
-          alert("typeof object is undefined");
+          this.alertOnce("typeof object is undefined");
         entries = this.getObj(subsceneid).objects;
         entries = entries.filter(ismissing);
         if (control.accumulate) {
@@ -2065,7 +2074,7 @@ rglwidgetClass = function() {
         vertex = vertices[k];
         ofs = obj.vOffsets[ofss[attrib]];
         if (ofs < 0)
-          alert("Attribute '"+attrib+"' not found in object "+control.objid);
+          this.alertOnce("Attribute '"+attrib+"' not found in object "+control.objid);
         else {
           stride = obj.vOffsets.stride;
           ofs = vertex*stride + ofs + pos[attrib];
@@ -2148,7 +2157,7 @@ rglwidgetClass = function() {
                 }
               }
             } else
-              alert("\'"+attribs[k]+"\' property not found in object "+objid);
+              this.alertOnce("\'"+attribs[k]+"\' property not found in object "+objid);
           }
         }
         obj.values = propvals;
