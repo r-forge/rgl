@@ -4,7 +4,8 @@
 Set attributes of vertices based on their age.
 }
 \description{
-This is a function to produce actions in a Shiny app.  The
+This is a function to produce actions in response to
+a \code{\link{playwidget}} or Shiny input control.  The
 mental model is that each of the vertices of some object has
 a certain birth time; a control sets the current time, so that
 vertices have ages depending on the control setting.
@@ -35,7 +36,7 @@ as the ages vector. The births vector must have the same number of entries as
 the number of vertices in the object.
 
 Not all objects contain all attributes; if one is chosen that is
-not a property of the corresponding object, a Javascript alert() will be
+not a property of the corresponding object, a Javascript \code{alert()} will be
 generated.  (This restriction may be removed in the future by attempting
 to add the attribute when it makes sense.)
 
@@ -52,13 +53,21 @@ Duncan Murdoch
 
 \examples{
   library(rgl)
+  library(htmltools)
   saveopts <- options(rgl.useNULL = TRUE)
   open3d()
-  ids <- plot3d((-10):10, rnorm(21), rnorm(21))
-  ageControl(value=0,
-             births=c((-10):10),
-             ages = c(-5,0,5),
-             colors = c("green", "yellow", "red"),
-             objids = ids["data"])
+
+  theta <- seq(0, 6*pi, len=100)
+  xyz <- cbind(sin(theta), cos(theta), theta)
+  lineid <- plot3d(xyz, type="l", alpha = 1:0, lwd = 5, col = "blue")["data"]
+
+  browsable(tagList(rglwidget(elementId = "example", width=500, height=300),
+    playwidget("example", ageControl(births = theta,
+                                     ages = c(0, 0, 1),
+                                     objids = lineid,
+                                     alpha = c(0, 1, 0)),
+                                     start = 1, stop = 6*pi,
+                                     step = 0.1, rate = 2)
+  ))
   options(saveopts)
 }

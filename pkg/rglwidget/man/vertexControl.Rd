@@ -67,10 +67,21 @@ Duncan Murdoch
 
 \examples{
   library(rgl)
+  library(htmltools)
   saveopts <- options(rgl.useNULL = TRUE)
   open3d()
-  ids <- plot3d((-10):10, rnorm(21), rnorm(21))
-  vertexControl(values = 10:(-10),
-                vertices = 11, attributes="x", objid=ids["data"])
+
+  theta <- seq(0, 6*pi, len=100)
+  xyz <- cbind(sin(theta), cos(theta), theta)
+  plot3d(xyz, type="l")
+  id <- spheres3d(xyz[1,,drop=FALSE], col="red")
+
+  browsable(tagList(
+    rglwidget(elementId = "example", width=500, height=300),
+    playwidget("example", vertexControl(values=xyz,
+                                     attributes=c("x", "y", "z"),
+                                     objid = id, param=1:100),
+                                     start = 1, stop = 100, rate=10)
+  ))
   options(saveopts)
 }

@@ -96,6 +96,9 @@ save_rgl <- function(name, devices) {
 }
 
 .setupKnitr <- function() {
+  # R produces multiple vignettes in the same session.
+  environment(rglwidget)$reuseDF <- NULL
+
   if (requireNamespace("knitr")) {
     knit_hooks$set(webgl = .hook_webgl)
     knit_hooks$set(webGL = .hook_webgl)
