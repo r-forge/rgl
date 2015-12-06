@@ -1,3 +1,8 @@
+/* el is the <span>, holding x as el.rglPlayer
+   x is the JSON encoded playwidget.
+   instance holds x as instance.rglPlayer
+*/
+
 HTMLWidgets.widget({
 
   name: 'rglPlayer',
@@ -11,23 +16,22 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    var applyVals = function() {
-
+    var ShowValue = function(value) {
+        var scene = window[x.sceneId].rglinstance;
+        x.value = value;
       /* We might be running before the scene exists.  If so, it
          will have to apply our initial value. */
-
-        var scene = window[x.sceneId].rglinstance;
         if (typeof scene !== "undefined") {
-          scene.applyControls(el, x.controls);
+          scene.Player(el, x);
           instance.initialized = true;
         } else {
-          instance.controls = x.controls;
+          instance.rglPlayer = x;
           instance.initialized = false;
         }
       };
 
-    instance.el = el;
-    el.rglPlayer = instance;
+    el.rglPlayer = x;
+    instance.rglPlayer = x;
 
     if (x.respondTo !== null) {
       var control = window[x.respondTo];
@@ -53,20 +57,17 @@ HTMLWidgets.widget({
           }
           do {
             state = "busy";
-            for (i=0; i<x.controls.length; i++) {
-              x.controls[i].value = control.value;
-            }
             if (control.rglOldhandler !== null)
               control.rglOldhandler.call(this);
-            applyVals();
+            ShowValue(control.value);
             if (state === "busy")
               state = "idle";
           } while (state !== "idle");
         };
-        control.onchange();
+        ShowValue(control.value);
       }
     }
-    applyVals();
+    ShowValue(x.value);
   },
 
   resize: function(el, width, height, instance) {

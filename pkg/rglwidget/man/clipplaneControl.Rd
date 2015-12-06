@@ -34,3 +34,18 @@ values, to be used in an rgl widget.
 \author{
 Duncan Murdoch
 }
+\examples{
+  library(rgl)
+  library(htmltools)
+  saveopts <- options(rgl.useNULL = TRUE)
+  open3d()
+  xyz <- matrix(rnorm(300), ncol = 3)
+  id <- plot3d(xyz, type="s", col = "blue", zlim = c(-3,3))["clipplanes"]
+  dvals <- c(3, -3)
+  browsable(tagList(rglwidget(elementId = "example", width=500, height=300, controllers = "player"),
+    playwidget("example", clipplaneControl(d = dvals, clipplaneids = id),
+               elementId = "player", start = 0, stop = 1, step = 0.01,
+               rate = 0.5)
+  ))
+  options(saveopts)
+}

@@ -1,19 +1,30 @@
 ---
-title: "Untitled"
+title: "test"
 author: "Duncan Murdoch"
-date: "November 28, 2015"
-output: ioslides_presentation
+date: "December 3, 2015"
+output: html_document
 ---
 
-## R Markdown
+```{r}
+  library(rgl)
+  library(rglwidget)
 
-```{r echo=FALSE}
-library(rgl)
-library(rglwidget)
-dataid <- plot3d(matrix(rnorm(300), ncol=3))["data"]
-planeid = planes3d(1,2,3, 4, col="red")
-rglwidget(elementId = "testID")
-playwidget("testID", controls = propertyControl(values=0:10, entries = 0, properties = "normals", objids = planeid),
-                       reinit = planeid,
-           start = 0, stop=10, step=0.1)
+  saveopts <- options(rgl.useNULL = TRUE)
+  open3d()
+
+  theta <- seq(0, 6*pi, len=100)
+  xyz <- cbind(sin(theta), cos(theta), theta)
+  lineid <- plot3d(xyz, type="l", 
+                   alpha = seq(0, 1,len=100), 
+                   lwd = 5, col = c("blue", "green"))["data"]
+
+rglwidget(elementId = "example", width=500, height=300, controllers = "player")
+playwidget("example", ageControl(births = theta,
+                                    ages = c(0, 0, 1),
+                                    objids = lineid,
+ #                                   alpha = c(0, 1, 0),
+colors = c("red", "green", "blue")),
+                                    start = 1, stop = 6*pi,
+                                    step = 0.1, rate = 2,
+                                    elementId = "player")
 ```
