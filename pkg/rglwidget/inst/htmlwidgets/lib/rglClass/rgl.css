@@ -3,18 +3,18 @@
   height: auto;
 }
 
-.rgl-button {
+.rglPlayer .rgl-button {
   width: auto;
   display: inline-block;
   font-size: 75%;
 }
 
-.rgl-slider {
+.rglPlayer .rgl-slider {
   display: inline-block;
   width: 30%;
 }
 
-.rgl-label {
+.rglPlayer .rgl-label {
   display: inline;
   padding-left: 6px;
   padding-right: 6px;
