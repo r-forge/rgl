@@ -25,7 +25,10 @@ It has static local storage `reuseDF`
 to store information about objects for re-use in later widgets.
 This is `NULL` or a dataframe from the `reuse` attribute
 of the `convertScene()` result, containing columns `id`, 
-`elementId`, `texture`.
+`elementId`, `texture`.  When R produces vignettes for a package,
+it doesn't start a new session for each vignette, so this
+should be cleared at the start.  The `rgl::setupKnitr()` function
+does that.
 
 If not running in Shiny and not specified in the call, it
 assigns a random `elementId` of the form `rglNNNNN`, where
@@ -67,7 +70,8 @@ initializes a new `rglwidgetClass` object using the
 `<div>` element and `x`, then checks for uninitialized
 controllers and initializes them.
 
-Finally it draws the scene.
+Finally it draws the scene, unless it has found a controller
+that will do so.
 
 # playwidget()
 
@@ -130,6 +134,7 @@ There are currently two ways to include `rgl` scenes in a
 `knitr`/`Rmarkdown` document.  The old way requires
 `setupKnitr()` to be called to install hooks into `knitr`;
 the newer way is to call `rglwidget()` to insert each image.
+The latter still requires `setupKnitr()` to clear the `reuseDF`.
 
 The `knitr` hooks do the following:
 
