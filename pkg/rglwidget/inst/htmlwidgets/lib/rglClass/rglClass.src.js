@@ -1427,9 +1427,11 @@ rglwidgetClass = function() {
         return;
 		  for (i=0; i < subids.length; i++) {
 		    flags = objects[subids[i]].flags;
-		    subscene_has_faces |= (flags & this.f_is_lit)
+		    if (typeof flags !== "undefined") {
+		      subscene_has_faces |= (flags & this.f_is_lit)
 		                       & !(flags & this.f_fixed_quads);
-		    subscene_needs_sorting |= (flags & this.f_depth_sort);
+		      subscene_needs_sorting |= (flags & this.f_depth_sort);
+		    }
 		  }
 
 		  var bgid = obj.backgroundId,
@@ -1465,9 +1467,12 @@ rglwidgetClass = function() {
 				    this.drawObj(clipids[i], subsceneid);
 				}
 				subids = obj.opaque;
-				gl.depthMask(true);
-				for (i = 0; subids && i < subids.length; i++) {
-				  this.drawObj(subids[i], subsceneid);
+				if (subids.length > 0) {
+				  gl.depthMask(true);
+				  gl.disable(gl.BLEND);
+				  for (i = 0; subids && i < subids.length; i++) {
+				    this.drawObj(subids[i], subsceneid);
+				  }
 				}
 				subids = obj.transparent;
 				if (subids.length > 0) {
@@ -1834,7 +1839,8 @@ rglwidgetClass = function() {
 		    this.debugelement = document.getElementById(this.prefix + "debug");
 	      this.debug("");
 		  }
-		  this.drawInstance();
+		  this.drag = 0;
+		  this.drawScene();
 		};
 
 		this.debug = function(msg, img) {
@@ -1883,23 +1889,17 @@ rglwidgetClass = function() {
       this.canvas.height = el.height;
     };
 
-		this.drawInstance = function() {
-	    var gl = this.gl;
-	    if (gl) {
-		    gl.enable(gl.DEPTH_TEST);
-	      gl.depthFunc(gl.LEQUAL);
-	      gl.clearDepth(1.0);
-	      gl.clearColor(1,1,1,1);
-	      this.drag  = 0;
-        this.drawScene();
-	    }
-		};
-
     this.drawScene = function() {
       var gl = this.gl;
-			gl.disable(gl.BLEND);
+      if (!gl)
+        this.alertOnce("No WebGL context.");
+      gl.enable(gl.DEPTH_TEST);
+	    gl.depthFunc(gl.LEQUAL);
+	    gl.clearDepth(1.0);
+	    gl.clearColor(1,1,1,1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this.drawSubscene(this.scene.rootSubscene);
-			gl.flush();
+			this.drawing = false;
 		};
 
 		this.subsetSetter = function(el, control) {
@@ -2177,7 +2177,7 @@ rglwidgetClass = function() {
       window[control.prefix + "rgl"] = this;
 		};
 
-		this.player = function(el, control) {
+		this.Player = function(el, control) {
 		  var
 		    self = this,
 		    components = [].concat(control.components),
@@ -2203,7 +2203,8 @@ rglwidgetClass = function() {
 		      for (i=0; i < this.actions.length; i++) {
 		        this.actions[i].value = nominal;
 		      }
-		      self.applyControls(el, this.actions);
+		      self.applyControls(el, this.actions, false);
+		      self.drawScene();
 		    },
 
         OnSliderInput = function() { /* "this" will be the slider */
@@ -2278,7 +2279,7 @@ rglwidgetClass = function() {
         el.rgltimer.Tick();
 		};
 
-		this.applyControls = function(el, x) {
+		this.applyControls = function(el, x, draw) {
 		  var self = this, reinit = x.reinit, i, obj, control, type;
 		  for (i = 0; i < x.length; i++) {
 		    control = x[i];
@@ -2290,7 +2291,8 @@ rglwidgetClass = function() {
 		    for (i = 0; i < reinit.length; i++)
 		      self.getObj(reinit[i]).initialized = false;
 		  }
-		  self.drawScene();
+		  if (typeof draw === "undefined" || draw)
+		    self.drawScene();
 		};
 
 		this.sceneChangeHandler = function(message) {

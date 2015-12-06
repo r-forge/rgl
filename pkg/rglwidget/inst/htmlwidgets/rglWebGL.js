@@ -1,3 +1,9 @@
+/* el is the div, holding the rgl object as el.rglinstance,
+     which holds x as el.rglinstance.scene
+   x is the JSON encoded rglwidget.
+*/
+
+
 HTMLWidgets.widget({
 
   name: 'rglWebGL',
@@ -11,34 +17,39 @@ HTMLWidgets.widget({
 
   },
 
-  renderValue: function(el, x, instance) {
-    var rgl = new rglwidgetClass(), i, controller;
+  renderValue: function(el, x) {
+    var rgl = new rglwidgetClass(), i, pel, player,
+      draw = true;
     rgl.initialize(el, x);
 
-    /* We might have been called after (some of) the controllers were rendered.
+    /* We might have been called after (some of) the players were rendered.
        We need to make sure we respond to their initial values. */
 
-    if (typeof x.controllers !== "undefined") {
-      x.controllers = [].concat(x.controllers);
-      for (i = 0; i<x.controllers.length; i++) {
-        controller = window[x.controllers[i]];
-        if (typeof controller !== "undefined") {
-          controller = controller.rglPlayer;
-          if (typeof controller !== "undefined" && !controller.initialized) {
-            rgl.applyControls(el, controller.controls);
-            controller.initialized = true;
-          }
-        }
+    if (typeof x.players !== "undefined") {
+      x.players = [].concat(x.players);
+      for (i = 0; i < x.players.length; i++) {
+        pel = window[x.players[i]];
+        if (typeof pel !== "undefined") {
+          player = pel.rglPlayer;
+          if (typeof player !== "undefined" && !player.initialized) {
+            rgl.Player(pel, player, false);
+            player.initialized = true;
+          } else
+            draw = false;  // The player will do the drawing
+        } else
+          rgl.alertOnce("Controller '" + x.players[i] + "' not found.");
       }
     }
-    rgl.drawInstance();
+    rgl.drag = 0;
+    if (draw)
+      rgl.drawScene();
   },
 
-  resize: function(el, width, height, instance) {
+  resize: function(el, width, height) {
     el.width = width;
     el.height = height;
     el.rglinstance.resize(el);
-    el.rglinstance.drawInstance();
+    el.rglinstance.drawScene();
   }
 
 });

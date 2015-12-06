@@ -23,7 +23,7 @@ rglwidget <- local({
     reuseDF <<- attr(x, "reuse")
 
   if (!is.null(controllers))
-    x$controllers = controllers
+    x$players = controllers
   # create widget
   structure(htmlwidgets::createWidget(
     name = 'rglWebGL',

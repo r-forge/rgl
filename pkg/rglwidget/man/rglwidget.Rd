@@ -44,7 +44,7 @@ or in a \pkg{shiny} app.
 In a \pkg{shiny} app, there will often be one or more
 \code{\link{playwidget}} objects in the app, taking input from
 the user.  In order to be sure that the initial value of the user control
-is reflected in the scene, you should list all controllers in the
+is reflected in the scene, you should list all players in the
 \code{controllers} argument.  See the sample application in
 \code{system.file("shinyDemo", package = "rglwidget")} for an example.
 
