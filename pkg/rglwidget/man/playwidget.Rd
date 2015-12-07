@@ -1,5 +1,9 @@
 \name{playwidget}
 \alias{playwidget}
+\alias{playwidget.default}
+\alias{playwidget.rglWebGL}
+\alias{playwidget.rglPlayer}
+\alias{playwidget.shiny.tag.list}
 \title{
 Add a widget to play animations.
 }
@@ -8,7 +12,9 @@ This is a widget that can be put in a web page to allow
 animations with or without Shiny.
 }
 \usage{
-playwidget(sceneId, controls,
+playwidget(sceneId, ...)
+
+\S3method{playwidget}{default}(sceneId, controls,
             start = 0, stop = Inf, interval = 0.05, rate = 1,
             components = c("Reverse", "Play", "Slower", "Faster",
                            "Reset", "Slider", "Label"),
@@ -18,10 +24,17 @@ playwidget(sceneId, controls,
             elementId = NULL, respondTo = NULL,
             reinit = NULL,
             ...)
+
+\S3method{playwidget}{rglWebGL}(sceneId, controls, elementId = NULL, ...)
+
+\S3method{playwidget}{rglPlayer}(sceneId, controls, elementId = NULL, ...)
+
+\S3method{playwidget}{shiny.tag.list}(sceneId, controls, elementId = NULL, ...)
 }
 \arguments{
   \item{sceneId}{
-The HTML id of the rgl scene being controlled.
+The HTML id of the rgl scene being controlled,
+or an object.  See the Details below.
 }
   \item{controls}{
 A single \code{"rglControl"} object, e.g. \code{\link{propertyControl}}, or a list of several.
@@ -70,8 +83,8 @@ A vector of ids that will need re-initialization before
 being drawn again.
 }
 
-  \item{...}{Additional arguments
-to pass to \code{htmlwidgets::\link{createWidget}}.}
+  \item{...}{The default method passes additional arguments
+to \code{htmlwidgets::\link{createWidget}}.}
 }
 \details{
 The \code{components} are buttons to control the animation,
@@ -88,6 +101,15 @@ The buttons have the following behaviour:
 }
 
 If \code{respondTo} is used, no \code{components} are shown, as Shiny will provide the UI components.
+
+In RMarkdown or in standalone code, you can use a \pkg{magrittr}-style
+\dQuote{pipe} command to join an \code{rglwidget} with a
+\code{\link{playwidget}}.  If the \code{playwidget} comes
+first, \code{sceneId} may be set to \code{NA}, and the
+result should be piped into the \code{controllers}
+argument of \code{\link{rglwidget}}.  If the \code{rglwidget}
+comes first, it
+can be piped into the \code{sceneId} argument of \code{playwidget}.
 }
 \section{Appearance}{
 The appearance of the controls is set by the stylesheet
@@ -113,7 +135,7 @@ which are set during initialization.
 }
 \value{
 A widget suitable for use in an \pkg{Rmarkdown}-generated web
-page.
+page, or elsewhere.
 }
 \author{
 Duncan Murdoch
