@@ -8,4 +8,4 @@ Description: Provides an 'htmlwidgets' framework for the 'rgl' package.
 License: GPL-2
 LazyData: TRUE
 Imports: htmlwidgets, htmltools, knitr, jsonlite, shiny,
-         rgl (>= 0.95.1367)
+         magrittr, rgl (>= 0.95.1367)

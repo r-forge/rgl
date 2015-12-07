@@ -14,7 +14,10 @@ renderPlaywidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, rglwidgetOutput, env, quoted = TRUE)
 }
 
-playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05,  rate = 1,
+playwidget <- function(sceneId, ...)
+  UseMethod("playwidget")
+
+playwidget.default <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05,  rate = 1,
                        components = c("Reverse", "Play", "Slower", "Faster", "Reset", "Slider", "Label"),
                        loop = TRUE,
                        step = 1, labels = NULL,
@@ -98,3 +101,51 @@ playwidget <- function(sceneId, controls, start = 0, stop = Inf, interval = 0.05
 rglPlayer_html <- function(id, style, class, ...) {
   tags$span(id = id, class = class)
 }
+
+playwidget.rglWebGL <- function(sceneId, controls, elementId = NULL, ...) {
+
+  if (is.null(elementId) && !inShiny())
+    elementId <- paste0("rgl-play", sample(100000, 1))
+
+  if (!is.null(elementId) && !(elementId %in% sceneId$x$players))
+    sceneId$x$players <- c(sceneId$x$players, elementId)
+
+  browsable(tagList(sceneId,
+                    playwidget(sceneId$elementId, controls, elementId = elementId,
+                               ...)))
+}
+
+playwidget.rglPlayer <- function(sceneId, controls, elementId = NULL, ...) {
+
+  if (is.null(elementId) && !inShiny())
+    elementId <- paste0("rgl-play", sample(100000, 1))
+
+  browsable(tagList(sceneId,
+                    playwidget(NA, controls, elementId = elementId,
+                               ...)))
+}
+
+playwidget.shiny.tag.list <- function(sceneId, controls, elementId = NULL, ...) {
+
+  if (is.null(elementId) && !inShiny())
+    elementId <- paste0("rgl-play", sample(100000, 1))
+
+  scene <- NULL
+  for (i in seq_along(sceneId)) {
+    if (inherits(sceneId[[i]], "rglWebGL")) {
+      scene <- sceneId[[i]]$elementId
+      if (!is.null(elementId) && !(elementId %in% sceneId[[i]]$x$players))
+        sceneId[[i]]$x$players <- c(sceneId[[i]]$x$players, elementId)
+      break
+    }
+  }
+
+  if (is.null(scene))
+    scene <- NA
+
+  sceneId[[length(sceneId) + 1]] <-
+    playwidget(scene, controls, elementId = elementId,
+                               ...)
+  sceneId
+}
+

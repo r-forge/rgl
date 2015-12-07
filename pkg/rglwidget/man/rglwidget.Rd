@@ -21,7 +21,7 @@ An \pkg{rgl} scene produced by the \code{\link[rgl]{scene3d}} function.
 The width and height of the display in pixels.
 }
   \item{controllers}{Names of \code{\link{playwidget}} objects
-associated with this scene.  See Details below.
+associated with this scene, or objects (typically piped in).  See Details below.
 }
   \item{snapshot}{Control of snapshot of scene.  See
 \code{\link{writeWebGL}} for details.
@@ -48,6 +48,13 @@ is reflected in the scene, you should list all players in the
 \code{controllers} argument.  See the sample application in
 \code{system.file("shinyDemo", package = "rglwidget")} for an example.
 
+In RMarkdown or in standalone code, you can use a \pkg{magrittr}-style
+\dQuote{pipe} command to join an \code{rglwidget} with a
+\code{\link{playwidget}}.  If the \code{playwidget} comes
+first, it should be piped into the \code{controllers}
+argument.  If the \code{rglwidget} comes first, it
+can be piped into the first argument of \code{playwidget}.
+
 If the \code{reuse} argument is \code{FALSE} (the default in interactive
 use), earlier information will be
 cleared before drawing the new scene.  If \code{TRUE}, earlier
@@ -63,7 +70,8 @@ If \code{elementId} is \code{NULL} and we are not in a Shiny app,
 of information.
 }
 \value{
-An object of class htmlwidget that will intelligently print itself into
+An object of class \code{"htmlwidget"} (or \code{"shiny.tag.list"}
+if pipes are used) that will intelligently print itself into
 HTML in a variety of contexts including the R console, within R Markdown
 documents, and within Shiny output bindings.
 
