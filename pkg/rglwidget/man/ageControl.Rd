@@ -56,17 +56,17 @@ Duncan Murdoch
   saveopts <- options(rgl.useNULL = TRUE)
   open3d()
 
-  theta <- seq(0, 6*pi, len=100)
-  xyz <- cbind(sin(theta), cos(theta), theta)
+  theta <- seq(0, 4*pi, len=100)
+  xyz <- cbind(sin(theta), cos(theta), sin(theta/2))
   lineid <- plot3d(xyz, type="l", alpha = 1:0, lwd = 5, col = "blue")["data"]
 
   rglwidget(width=500, height=300) \%>\%
   playwidget(ageControl(births = theta,
-                        ages = c(0, 0, 1),
+                        ages = c(-4*pi, -4*pi, 1-4*pi, 0, 0, 1),
                         objids = lineid,
-                        alpha = c(0, 1, 0)),
-             start = 1, stop = 6*pi,
-             step = 0.1, rate = 6)
+                        alpha = c(0, 1, 0, 0, 1, 0)),
+             start = 0, stop = 4*pi,
+             step = 0.1, rate = 4)
 
   options(saveopts)
 }

@@ -28,3 +28,31 @@ colors = c("red", "green", "blue")),
                                     step = 0.1, rate = 2,
                                     elementId = "player")
 ```
+
+
+Here we use a pipe:
+
+```{r}
+  theta <- seq(0, 6*pi, len=100)
+  xyz <- cbind(sin(theta), cos(theta), theta)
+  lineid <- plot3d(xyz, type="l", alpha = 1:0, lwd = 5, col = "blue")["data"]
+
+  rglwidget(width=500, height=300) %>%
+  playwidget(ageControl(births = theta,
+                        ages = c(0, 0, 1),
+                        objids = lineid,
+                        alpha = c(0, 1, 0)),
+             start = 1, stop = 6*pi,
+             step = 0.1, rate = 6)
+```
+
+And a pipe in the other direction:
+```{r}
+  playwidget(NA, ageControl(births = theta,
+                        ages = c(0, 0, 1),
+                        objids = lineid,
+                        alpha = c(0, 1, 0)),
+             start = 1, stop = 6*pi,
+             step = 0.1, rate = 6) %>%
+  rglwidget(width=500, height=300, controllers = .) 
+```

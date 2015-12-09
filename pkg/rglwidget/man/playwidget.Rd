@@ -27,7 +27,7 @@ playwidget(sceneId, ...)
 
 \S3method{playwidget}{rglWebGL}(sceneId, controls, elementId = NULL, ...)
 
-\S3method{playwidget}{rglPlayer}(sceneId, controls, elementId = NULL, ...)
+\S3method{playwidget}{rglPlayer}(sceneId, controls, ...)
 
 \S3method{playwidget}{shiny.tag.list}(sceneId, controls, elementId = NULL, ...)
 }
@@ -100,16 +100,16 @@ The buttons have the following behaviour:
 \item{Reset}{Stop the animation and reset to the start value.}
 }
 
-If \code{respondTo} is used, no \code{components} are shown, as Shiny will provide the UI components.
+If \code{respondTo} is used, no \code{components} are shown, as it is assumed Shiny (or whatever control is being referenced) will provide the UI components.
 
-In RMarkdown or in standalone code, you can use a \pkg{magrittr}-style
-\dQuote{pipe} command to join an \code{rglwidget} with a
-\code{\link{playwidget}}.  If the \code{playwidget} comes
-first, \code{sceneId} may be set to \code{NA}, and the
-result should be piped into the \code{controllers}
-argument of \code{\link{rglwidget}}.  If the \code{rglwidget}
-comes first, it
-can be piped into the \code{sceneId} argument of \code{playwidget}.
+The \code{sceneId} component can be another \code{playwidget} or a \code{\link{rglwidget}} result.  This allows you
+to use a \pkg{magrittr}-style
+\dQuote{pipe} command to join an \code{rglwidget} with one or more \code{\link{playwidget}}s.  If a \code{playwidget} comes
+first, \code{sceneId} should be set to \code{NA}.  If
+the \code{\link{rglwidget}} does not come first,
+previous values should be piped into its \code{controllers}
+argument.  Other HTML code (including other widgets)
+can be used in the chain if wrapped in \code{htmltools::\link[htmltools]{tagList}}.
 }
 \section{Appearance}{
 The appearance of the controls is set by the stylesheet
@@ -147,13 +147,29 @@ Duncan Murdoch
 }
 \examples{
 saveopts <- options(rgl.useNULL = TRUE)
-example("plot3d", "rgl")
-rglwidget(elementId = "theplot")
+
+objid <- plot3d(1:10, 1:10, rnorm(10), col=c("red", "red"), type = "s")["data"]
+
 control <- ageControl(value=0,
-             births=rep(0, 21),
+             births=1:10,
              ages = c(-5,0,5),
              colors = c("green", "yellow", "red"),
-             objids = 123)
-playwidget("theplot", control, start = -5, stop = 5, rate = 3, loop = TRUE)
+             objids = objid)
+
+# This example uses explicit names
+
+rglwidget(elementId = "theplot", controllers = "theplayer",
+          height = 300, width = 300)
+playwidget("theplot", control, start = -5, stop = 5,
+           rate = 3, elementId = "theplayer",
+           components = c("Play", "Slider"))
+
+# This example uses pipes, and can skip the names
+
+rglwidget(height = 300, width = 300) \%>\%
+playwidget(control, start = -5, stop = 5,
+           rate = 3, components = c("Play", "Slider"))
+
+
 options(saveopts)
 }

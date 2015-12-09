@@ -47,11 +47,11 @@ rglwidget <- local({
     elementId = elementId,
     ...
   ), rglReuse = attr(x, "reuse"))
-  if (inherits(controllers, "rglPlayer"))
-    browsable(tagList(controllers, result))
-  else if (inherits(controllers, "shiny.tag.list")) {
+  if (inherits(controllers, "shiny.tag.list")) {
     controllers[[length(controllers) + 1]] <- result
     controllers
+  } else if (inherits(controllers, "rglPlayer")) {
+    browsable(tagList(controllers, result))
   } else
     result
   }

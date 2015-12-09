@@ -26,6 +26,11 @@ playwidget.default <- function(sceneId, controls, start = 0, stop = Inf, interva
                        reinit = NULL,
                        ...) {
 
+  sceneId <- as.character(sceneId)
+
+  if (length(sceneId) != 1)
+    stop("Unsupported `sceneId`")
+
   if (is.null(elementId) && !inShiny())
     elementId <- paste0("rgl-play", sample(100000, 1))
 
@@ -115,13 +120,10 @@ playwidget.rglWebGL <- function(sceneId, controls, elementId = NULL, ...) {
                                ...)))
 }
 
-playwidget.rglPlayer <- function(sceneId, controls, elementId = NULL, ...) {
-
-  if (is.null(elementId) && !inShiny())
-    elementId <- paste0("rgl-play", sample(100000, 1))
+playwidget.rglPlayer <- function(sceneId, controls, ...) {
 
   browsable(tagList(sceneId,
-                    playwidget(NA, controls, elementId = elementId,
+                    playwidget(NA, controls,
                                ...)))
 }
 
