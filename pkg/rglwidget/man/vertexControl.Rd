@@ -66,14 +66,12 @@ Duncan Murdoch
 }
 
 \examples{
-  library(rgl)
   saveopts <- options(rgl.useNULL = TRUE)
-  open3d()
 
   theta <- seq(0, 6*pi, len=100)
   xyz <- cbind(sin(theta), cos(theta), theta)
-  plot3d(xyz, type="l")
-  id <- spheres3d(xyz[1,,drop=FALSE], col="red")
+  rgl::plot3d(xyz, type="l")
+  id <- rgl::spheres3d(xyz[1,,drop=FALSE], col="red")
 
   rglwidget(width=500, height=300) \%>\%
   playwidget(vertexControl(values=xyz,
