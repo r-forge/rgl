@@ -1847,12 +1847,12 @@ rglwidgetClass = function() {
 		};
 
 		this.debug = function(msg, img) {
-		  if (typeof this.debugelement !== "undefined") {
+		  if (typeof this.debugelement !== "undefined" && this.debugelement !== null) {
 		    this.debugelement.innerHTML = msg;
 		    if (typeof img !== "undefined") {
 		      this.debugelement.insertBefore(img, this.debugelement.firstChild);
 		    }
-		  } else
+		  } else if (msg !== "")
 		    alert(msg);
 		};
 
