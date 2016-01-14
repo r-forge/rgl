@@ -1883,8 +1883,10 @@ rglwidgetClass = function() {
     };
 
     this.initGL = function() {
-	   this.gl = this.canvas.getContext("webgl") ||
-	               this.canvas.getContext("experimental-webgl");
+	   this.gl = this.canvas.getContext("webgl",
+	               {preserveDrawingBuffer:true}) ||
+	             this.canvas.getContext("experimental-webgl",
+	               {preserveDrawingBuffer:true});
 	 };
 
     this.resize = function(el) {
