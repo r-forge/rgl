@@ -68,6 +68,8 @@ nor updated.
 If \code{elementId} is \code{NULL} and we are not in a Shiny app,
 \code{elementId} is set to a random value to facilitate re-use
 of information.
+
+To save the display to a file, use \code{htmlwidgets::\link{saveWidget}}.
 }
 \value{
 An object of class \code{"htmlwidget"} (or \code{"shiny.tag.list"}
@@ -104,5 +106,10 @@ save <- getOption("rgl.useNULL")
 options(rgl.useNULL=TRUE)
 example("plot3d", "rgl")
 rglwidget()
+
+# Save it to a file
+filename <- tempfile(fileext = ".html")
+htmlwidgets::saveWidget(rglwidget(), filename)
+browseURL(filename)
 }
 
