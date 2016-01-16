@@ -854,6 +854,13 @@ rglwidgetClass = function() {
       return;
     }
 
+    if (typeof obj.vertices === "undefined")
+      obj.vertices = [];
+
+    v = obj.vertices;
+    obj.vertexCount = v.length;
+    if (!obj.vertexCount) return;
+
 		if (!sprites_3d) {
 			obj.prog = gl.createProgram();
 			gl.attachShader(obj.prog, this.getShader( gl.VERTEX_SHADER,
@@ -918,10 +925,6 @@ rglwidgetClass = function() {
 		if (type === "text") {
 		  this.handleLoadedTexture(obj.texture, this.textureCanvas);
 		}
-
-    v = obj.vertices;
-    obj.vertexCount = v.length;
-    if (!obj.vertexCount) return;
 
     var stride = 3, nc, cofs, nofs, radofs, oofs, tofs, vnew, v1;
 
@@ -1186,7 +1189,7 @@ rglwidgetClass = function() {
       if (!obj.initialized)
         this.initObj(id);
 
-      if (type === "light" || type === "bboxdeco")
+      if (type === "light" || type === "bboxdeco" || !obj.vertexCount)
         return;
 
 		  if (type === "clipplanes") {
