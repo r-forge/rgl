@@ -425,6 +425,18 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
                      data.frame(id = -1, elementId = elementId,
                                 texture = "", stringsAsFactors = FALSE))
 	}
+	
+	# slow jsonlite workaround convert big matrices to data.frames
+	# the json output will be the same if toJSON(dataframe = "rows")
+	convert_matrix_df<-function(x) {
+	  if(is.list(x) && length(x)) {
+	    return(sapply(x, convert_matrix_df, simplify = FALSE))
+	  }
+	  if(!is.matrix(x) || nrow(x)<10) return(x)
+	  unname(as.data.frame(x))
+	}
+	result$objects=convert_matrix_df(result$objects)
+	
 	structure(result, reuse = reuseDF)
 }
 
