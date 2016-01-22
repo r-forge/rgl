@@ -80,7 +80,7 @@ subst <- function(strings, ..., digits=7) {
 
   reuse <- attr(scene, "reuse")
   json <- toJSON(I(scene),
-                 dataframe = "columns", null = "null", na = "null",
+                 dataframe = "columns", null = "null", na = "string",
                  auto_unbox = TRUE, digits = getOption("shiny.json.digits",
                                                        7),
                  use_signif = TRUE, force = TRUE, POSIXt = "ISO8601",
