@@ -38,6 +38,7 @@ rglwidget <- local({
   } else if (!is.null(controllers))
     x$players <- controllers
   # create widget
+  attr(x, "TOJSON_ARGS") <- list(na = "string")
   result <- structure(htmlwidgets::createWidget(
     name = 'rglWebGL',
     x = x,
