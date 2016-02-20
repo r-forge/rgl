@@ -11,7 +11,8 @@ provides the necessities to embed an \pkg{rgl} scene in one.
 \usage{
 rglwidget(x = scene3d(), width = NULL, height = NULL,
           controllers = NULL, snapshot = FALSE,
-          elementId = NULL, reuse = !interactive(), ...)
+          elementId = NULL, reuse = !interactive(),
+          webGLoptions = list(preserveDrawingBuffer = TRUE), ...)
 }
 \arguments{
   \item{x}{
@@ -33,6 +34,8 @@ component that will hold the scene.
 rgl objects from earlier scenes should be referenced. See
 the Details below.
 }
+  \item{webGLoptions}{A list of options to pass
+  to WebGL when the drawing context is created.  See the Details below.}
   \item{...}{Additional arguments
 to pass to \code{htmlwidgets::\link{createWidget}}.}
 }
@@ -70,6 +73,16 @@ If \code{elementId} is \code{NULL} and we are not in a Shiny app,
 of information.
 
 To save the display to a file, use \code{htmlwidgets::\link{saveWidget}}.  This requires \command{pandoc} to be installed.
+
+The \code{webGLoptions} argument is a list which will
+be passed when the WebGL context is created.  See
+the WebGL 1.0 specification on \url{https://www.khronos.org/registry/webgl/specs} for possible
+settings.  The default in \code{rglwidget} differs
+from the WebGL default by setting \code{preserveDrawingBuffer = TRUE} in order to allow other tools to read
+the image, but please note that some implementations
+of WebGL contain bugs with this setting.  We have
+attempted to work around them, but may change our
+default in the future if this proves unsatisfactory.
 }
 \value{
 An object of class \code{"htmlwidget"} (or \code{"shiny.tag.list"}

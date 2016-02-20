@@ -1817,7 +1817,7 @@ rglwidgetClass = function() {
         el.removeChild(el.firstChild);
       }
 		  el.appendChild(this.canvas);
-		  this.initGL0();
+		  this.initGL0(el.rglinstance.scene.webGLoptions);
 		  if (!this.gl)
 		    return;
 	    var objs = this.scene.objects,
@@ -1870,13 +1870,13 @@ rglwidgetClass = function() {
 	    return img;
     };
 
-    this.initGL0 = function() {
+    this.initGL0 = function(options) {
 	    if (!window.WebGLRenderingContext){
 	      this.debug("Your browser does not support WebGL. See <a href=\"http://get.webgl.org\">http://get.webgl.org</a>", this.getSnapshot());
 	      return;
 	    }
 	    try {
-	      this.initGL();
+	      this.initGL(options);
 	    }
 	    catch(e) {}
 	    if ( !this.gl ) {
@@ -1886,11 +1886,9 @@ rglwidgetClass = function() {
 	    }
     };
 
-    this.initGL = function() {
-	   this.gl = this.canvas.getContext("webgl",
-	               {preserveDrawingBuffer:true}) ||
-	             this.canvas.getContext("experimental-webgl",
-	               {preserveDrawingBuffer:true});
+    this.initGL = function(options) {
+	   this.gl = this.canvas.getContext("webgl", options) ||
+	             this.canvas.getContext("experimental-webgl", options);
 	 };
 
     this.resize = function(el) {

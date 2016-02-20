@@ -8,7 +8,8 @@ rglwidget <- local({
   function(x = scene3d(), width = NULL, height = NULL,
            controllers = NULL, snapshot = FALSE,
            elementId = NULL,
-           reuse = !interactive(), ...) {
+           reuse = !interactive(),
+           webGLoptions = list(preserveDrawingBuffer = TRUE), ...) {
   if (is.na(reuse))
     reuseDF <- NULL # local change only
   else if (!reuse)
@@ -37,6 +38,9 @@ rglwidget <- local({
     }
   } else if (!is.null(controllers))
     x$players <- controllers
+
+  x$webGLoptions <- webGLoptions
+
   # create widget
   attr(x, "TOJSON_ARGS") <- list(na = "string")
   result <- structure(htmlwidgets::createWidget(
