@@ -1444,6 +1444,7 @@ rglwidgetClass = function() {
       if (typeof bgid !== "undefined" && objects[bgid].colors.length) {
 			  bg = objects[bgid].colors[0];
 			  gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
+			  gl.depthMask(true);  // workaround for WebGL preserveDrawingBuffer bug
 			  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       }
 
