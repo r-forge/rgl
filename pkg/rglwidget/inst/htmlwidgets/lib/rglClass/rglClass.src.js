@@ -1441,10 +1441,10 @@ rglwidgetClass = function() {
 		      bg;
 
       this.setViewport(subsceneid);
+      gl.depthMask(true); // must be true before clearing depth buffer, and for opaque objects
       if (typeof bgid !== "undefined" && objects[bgid].colors.length) {
 			  bg = objects[bgid].colors[0];
 			  gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
-			  gl.depthMask(true);  // workaround for WebGL preserveDrawingBuffer bug
 			  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       }
 
@@ -1472,7 +1472,6 @@ rglwidgetClass = function() {
 				}
 				subids = obj.opaque;
 				if (subids.length > 0) {
-				  gl.depthMask(true);
 				  gl.disable(gl.BLEND);
 				  for (i = 0; subids && i < subids.length; i++) {
 				    this.drawObj(subids[i], subsceneid);
@@ -1904,6 +1903,7 @@ rglwidgetClass = function() {
 	    gl.depthFunc(gl.LEQUAL);
 	    gl.clearDepth(1.0);
 	    gl.clearColor(1,1,1,1);
+	    gl.depthMask(true); // Must be true before clearing depth buffer
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 			this.drawSubscene(this.scene.rootSubscene);
 			this.drawing = false;
