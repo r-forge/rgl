@@ -1189,9 +1189,6 @@ rglwidgetClass = function() {
       if (!obj.initialized)
         this.initObj(id);
 
-      if (type === "light" || type === "bboxdeco" || !obj.vertexCount)
-        return;
-
 		  if (type === "clipplanes") {
 			  count = obj.offsets.length;
 			  var IMVClip = [];
@@ -1201,6 +1198,9 @@ rglwidgetClass = function() {
  			  obj.IMVClip = IMVClip;
         return;
 			}
+
+      if (type === "light" || type === "bboxdeco" || !obj.vertexCount)
+        return;
 
       this.setDepthTest(id);
 
