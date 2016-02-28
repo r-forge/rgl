@@ -119,7 +119,7 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 			return(result)
 		}
 
-		if (type %in% c("light", "bboxdeco", "background"))
+		if (type %in% c("light", "bboxdeco"))
 		  return(result)
 
 		mat <- getMaterial(id)
@@ -352,12 +352,12 @@ convertScene <- function(x = scene3d(), width = NULL, height = NULL, reuse = NUL
 	    types[i] <- "reused"
 	  }
 	}
-	simple <- types %in% c("light", "background")
+	simple <- types %in% c("light")
 	if (any(simple))
 	  reuseDF <- rbind(reuseDF, data.frame(id = ids[simple],
 	                                     elementId = elementId,
 	                                     texture = "", stringsAsFactors = FALSE))
-	keep <- types %in% setdiff(knowntypes, c("light", "background", "bboxdeco"))
+	keep <- types %in% setdiff(knowntypes, c("light", "bboxdeco"))
 	ids <- ids[keep]
 	cids <- as.character(ids)
 	nflags <- flags[keep]

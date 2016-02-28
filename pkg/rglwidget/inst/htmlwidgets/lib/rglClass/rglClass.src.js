@@ -590,6 +590,7 @@ rglwidgetClass = function() {
 	     this.vp = {x:x, y:y, width:width, height:height};
 	     gl.viewport(x, y, width, height);
 	     gl.scissor(x, y, width, height);
+	     gl.enable(gl.SCISSOR_TEST);
 	   };
 
 	  this.setprMatrix = function(id) {
@@ -838,7 +839,7 @@ rglwidgetClass = function() {
 
     obj.initialized = true;
 
-    if (type === "background" || type === "bboxdeco" || type === "subscene")
+    if (type === "bboxdeco" || type === "subscene")
       return;
 
     if (type === "light") {
@@ -851,6 +852,11 @@ rglwidgetClass = function() {
 
     if (type === "clipplanes") {
       obj.vClipplane = this.flatten(this.cbind(obj.normals, obj.offsets));
+      return;
+    }
+
+    if (type == "background" && typeof obj.ids !== "undefined") {
+      obj.quad = this.flatten([].concat(obj.ids));
       return;
     }
 
@@ -1418,6 +1424,31 @@ rglwidgetClass = function() {
 			}
 	 };
 
+    this.drawBackground = function(id, subsceneid) {
+	    var gl = this.gl,
+	        obj = this.getObj(id),
+	        bg, i;
+
+      if (!obj.initialized)
+        this.initObj(id);
+
+	    if (obj.colors.length) {
+			  bg = obj.colors[0];
+			  gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
+			  gl.depthMask(true);
+			  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	    }
+	    if (typeof obj.quad !== "undefined") {
+	      this.prMatrix.makeIdentity();
+	      this.mvMatrix.makeIdentity();
+	      gl.disable(gl.BLEND);
+	      gl.disable(gl.DEPTH_TEST);
+	      gl.depthMask(false);
+	      for (i=0; i < obj.quad.length; i++)
+	        this.drawObj(obj.quad[i], subsceneid);
+	    }
+    };
+
 	  this.drawSubscene = function(subsceneid) {
 		  var gl = this.gl,
 		      obj = this.getObj(subsceneid),
@@ -1437,16 +1468,10 @@ rglwidgetClass = function() {
 		    }
 		  }
 
-		  var bgid = obj.backgroundId,
-		      bg;
-
       this.setViewport(subsceneid);
-      gl.depthMask(true); // must be true before clearing depth buffer, and for opaque objects
-      if (typeof bgid !== "undefined" && objects[bgid].colors.length) {
-			  bg = objects[bgid].colors[0];
-			  gl.clearColor(bg[0], bg[1], bg[2], bg[3]);
-			  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      }
+
+      if (typeof obj.backgroundId !== "undefined")
+          this.drawBackground(obj.backgroundId, subsceneid);
 
 			if (subids.length) {
 			  this.setprMatrix(subsceneid);
@@ -1463,6 +1488,10 @@ rglwidgetClass = function() {
 				if (subscene_needs_sorting)
 				  this.setprmvMatrix();
 
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthMask(true);
+        gl.disable(gl.BLEND);
+
 				var clipids = obj.clipplanes;
 				if (clipids.length > 0) {
 				  this.invMatrix = new CanvasMatrix4(this.mvMatrix);
@@ -1472,8 +1501,7 @@ rglwidgetClass = function() {
 				}
 				subids = obj.opaque;
 				if (subids.length > 0) {
-				  gl.disable(gl.BLEND);
-				  for (i = 0; subids && i < subids.length; i++) {
+          for (i = 0; i < subids.length; i++) {
 				    this.drawObj(subids[i], subsceneid);
 				  }
 				}
