@@ -77,3 +77,7 @@ Get rid of old style Javascript insertion of controls, always use
 widget.
 
 Maybe depth_test = "lequal" should be the default?  Or figure out why "less" messes up the display.
+
+Add support for .svg textures?
+
+Complete support for backgrounds.  (Partially done:  now supports backgrounds.)
