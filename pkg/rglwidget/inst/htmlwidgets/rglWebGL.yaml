@@ -5,6 +5,6 @@ dependencies:
      script: rglClass.src.js
      stylesheet: rgl.css
   -  name: CanvasMatrix4
-     version: 2009
+     version: 2016
      src: htmlwidgets/lib/CanvasMatrix
      script: CanvasMatrix.src.js

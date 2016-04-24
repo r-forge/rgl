@@ -1,3 +1,5 @@
-0.1.1456
+0.1.1464
   - Added this NEWS file
   - Added better support for backgrounds
+  - Added support for orthographic projections (FOV = 0)
+  - Added simple Shiny demo using tabs

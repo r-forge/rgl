@@ -27,7 +27,7 @@ rglwidgetClass = function() {
 
     this.dotprod = function(a, b) {
       return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-    }
+    };
 
 		this.xprod = function(a, b) {
 			return [a[1]*b[2] - a[2]*b[1],
@@ -232,7 +232,7 @@ rglwidgetClass = function() {
       var thelist,
           thesub = this.getObj(subscene),
           obj = this.getObj(id),
-          ids = [id], i, newIds;
+          ids = [id], i;
       if (typeof obj.newIds !== "undefined")
         ids = ids.concat(obj.newIds);
       for (j=0; j<ids.length;j++) {
@@ -612,19 +612,30 @@ rglwidgetClass = function() {
        if (radius <= 0) radius = 1;
        var observer = subscene.par3d.observer,
            distance = observer[2],
-	         t = Math.tan(subscene.par3d.FOV*Math.PI/360),
+           FOV = subscene.par3d.FOV, ortho = FOV === 0,
+	         t = ortho ? 1 : Math.tan(FOV*Math.PI/360),
 	         near = distance - radius,
 	         far = distance + radius,
 	         hlen = t*near,
 	         aspect = this.vp.width/this.vp.height,
 	         z = subscene.par3d.zoom;
-	     if (aspect > 1)
-	       this.prMatrix.frustum(-hlen*aspect*z, hlen*aspect*z,
+	     if (ortho) {
+	       if (aspect > 1)
+           this.prMatrix.ortho(-hlen*aspect*z, hlen*aspect*z,
 	                        -hlen*z, hlen*z, near, far);
-	     else
-	       this.prMatrix.frustum(-hlen*z, hlen*z,
+	       else
+	         this.prMatrix.ortho(-hlen*z, hlen*z,
 	                        -hlen*z/aspect, hlen*z/aspect,
 	                        near, far);
+	     } else {
+	       if (aspect > 1)
+	         this.prMatrix.frustum(-hlen*aspect*z, hlen*aspect*z,
+	                        -hlen*z, hlen*z, near, far);
+	       else
+	         this.prMatrix.frustum(-hlen*z, hlen*z,
+	                        -hlen*z/aspect, hlen*z/aspect,
+	                        near, far);
+	     }
 	   };
 
 	  this.setmvMatrix = function(id) {
@@ -764,7 +775,7 @@ rglwidgetClass = function() {
               u = perms[0][i];
               v = perms[1][i];
               w = perms[2][i];
-              if (A[w] != 0.0) {
+              if (A[w] !== 0.0) {
                 intersect = -(d + A[u]*bbox[j+2*u] + A[v]*bbox[k+2*v])/A[w];
   	            if (bbox[2*w] < intersect && intersect < bbox[1+2*w]) {
   	              xrow = [];
@@ -784,8 +795,8 @@ rglwidgetClass = function() {
               for (i=0; i<nhits-2; i++) {
                 which = 0; /* initialize to suppress warning */
                 for (j=i+1; j<nhits; j++) {
-                  if (face1[i] == face1[j] || face1[i] == face2[j]
-                      || face2[i] == face1[j] || face2[i] == face2[j] ) {
+                  if (face1[i] == face1[j] || face1[i] == face2[j] ||
+                      face2[i] == face1[j] || face2[i] == face2[j] ) {
                     which = j;
                     break;
                   }
@@ -2295,7 +2306,7 @@ rglwidgetClass = function() {
           el.appendChild(button);
 		    };
 
-        if (typeof control.reinit !== "null") {
+        if (typeof control.reinit !== "undefined" && control.reinit !== null) {
           control.actions.reinit = control.reinit;
         }
 		    el.rgltimer = new rgltimerClass(Tick, control.start, control.interval, control.stop, control.value, control.rate, control.loop, control.actions);
@@ -2315,12 +2326,12 @@ rglwidgetClass = function() {
 		};
 
 		this.applyControls = function(el, x, draw) {
-		  var self = this, reinit = x.reinit, i, obj, control, type;
+		  var self = this, reinit = x.reinit, i, control, type;
 		  for (i = 0; i < x.length; i++) {
 		    control = x[i];
 		    type = control.type;
 		    self[type](el, control);
-		  };
+		  }
 		  if (typeof reinit !== "undefined" && reinit !== null) {
 		    reinit = [].concat(reinit);
 		    for (i = 0; i < reinit.length; i++)
@@ -2337,7 +2348,7 @@ rglwidgetClass = function() {
 		      initSubs = message.initSubscenes,
 		      redraw = message.redrawScene,
 		      skipRedraw = message.skipRedraw,
-		      deletes, subs, allsubs = [], obj, i,j;
+		      deletes, subs, allsubs = [], i,j;
 		  if (typeof message.delete !== "undefined") {
 		    deletes = [].concat(message.delete);
 		    if (typeof message.delfromSubscenes !== "undefined")
