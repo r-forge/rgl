@@ -283,7 +283,7 @@ rglwidgetClass = function() {
 			" varying vec4 vCol;\n"+
 			" varying vec4 vPosition;\n";
 
-			if (is_lit && !fixed_quads)
+			if ((is_lit && !fixed_quads) || sprite_3d)
 				result = result + "	attribute vec3 aNorm;\n"+
 			                    " uniform mat4 normMatrix;\n"+
 			                    " varying vec3 vNormal;\n";
