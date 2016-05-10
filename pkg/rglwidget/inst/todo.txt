@@ -1,5 +1,11 @@
 TODO:
 
+Sprites aren't serialized in a sensible way -
+there are copies rather than references in the
+sprite object.  Is this necessary?  More
+generally, which parts of scene3d() aren't
+needed in the serialization, or at all?
+
 DONE:
 
 For those objects where the init method expands the number of vertices,
