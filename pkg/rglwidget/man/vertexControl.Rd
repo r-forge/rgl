@@ -51,7 +51,8 @@ perhaps \code{"oz"}, texture coordinates \code{"ts", "tt"}.
 If only one attribute of one vertex is specified, \code{values} may
 be given as a vector and will be treated as a one-column matrix.  Otherwise
 \code{values} must be given as a matrix with \code{ncol(values) == max(length(vertices),
-length(attributes))}.
+length(attributes))}.  The \code{vertices} and \code{attributes} vectors will be recycled to the same length, and entries from column \code{j} of \code{values} will be applied to 
+vertex \code{vertices[j]}, attribute \code{attributes[j]}.
 
 The \code{value} argument is translated into a row (or two rows if
 \code{interp = TRUE}) of \code{values}
