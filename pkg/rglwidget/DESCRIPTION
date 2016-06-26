@@ -9,4 +9,4 @@ License: GPL-2
 LazyData: TRUE
 Imports: htmlwidgets, htmltools, knitr, jsonlite (>= 0.9.20), shiny,
          magrittr, rgl (>= 0.95.1456)
-Remotes:  rforge/rgl/pkg/rgl
+Remotes:  svn::svn://svn.r-forge.r-project.org/svnroot/rgl/pkg/rgl
