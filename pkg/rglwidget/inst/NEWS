@@ -1,8 +1,0 @@
-0.1.1473
-  - Added this NEWS file
-  - Added better support for backgrounds
-  - Added support for orthographic projections (FOV = 0)
-  - Added simple Shiny demo using tabs
-  - Fixed bug in rendering unlit 3D sprites
-  - Added version dependency for jsonlite so that the
-    new faster matrix code will be used.
