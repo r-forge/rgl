@@ -1,6 +1,6 @@
 Package: tkrgl
 Title: 'TK' Widget Tools for 'rgl'
-Version: 0.71.1255
+Version: 0.8
 Author: Duncan Murdoch/Ming Chen
 Description: Provides 'TK' widget tools for the 'rgl' package. 
 Maintainer: Duncan Murdoch <murdoch@stats.uwo.ca>

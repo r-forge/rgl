@@ -32,6 +32,8 @@ to the \code{\link[rgl]{par3dinterp}} function.
 \examples{
 \dontrun{
 
+library(rgl)
+
 # Record a series of positions, and then play them back immediately
 # at evenly spaced times, in an oscillating loop
 

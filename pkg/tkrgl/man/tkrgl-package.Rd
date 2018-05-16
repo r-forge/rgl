@@ -3,20 +3,16 @@
 \alias{tkrgl}
 \docType{package}
 \title{
-TK widget tools for rgl package
+\packageTitle{tkrgl}
 }
 \description{
-This package provides a TK spin control for the rgl package.  
+\packageDescription{tkrgl}
 }
 \details{
-\tabular{ll}{
-Package: \tab tkrgl\cr
-Version: \tab 0.3\cr
-License: \tab GPL\cr
-Depends: \tab R (>= 1.9.0), tcltk, rgl (>= 0.66)\cr
-SystemRequirements: \tab rgl packages for rendering\cr
-URL: \tab \url{http://www.stats.uwo.ca/faculty/murdoch}\cr
-}
+The DESCRIPTION file:
+\packageDESCRIPTION{tkrgl}
+\packageIndices{tkrgl}
+
 
 History:
 \tabular{ll}{
@@ -26,18 +22,6 @@ History:
 0.5   \tab Added continuous rotation \cr
 0.6   \tab Added par3dsave \cr
 0.7   \tab Added parameters to \code{\link{spinControl}}, fixed startup \cr
-}
-
-Index:
-\tabular{ll}{
-\code{\link{spin3d}} \tab   Create TCL/TK controller for rgl window(s) \cr
-\code{\link{spinControl}} \tab Create a spin control in a TCL/TK window \cr
-\code{\link{par3dsave}} \tab Save viewpoints for playback
+0.8   \tab Minor fixes to pass checks \cr
 }
 }
-\author{
-Duncan Murdoch/Ming Chen
-
-Maintainer: Duncan Murdoch <dmurdoch@pair.com>
-}
-\keyword{ package }

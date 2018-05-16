@@ -19,6 +19,8 @@ spinControl(base, dev = rgl.cur(),
 \seealso{\code{\link{spin3d}}}
 \examples{
 if (interactive()) { 
+    library(rgl)
+    library(tcltk)
     open3d()
     win1 <- rgl.cur()
     rgl.bringtotop(TRUE)
