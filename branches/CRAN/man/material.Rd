@@ -1,0 +1,208 @@
+\name{rgl.material}
+\alias{rgl.material}
+\alias{material3d}
+\title{Generic Appearance setup}
+\description{
+  Set material properties for geometry appearance.
+}
+\usage{
+rgl.material(
+  color        = c("white"),
+  alpha        = c(1.0),
+  lit          = TRUE, 
+  ambient      = "black",
+  specular     = "white", 
+  emission     = "black", 
+  shininess    = 50.0, 
+  smooth       = TRUE,
+  texture      = NULL, 
+  textype      = "rgb", 
+  texmipmap    = FALSE, 
+  texminfilter = "linear", 
+  texmagfilter = "linear",
+  texenvmap    = FALSE,
+  front        = "fill", 
+  back         = "fill",
+  size         = 3.0, 
+  lwd          = 1.0,
+  fog          = TRUE,
+  point_antialias = FALSE,
+  line_antialias = FALSE,
+  depth_mask   = TRUE,
+  depth_test   = "less",
+  polygon_offset = c(0.0, 0.0),
+  ...
+)
+material3d(...)
+}
+\arguments{
+  \item{color}{
+    vector of R color characters. Represents the diffuse component in case of lighting calculation (lit = TRUE),
+    otherwise it describes the solid color characteristics.
+  }
+  \item{lit}{
+    logical, specifying if lighting calculation should take place on geometry
+  }
+  \item{ambient, specular, emission, shininess}{
+    properties for lighting calculation. ambient, specular, emission are R color character string values; shininess represents a
+    numerical.
+  }
+  \item{alpha}{ 
+    vector of alpha values between 0.0 (fully transparent) .. 1.0 (opaque).
+  }
+  \item{smooth}{
+    logical, specifying whether Gouraud shading (smooth) or flat shading should be used.
+  }
+  \item{texture}{ 
+    path to a texture image file. Supported formats: png.
+  }
+  \item{textype}{
+    specifies what is defined with the pixmap
+    \describe{
+      \item{"alpha"}{alpha values}
+      \item{"luminance"}{luminance}
+      \item{"luminance.alpha"}{luminance and alpha}
+      \item{"rgb"}{color}
+      \item{"rgba"}{color and alpha texture}
+    }
+  }
+  \item{texmipmap}{
+    Logical, specifies if the texture should be mipmapped.
+  }
+  \item{texmagfilter}{
+    specifies the magnification filtering type (sorted by ascending quality):
+    \describe{
+      \item{"nearest"}{texel nearest to the center of the pixel}
+      \item{"linear"}{weighted linear average of a 2x2 array of texels}
+    }
+  }
+  \item{texminfilter}{
+    specifies the minification filtering type (sorted by ascending quality):
+    \describe{
+      \item{"nearest"}{texel nearest to the center of the pixel}
+      \item{"linear"}{weighted linear average of a 2x2 array of texels}
+      \item{"nearest.mipmap.nearest"}{low quality mipmapping}
+      \item{"nearest.mipmap.linear"}{medium quality mipmapping}
+      \item{"linear.mipmap.nearest"}{medium quality mipmapping}
+      \item{"linear.mipmap.linear"}{high quality mipmapping}
+    }
+  }
+  \item{texenvmap}{
+    logical, specifies if auto-generated texture coordinates for environment-mapping 
+    should be performed on geometry.
+  }
+  \item{front, back}{
+    Determines the polygon mode for the specified side:
+    \describe{
+      \item{"filled"}{filled polygon}
+      \item{"lines"}{wireframed polygon}
+      \item{"points"}{point polygon}
+      \item{"culled"}{culled (hidden) polygon}
+    }
+  }
+  \item{size}{ 
+    numeric, specifying the size of points in pixels
+  }
+  \item{lwd}{
+    numeric, specifying the line width in pixels
+  }
+  \item{fog}{logical, specifying if fog effect should be applied on the corresponding shape}
+  \item{point_antialias, line_antialias}{logical, specifying if points and lines 
+     should be antialiased}
+  \item{depth_mask}{logical, specifying whether the object's depth
+     should be stored.}
+  \item{depth_test}{Determines which depth test is used to see if this
+     object is visible, depending on its apparent depth in the scene
+     compared to the stored depth. Possible values are \code{"never"},
+     \code{"less"} (the default), \code{"equal"}, \code{"lequal"}
+     (less than or equal), \code{"greater"}, \code{"notequal"},
+     \code{"gequal"} (greater than or equal), \code{"always"}.}
+  \item{polygon_offset}{If non-zero, offsets are added
+  to the recorded depth of filled polygons.  See Details below.}
+  \item{...}{Any of the arguments above can
+  be passed to \code{material3d}; see Details below.  \code{rgl.material} will ignore others.}
+}
+\details{
+  Values can be queried by specifying their names
+in a character vector, e.g. \code{material3d("color")}.
+There is one read-only property that can be queried
+but not set:
+
+\describe{
+\item{isTransparent}{Is the current colour transparent?}
+}
+  
+  Only one side at a time can be culled.
+  
+  The \code{polygon_offset} property is a two element
+vector giving the \samp{factor} and \samp{units} values
+to use in a \code{glPolygonOffset()} call in OpenGL.  If
+only one value is given, it is used for both elements.
+The \samp{units} value is added to the depth of all pixels in
+a filled polygon,
+and the \samp{factor} value is multiplied by an estimate of
+the slope of the polygon and then added to the depth.  Positive values \dQuote{push} polygons back slightly for the purpose
+of depth testing, to allow points, lines or other polygons
+to be drawn on the surface without being obscured due 
+to rounding error.  Negative values pull the object forward.
+A typical value to use is \code{1} (which
+is automatically expanded to \code{c(1,1)}).
+If values are too large, objects which should be behind
+the polygon will show through, and if values are too small,
+the objects on the surface will be partially obscured. 
+Experimentation may be needed to get it right.  The first
+example in \code{?\link{persp3d}} uses this property to add 
+grid lines to a surface.
+  
+  \code{material3d} is an alternate interface to the material properties, modelled after
+\code{\link{par3d}}:  rather than setting defaults for parameters that are not specified, 
+they will be left unchanged.  \code{material3d} may also be used to query the material
+properties; see the examples below.
+
+  The current implementation does not return parameters for textures.
+  
+  If \code{point_antialias} is \code{TRUE}, points will be drawn as circles; otherwise, they
+will be drawn as squares.  Lines tend to appear heavier with \code{line_antialias == TRUE}.
+
+  The \code{material} member of the \code{\link{r3dDefaults}} list may be used to 
+set default values for material properties.
+  
+  The \code{...} parameter to \code{rgl.material} is ignored.
+}
+\value{
+\code{rgl.material()} is called for the side effect of setting the material properties.
+It returns a value invisibly which is not intended for use by the user.
+
+Users should use \code{material3d()} to query material properties.  It returns values similarly
+to \code{\link{par3d}} as follows:
+When setting properties, it returns the previous values in a named list.  A named list is also
+returned when more than one value is queried.  When a single value is queried it is returned 
+directly.
+} 
+\seealso{
+\code{\link{rgl.primitive}},
+\code{\link{rgl.bbox}},
+\code{\link{rgl.bg}},
+\code{\link{rgl.light}}
+}
+\examples{
+save <- material3d("color")
+material3d(color = "red")
+material3d("color")
+material3d(color = save)
+
+# this illustrates the effect of depth_test
+x <- c(1:3); xmid <- mean(x)
+y <- c(2, 1, 3); ymid <- mean(y)
+z <- 1
+open3d()
+tests <- c("never", "less", "equal", "lequal", "greater", 
+                  "notequal", "gequal", "always")
+for (i in 1:8) {
+  triangles3d(x, y, z + i, col = heat.colors(8)[i])
+  texts3d(xmid, ymid, z + i, paste(i, tests[i], sep = ". "), depth_test = tests[i]) 
+}
+highlevel()  # To trigger display
+}
+\keyword{dynamic}
+
