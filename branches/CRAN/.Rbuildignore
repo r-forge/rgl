@@ -1,0 +1,13 @@
+^src/Makevars$
+^src/TODO\.txt$
+^\.Rproj\.user$
+
+^.*\.Rproj$
+^vignettes/CanvasMatrix.js
+^vignettes/Rplots.pdf
+^vignettes/test
+^vignettes/WebGLdebug.Rmd
+^vignettes/figure
+^inst/doc/rglwidgetClass
+^inst/todo
+^inst/initNotes.txt
