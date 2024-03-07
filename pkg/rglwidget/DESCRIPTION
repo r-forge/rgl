@@ -1,10 +1,11 @@
 Package: rglwidget
 Type: Package
 Title: 'rgl' in 'htmlwidgets' Framework
-Version: 0.2
+Version: 0.2.2
 Author: Duncan Murdoch
 Maintainer: Duncan Murdoch <murdoch.duncan@gmail.com>
 Description: The contents of this package have
   been merged into rgl, so it is no longer needed.
 License: GPL-2
 LazyData: TRUE
+Config/runiverse/noindex: true
